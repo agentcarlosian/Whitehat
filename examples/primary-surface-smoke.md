@@ -44,3 +44,9 @@ python -m pip install ".[scanner-ruff]"
 python -B -m whitehat scan ruff .\examples\scanner\problem --json
 python -B -m whitehat scan ruff .\examples\scanner\clean --json
 ```
+
+The future-network boundary is validated separately and locally:
+
+```powershell
+python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
+```

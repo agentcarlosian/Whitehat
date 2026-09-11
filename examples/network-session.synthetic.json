@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "whitehat-network-session-v1",
+  "sessionId": "synthetic-session-001",
+  "mode": "owned-synthetic",
+  "validFrom": "2026-09-11T01:00:00Z",
+  "expiresAt": "2026-09-11T03:00:00Z",
+  "authority": {
+    "policyUrl": "https://example.invalid/security",
+    "policyReviewedAt": "2026-09-11T00:30:00Z",
+    "policyExpiresAt": "2026-09-12T00:00:00Z",
+    "approverAssertion": "Carlos",
+    "approvedAt": "2026-09-11T00:45:00Z"
+  },
+  "capabilities": [
+    "http.observe"
+  ],
+  "targets": [
+    {
+      "scheme": "https",
+      "host": "api.example.invalid",
+      "port": 443,
+      "pathPrefixes": [
+        "/health"
+      ],
+      "methods": [
+        "GET"
+      ]
+    }
+  ],
+  "budgets": {
+    "maxRequests": 10,
+    "maxConcurrency": 1,
+    "minDelayMs": 500,
+    "maxRequestBytes": 8192,
+    "maxResponseBytes": 1048576,
+    "maxWallSeconds": 900
+  },
+  "transport": {
+    "allowRedirects": false,
+    "allowProxyEnvironment": false,
+    "requireTlsVerification": true,
+    "dnsPolicy": "resolve-public-once-and-pin"
+  },
+  "effects": {
+    "credentials": false,
+    "targetMutation": false,
+    "thirdPartyData": false,
+    "contact": false,
+    "submission": false
+  },
+  "stopConditions": [
+    "user-stop",
+    "session-expired",
+    "policy-expired",
+    "scope-mismatch",
+    "budget-exhausted",
+    "rate-limited",
+    "unexpected-redirect",
+    "unexpected-address"
+  ]
+}

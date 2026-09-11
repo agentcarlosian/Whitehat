@@ -34,3 +34,4 @@ jobs:
           whitehat doctor --json
           whitehat run synthetic --message "installed CI fixture" --json
           whitehat scan ruff examples/scanner/problem --json
+          whitehat session validate examples/network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json

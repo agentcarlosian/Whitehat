@@ -3,7 +3,9 @@
 ## Product surface
 
 The primary interface is `python -m whitehat`; installation also provides the
-`whitehat` console command. Commands are deterministic and non-interactive.
+`whitehat` console command. Commands are non-interactive. Analysis results are
+deterministic for stable inputs; process results additionally retain observed
+runtime identity, byte counts, exit status, cleanup, and elapsed time.
 
 ## Risk model
 
@@ -154,6 +156,25 @@ availability. Raw messages, edit content, documentation URLs, source text,
 absolute paths, and stderr are omitted. Exit `0` is clean, exit `1` represents
 observations, and exit `2` or another status is failure. See
 `docs/scanner-adapters.md` for the reviewed contract and provenance record.
+
+## `session validate`
+
+```text
+whitehat session validate DOCUMENT [--evaluation-time RFC3339]
+  [--output FILE] [--json]
+```
+
+This local-only command validates `whitehat-network-session-v1`. It checks strict
+fields, duplicate keys, an eight-hour maximum, policy timing, approval timing,
+exact HTTPS targets, GET/HEAD methods, typed capability, budgets, fixed transport,
+false consequential effects, required stop conditions, and activity at the
+evaluation clock.
+
+`--evaluation-time` exists only for offline fixtures and historical inspection.
+A future engine must ignore it and use a trusted current clock. Successful output
+is `valid-design-contract` with legal authority, implemented network engine,
+network execution authorization, and execution performed all false. See
+`docs/network-session-boundary.md` and Decision 0002.
 
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

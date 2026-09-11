@@ -52,5 +52,14 @@ python -B -m whitehat scan ruff .\examples\scanner\clean --json
 The first command reports `F401` and `F841`; the clean twin reports zero
 observations. Neither result establishes a security finding.
 
+Validate the separate future-network design without opening a socket:
+
+```powershell
+python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
+```
+
+The result must keep `networkEngineImplemented`, `networkExecutionAuthorized`,
+and `networkExecutionPerformed` false. Offline commands never require this file.
+
 If Python cannot import `whitehat`, confirm that the command is running from the
 repository root. Use `python --version` to confirm Python 3.11 or newer.

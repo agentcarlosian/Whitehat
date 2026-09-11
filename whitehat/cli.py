@@ -12,6 +12,11 @@ from .dependencies import (
 )
 from .diagnostics import doctor_result
 from .local_diff import DiffError, DiffLimits, compare_directories, inventory_directory
+from .network_session import (
+    NetworkSessionError,
+    load_and_validate_network_session,
+    parse_evaluation_time,
+)
 from .records import (
     MAX_RESULT_BYTES,
     REVIEW_DECISIONS,
@@ -86,6 +91,13 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
                 f"{observation['code']:8} {observation['path']}:"
                 f"{location['row']}:{location['column']}"
             )
+        return
+    if value.get("schemaVersion") == "whitehat-network-session-validation-v1":
+        print(
+            f"Network session design: {value['sessionId']} is valid at "
+            f"{value['evaluatedAt']}"
+        )
+        print("Network engine implemented: false; execution authorized: false")
         return
     summary = value["summary"]
     print(
@@ -191,6 +203,23 @@ def _parser() -> argparse.ArgumentParser:
     ruff.add_argument("--workspace-root")
     _add_output(ruff)
     ruff.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
+
+    session = commands.add_parser(
+        "session", help="Validate a local design contract for future network work."
+    )
+    session_commands = session.add_subparsers(dest="session_command", required=True)
+    validate_session = session_commands.add_parser(
+        "validate", help="Validate one session contract without network access."
+    )
+    validate_session.add_argument("document")
+    validate_session.add_argument(
+        "--evaluation-time",
+        help="Offline evaluation clock; future network execution must use its own clock.",
+    )
+    _add_output(validate_session)
+    validate_session.add_argument(
+        "--json", action="store_true", help="Emit deterministic JSON."
+    )
     return parser
 
 
@@ -294,7 +323,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args,
             )
             return 0
-    except (DiffError, DependencyError, RecordError, RunnerError, ScannerError) as exc:
+        if args.command == "session" and args.session_command == "validate":
+            _emit_analysis(
+                load_and_validate_network_session(
+                    args.document,
+                    parse_evaluation_time(args.evaluation_time),
+                ),
+                args,
+            )
+            return 0
+    except (
+        DiffError,
+        DependencyError,
+        NetworkSessionError,
+        RecordError,
+        RunnerError,
+        ScannerError,
+    ) as exc:
         failure = {
             "schemaVersion": "whitehat-error-v1",
             "ok": False,

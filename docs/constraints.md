@@ -29,6 +29,12 @@
 - Scanner output is static-analysis metadata. A rule match, clean result, exit
   code, or fix suggestion does not establish reachability, exploitability,
   finding validity, impact, severity, eligibility, or authorization.
+- Network-session validation is implemented, but network execution is not. The
+  synthetic contract, approver assertion, policy URL, and validation result do
+  not establish legal authority or authorize a socket.
+- The initial design is HTTPS observation-only with GET/HEAD and all credential,
+  mutation, third-party-data, contact, and submission effects false. Broader
+  network behavior requires a separate design and implementation review.
 - No network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the

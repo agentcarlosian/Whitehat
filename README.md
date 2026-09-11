@@ -19,6 +19,8 @@ This repository currently provides one small, dependency-free Python CLI:
   output, time, environment, and disposable workspace cleanup.
 - `whitehat scan ruff` runs one pinned, reviewed Ruff adapter over a bounded
   disposable copy of local Python source.
+- `whitehat session validate` checks a short-lived future-network design locally;
+  it never enables or performs network access.
 
 Local read-only and offline analysis does not require an approval file. Network
 actions, credentials, target changes, external contact, and report submission are
@@ -34,6 +36,7 @@ python -B -m whitehat analyze inventory .\examples\before --json
 python -B -m whitehat analyze diff .\examples\before .\examples\after --json
 python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
 python -B -m whitehat run synthetic --message "owned fixture" --json
+python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
 python -B scripts\validate.py
 ```
 

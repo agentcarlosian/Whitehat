@@ -216,6 +216,50 @@ class CliTests(unittest.TestCase):
             review = json.loads(reviewed.stdout)
             self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
 
+    def test_network_session_validation_is_local_and_reviewable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            result_path = Path(temporary, "session-validation.json")
+            review_path = Path(temporary, "session-validation.review.json")
+            completed = self._run(
+                "session",
+                "validate",
+                str(ROOT / "examples" / "network-session.synthetic.json"),
+                "--evaluation-time",
+                "2026-09-11T01:30:00Z",
+                "--output",
+                str(result_path),
+                "--json",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = json.loads(completed.stdout)
+            self.assertFalse(result["claims"]["networkEngineImplemented"])
+            self.assertFalse(result["claims"]["networkExecutionAuthorized"])
+            self.assertFalse(result["effects"]["network"])
+            reviewed = self._run(
+                "review",
+                str(result_path),
+                "--decision",
+                "accepted",
+                "--note",
+                "Design contract reviewed; no network execution.",
+                "--output",
+                str(review_path),
+                "--json",
+            )
+            self.assertEqual(reviewed.returncode, 0, reviewed.stderr)
+            review = json.loads(reviewed.stdout)
+            self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
+
+    def test_offline_analysis_does_not_require_network_session(self) -> None:
+        completed = self._run(
+            "analyze",
+            "inventory",
+            str(ROOT / "examples" / "before"),
+            "--json",
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertTrue(json.loads(completed.stdout)["ok"])
+
     def test_invalid_input_is_structured(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             missing = Path(temporary, "missing")

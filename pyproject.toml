@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whitehat"
-version = "0.5.0a1"
+version = "0.6.0a1"
 description = "Local-first tools for authorized security research"
 readme = "README.md"
 requires-python = ">=3.11"

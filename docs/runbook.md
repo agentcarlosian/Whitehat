@@ -18,6 +18,7 @@ external services and has no persistent background process.
 | Run synthetic profile | `python -B -m whitehat run synthetic --message TEXT --json` | Fixed child; disposable workspace |
 | Install Ruff adapter | `python -m pip install ".[scanner-ruff]"` | Installs exact optional version |
 | Scan Python source | `python -B -m whitehat scan ruff SOURCE --json` | Fixed rules; no fixes or source execution |
+| Validate session design | `python -B -m whitehat session validate DOCUMENT --json` | Local validation only; no network authority |
 | Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 

@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: runner and first reviewed scanner adapter complete; network design next
+Status: requested runner, scanner, and network-boundary design complete
 
 Primary surface: `python -m whitehat`
 
@@ -54,22 +54,33 @@ a meaningful side-effect boundary.
 - [x] Normalize observations without messages, URLs, snippets, or absolute paths.
 - [x] Prove dirty and clean twins plus path, duplicate, identity, limit, and link rejection.
 
+## Completed session-scoped network design
+
+- [x] Define one immutable, short-lived session grant instead of per-request approvals.
+- [x] Bind exact policy timing, capabilities, targets, methods, budgets, and stop conditions.
+- [x] Keep all credential, mutation, third-party-data, contact, and submission effects false.
+- [x] Specify a separate atomic local consumption ledger and restart behavior.
+- [x] Specify resolve-once public-address pinning, TLS, proxy, redirect, and retry boundaries.
+- [x] Implement local contract validation while keeping network execution absent.
+- [x] Prove offline commands do not require or discover session state.
+
 ## Next slices
 
-1. Design a session-scoped network boundary separately; do not make it a
-   prerequisite for useful offline work.
-2. Complete provenance, secret, package, and publication review before
+1. Complete provenance, secret, package, and publication review before
    configuring a public remote. Apache-2.0 is selected.
+2. Implement network execution only after a separate explicit owner decision and
+   the acceptance gates in `docs/network-session-boundary.md`.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check and 45 tests pass, including the pinned
-  Ruff dirty/clean twins and scanner boundary rejections. Two symbolic-link tests
-  are skipped because the current Windows account cannot create test symlinks.
+- Windows Python 3.13.12: syntax check and 57 tests pass, including local network
+  contract timing, scope, budget, effect, stop, and duplicate-key rejection. Two
+  symbolic-link tests are skipped because the current account cannot create them.
 - A fresh local clone of the root commit passes the same validation without
   ignored working-directory inputs.
-- Final installed-package verification for `0.5.0a1` includes the synthetic
-  runner and pinned Ruff adapter.
+- A clean temporary installation builds `0.6.0a1` with the optional Ruff extra;
+  its synthetic runner, dirty/clean Ruff scans, and local-only session validator
+  all pass their exact effect and claim checks.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

@@ -148,6 +148,22 @@ def main() -> int:
             ]
         ).stdout
     )
+    network_session = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "session",
+                "validate",
+                str(ROOT / "examples" / "network-session.synthetic.json"),
+                "--evaluation-time",
+                "2026-09-11T01:30:00Z",
+                "--json",
+            ]
+        ).stdout
+    )
     expected_diff = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
     expected_inventory = {"files": 2, "bytes": 31}
     expected_dependencies = {"added": 1, "removed": 1, "changed": 1, "unchanged": 1}
@@ -208,6 +224,11 @@ def main() -> int:
         or ruff_problem.get("effects", {}).get("workspaceCleaned") is not True
         or ruff_problem.get("claims", {}).get("findingValidityEstablished") is not False
         or ruff_clean.get("summary") != {"observations": 0, "codes": {}}
+        or network_session.get("claims", {}).get("networkEngineImplemented")
+        is not False
+        or network_session.get("claims", {}).get("networkExecutionAuthorized")
+        is not False
+        or network_session.get("effects", {}).get("network") is not False
     ):
         raise SystemExit("golden-path validation failed")
     test_count = sum(
@@ -230,6 +251,10 @@ def main() -> int:
                     "inventory": expected_inventory,
                     "records": {"resultStored": True, "reviewStored": True},
                     "ruffScanner": {"clean": 0, "problem": {"F401": 1, "F841": 1}},
+                    "sessionDesign": {
+                        "network": False,
+                        "networkEngineImplemented": False,
+                    },
                     "syntheticRunner": {"network": False, "workspaceCleaned": True},
                 },
             },
