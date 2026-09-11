@@ -127,6 +127,48 @@ class CliTests(unittest.TestCase):
                 "invalid-input",
             )
 
+    def test_synthetic_runner_can_be_saved_and_reviewed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace_root = Path(temporary, "workspaces")
+            workspace_root.mkdir()
+            result_path = Path(temporary, "run.json")
+            review_path = Path(temporary, "run.review.json")
+            completed = self._run(
+                "run",
+                "synthetic",
+                "--message",
+                "owned fixture",
+                "--repeat",
+                "2",
+                "--workspace-root",
+                str(workspace_root),
+                "--output",
+                str(result_path),
+                "--json",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = json.loads(completed.stdout)
+            self.assertTrue(result["effects"]["workspaceCleaned"])
+            self.assertEqual(list(workspace_root.iterdir()), [])
+            self.assertEqual(
+                json.loads(result_path.read_text(encoding="utf-8")), result
+            )
+
+            reviewed = self._run(
+                "review",
+                str(result_path),
+                "--decision",
+                "accepted",
+                "--note",
+                "Synthetic boundary reviewed.",
+                "--output",
+                str(review_path),
+                "--json",
+            )
+            self.assertEqual(reviewed.returncode, 0, reviewed.stderr)
+            review = json.loads(reviewed.stdout)
+            self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
+
     def test_invalid_input_is_structured(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             missing = Path(temporary, "missing")

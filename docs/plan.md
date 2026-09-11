@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: clean foundation and optional local records slice implemented
+Status: bounded synthetic runner complete; scanner adapter next
 
 Primary surface: `python -m whitehat`
 
@@ -36,25 +36,33 @@ a meaningful side-effect boundary.
 - [x] Add hash-linked `accepted`, `dismissed`, and `needs-work` review notes.
 - [x] Keep author identity caller-asserted and every authority/finding/external claim false.
 
+## Completed bounded synthetic runner
+
+- [x] Expose one fixed typed profile without caller-supplied commands or arguments.
+- [x] Sanitize the child environment and redirect temporary/home paths.
+- [x] Bound stdin, stdout, stderr, wall time, repeat count, delay, and message size.
+- [x] Clean the disposable workspace on success, timeout, and output overflow.
+- [x] Emit hashes and counts without returning the synthetic payload.
+- [x] Support optional result storage and the existing local review flow.
+
 ## Next slices
 
-1. Add a bounded local synthetic process runner with disposable workspaces.
-2. Add reviewed scanner adapters one at a time behind the local runner.
-3. Design a session-scoped network boundary separately; do not make it a
+1. Add one reviewed scanner adapter behind the local runner.
+2. Design a session-scoped network boundary separately; do not make it a
    prerequisite for useful offline work.
-4. Complete provenance, secret, package, and publication review before
+3. Complete provenance, secret, package, and publication review before
    configuring a public remote. Apache-2.0 is selected.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check, 31 tests, `doctor`, inventory, directory
-  diff, dependency comparison, result storage, and local review golden paths
-  pass. The symbolic-link test is skipped because the current Windows account
-  cannot create a test symlink.
+- Windows Python 3.13.12: syntax check and 36 tests pass, including the fixed
+  synthetic runner's success, timeout, output-overflow, cleanup, storage, and
+  review paths. The symbolic-link test is skipped because the current Windows
+  account cannot create a test symlink.
 - A fresh local clone of the root commit passes the same validation without
   ignored working-directory inputs.
-- A clean temporary installation builds the `0.3.0a1` wheel and the installed
-  CLI passes the explicit save/review path with local-write and false-claim checks.
+- A clean temporary installation builds the `0.4.0a1` wheel and its installed
+  synthetic runner passes cleanup, no-network, and no-arbitrary-command checks.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

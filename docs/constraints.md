@@ -16,6 +16,12 @@
   storage, signatures, authenticated identities, or independent execution proof.
 - Analysis output storage is capped at 64 MiB, requires an existing parent
   directory, and refuses overwrite. Review notes are capped at 4,000 characters.
+- The synthetic runner starts only the checked-in fixed Python child. It limits
+  retained input/output and wall time, but it is not an OS CPU/memory sandbox and
+  does not claim containment for arbitrary or hostile executables.
+- Timeout and overflow kill the fixed child. Descendant-process containment is
+  not claimed; the fixed child installs an audit hook denying process and socket
+  APIs, and no arbitrary-child profile exists.
 - No network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the

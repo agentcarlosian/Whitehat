@@ -105,5 +105,30 @@ workflow. All review decisions keep authority, finding validity, impact, externa
 action, and submission claims false. The review effects explicitly record the
 requested local file write.
 
+## `run synthetic`
+
+```text
+whitehat run synthetic --message TEXT [--repeat N] [--delay-ms N]
+  [--timeout-seconds N] [--max-input-bytes N] [--max-stdout-bytes N]
+  [--max-stderr-bytes N] [--workspace-root DIR] [--output FILE] [--json]
+```
+
+The initial runner exposes one profile, `python.synthetic.echo`. The caller
+chooses typed message, repeat, delay, and resource values but cannot supply an
+executable, module, script path, argument, environment variable, or command.
+
+The parent launches the exact current Python interpreter with isolated mode and
+the checked-in fixed child. The request is sent over bounded standard input. The
+child receives a minimal environment with temporary/home paths redirected to its
+disposable workspace and denies socket, subprocess, spawn, exec, and system audit
+events. The parent reads stdout and stderr concurrently, kills the process on
+timeout or retained-output overflow, and returns only after workspace cleanup.
+
+The result contains input/output hashes and sizes, executable and argument
+identities, elapsed time, exit code, sanitized environment-key names, and cleanup
+status. It does not return the message or child payload. Process creation and the
+temporary filesystem write are explicit; arbitrary commands and network remain
+false. This profile is a pipeline proof, not an OS sandbox for untrusted code.
+
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

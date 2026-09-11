@@ -26,7 +26,7 @@ def doctor_result() -> dict[str, Any]:
             "localReadOnly": True,
             "localResultStorage": True,
             "localReviewNotes": True,
-            "localSyntheticExecution": False,
+            "localSyntheticExecution": True,
             "network": False,
             "credentials": False,
             "targetMutation": False,

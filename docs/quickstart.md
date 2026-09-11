@@ -11,6 +11,7 @@ python -B -m whitehat doctor --json
 python -B -m whitehat analyze inventory .\examples\before --json
 python -B -m whitehat analyze diff .\examples\before .\examples\after --json
 python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
+python -B -m whitehat run synthetic --message "owned fixture" --json
 python -B scripts\validate.py
 ```
 
@@ -30,6 +31,15 @@ python -B -m whitehat review .\tmp\inventory.json --decision needs-work --note "
 
 The two output paths must not already exist. They are ignored local artifacts;
 ordinary analysis without `--output` remains write-free.
+
+The synthetic runner needs no approval artifact and exposes no arbitrary command:
+
+```powershell
+python -B -m whitehat run synthetic --message "owned fixture" --repeat 2 --json
+```
+
+The result should report `python.synthetic.echo`, process creation, no network or
+arbitrary command, and `workspaceCleaned: true` without returning the message.
 
 If Python cannot import `whitehat`, confirm that the command is running from the
 repository root. Use `python --version` to confirm Python 3.11 or newer.

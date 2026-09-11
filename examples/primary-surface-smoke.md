@@ -30,3 +30,9 @@ New-Item -ItemType Directory .\tmp -Force
 python -B -m whitehat analyze inventory .\examples\before --output .\tmp\inventory.json --json
 python -B -m whitehat review .\tmp\inventory.json --decision accepted --note "Local record reviewed." --output .\tmp\inventory.review.json --json
 ```
+
+The fixed synthetic-process proof is:
+
+```powershell
+python -B -m whitehat run synthetic --message "owned fixture" --repeat 2 --json
+```

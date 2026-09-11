@@ -103,6 +103,23 @@ def main() -> int:
             ]
         ).stdout
     )
+    synthetic_run = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "run",
+                "synthetic",
+                "--message",
+                "owned golden path",
+                "--repeat",
+                "2",
+                "--json",
+            ]
+        ).stdout
+    )
     expected_diff = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
     expected_inventory = {"files": 2, "bytes": 31}
     expected_dependencies = {"added": 1, "removed": 1, "changed": 1, "unchanged": 1}
@@ -156,6 +173,9 @@ def main() -> int:
         or inventory.get("summary") != expected_inventory
         or dependency_comparison.get("summary") != expected_dependencies
         or not records_valid
+        or synthetic_run.get("profile") != "python.synthetic.echo"
+        or synthetic_run.get("effects", {}).get("workspaceCleaned") is not True
+        or synthetic_run.get("effects", {}).get("network") is not False
     ):
         raise SystemExit("golden-path validation failed")
     test_count = sum(
@@ -177,6 +197,7 @@ def main() -> int:
                     "diff": expected_diff,
                     "inventory": expected_inventory,
                     "records": {"resultStored": True, "reviewStored": True},
+                    "syntheticRunner": {"network": False, "workspaceCleaned": True},
                 },
             },
             separators=(",", ":"),

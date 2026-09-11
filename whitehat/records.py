@@ -25,6 +25,7 @@ SUPPORTED_RESULT_SCHEMAS = frozenset(
         "whitehat-dependency-comparison-v1",
         "whitehat-local-diff-v1",
         "whitehat-local-inventory-v1",
+        "whitehat-synthetic-run-v1",
     }
 )
 REVIEW_DECISIONS = frozenset({"accepted", "dismissed", "needs-work"})

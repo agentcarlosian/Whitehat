@@ -15,6 +15,7 @@ external services and has no persistent background process.
 | Compare dependencies | `python -B -m whitehat analyze dependencies BEFORE AFTER --json` | Supports pyproject and package-lock |
 | Save an analysis | Add `--output NEW_FILE` | Optional; refuses overwrite |
 | Review a saved result | `python -B -m whitehat review RESULT --decision needs-work --note TEXT --output NEW_REVIEW --json` | Writes one hash-linked local note |
+| Run synthetic profile | `python -B -m whitehat run synthetic --message TEXT --json` | Fixed child; disposable workspace |
 | Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 

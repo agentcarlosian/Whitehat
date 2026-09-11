@@ -21,6 +21,7 @@ from .records import (
     save_result_document,
     write_json_document,
 )
+from .runner import ProcessLimits, RunnerError, run_synthetic
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -62,6 +63,16 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
             f"Local review: {value['decision']} for {value['reviewOf']['resultSha256']}"
         )
         print(value["note"])
+        return
+    if value.get("schemaVersion") == "whitehat-synthetic-run-v1":
+        print(
+            f"Synthetic run: {value['profile']} exited {value['process']['exitCode']} "
+            f"in {value['process']['elapsedMs']} ms"
+        )
+        print(
+            f"Payload: {value['output']['payloadBytes']} bytes, "
+            f"workspace cleaned: {value['effects']['workspaceCleaned']}"
+        )
         return
     summary = value["summary"]
     print(
@@ -131,6 +142,24 @@ def _parser() -> argparse.ArgumentParser:
     review.add_argument("--output", required=True)
     review.add_argument("--max-result-bytes", type=int, default=MAX_RESULT_BYTES)
     review.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
+
+    run = commands.add_parser("run", help="Run one fixed local synthetic profile.")
+    run_commands = run.add_subparsers(dest="run_command", required=True)
+    synthetic = run_commands.add_parser(
+        "synthetic", help="Run the fixed dependency-free synthetic child."
+    )
+    synthetic.add_argument("--message", required=True)
+    synthetic.add_argument("--repeat", type=int, default=1)
+    synthetic.add_argument("--delay-ms", type=int, default=0)
+    synthetic.add_argument("--timeout-seconds", type=float, default=5.0)
+    synthetic.add_argument("--max-input-bytes", type=int, default=64 * 1024)
+    synthetic.add_argument("--max-stdout-bytes", type=int, default=1024 * 1024)
+    synthetic.add_argument("--max-stderr-bytes", type=int, default=64 * 1024)
+    synthetic.add_argument("--workspace-root")
+    _add_output(synthetic)
+    synthetic.add_argument(
+        "--json", action="store_true", help="Emit deterministic JSON."
+    )
     return parser
 
 
@@ -200,7 +229,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             if not args.json:
                 print(f"Saved review: {saved}")
             return 0
-    except (DiffError, DependencyError, RecordError) as exc:
+        if args.command == "run" and args.run_command == "synthetic":
+            limits = ProcessLimits(
+                timeout_seconds=args.timeout_seconds,
+                max_input_bytes=args.max_input_bytes,
+                max_stdout_bytes=args.max_stdout_bytes,
+                max_stderr_bytes=args.max_stderr_bytes,
+            )
+            _emit_analysis(
+                run_synthetic(
+                    args.message,
+                    args.repeat,
+                    args.delay_ms,
+                    limits,
+                    args.workspace_root,
+                ),
+                args,
+            )
+            return 0
+    except (DiffError, DependencyError, RecordError, RunnerError) as exc:
         failure = {
             "schemaVersion": "whitehat-error-v1",
             "ok": False,
