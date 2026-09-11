@@ -14,7 +14,7 @@ a meaningful side-effect boundary.
 
 ## Completed foundation
 
-- [x] Initialize one disconnected repository with no remote.
+- [x] Initialize one independent repository with no inherited remote or history.
 - [x] Establish one package, CLI, version, test suite, and CI workflow.
 - [x] Record the clean-source and risk-tier decisions.
 - [x] Implement `doctor` with machine-readable boundary reporting.
@@ -43,7 +43,8 @@ a meaningful side-effect boundary.
   ignored working-directory inputs.
 - A clean temporary installation builds a wheel and the installed `whitehat`
   console command passes `doctor --json`.
-- Python 3.11 remains unverified locally and is covered by the pending CI matrix.
+- GitHub Actions passes validation and package installation on Ubuntu with Python
+  3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 
 ## Definition of done for the alpha foundation
 

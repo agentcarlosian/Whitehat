@@ -33,5 +33,5 @@ Whitehat is licensed under the Apache License, Version 2.0. See [LICENSE](LICENS
 
 ## Project status
 
-This is a disconnected local staging repository. It has no configured remote.
-Publication review and final release checks remain open.
+The canonical repository is currently private. Making it public remains a
+separate owner decision after publication review and final release checks.
