@@ -41,5 +41,16 @@ python -B -m whitehat run synthetic --message "owned fixture" --repeat 2 --json
 The result should report `python.synthetic.echo`, process creation, no network or
 arbitrary command, and `workspaceCleaned: true` without returning the message.
 
+Install and run the optional reviewed scanner:
+
+```powershell
+python -m pip install ".[scanner-ruff]"
+python -B -m whitehat scan ruff .\examples\scanner\problem --json
+python -B -m whitehat scan ruff .\examples\scanner\clean --json
+```
+
+The first command reports `F401` and `F841`; the clean twin reports zero
+observations. Neither result establishes a security finding.
+
 If Python cannot import `whitehat`, confirm that the command is running from the
 repository root. Use `python --version` to confirm Python 3.11 or newer.

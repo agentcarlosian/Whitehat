@@ -22,6 +22,13 @@
 - Timeout and overflow kill the fixed child. Descendant-process containment is
   not claimed; the fixed child installs an audit hook denying process and socket
   APIs, and no arbitrary-child profile exists.
+- Ruff `0.14.14` is the only scanner adapter. It is an optional external tool,
+  not a runtime dependency or vendored component. The adapter verifies version
+  text and executable hash but does not independently prove tool provenance or
+  operating-system network isolation.
+- Scanner output is static-analysis metadata. A rule match, clean result, exit
+  code, or fix suggestion does not establish reachability, exploitability,
+  finding validity, impact, severity, eligibility, or authorization.
 - No network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the

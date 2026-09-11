@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: bounded synthetic runner complete; scanner adapter next
+Status: runner and first reviewed scanner adapter complete; network design next
 
 Primary surface: `python -m whitehat`
 
@@ -45,24 +45,31 @@ a meaningful side-effect boundary.
 - [x] Emit hashes and counts without returning the synthetic payload.
 - [x] Support optional result storage and the existing local review flow.
 
+## Completed first scanner adapter
+
+- [x] Add Ruff `0.14.14` as one optional, pinned scanner dependency.
+- [x] Run version and scan processes through the fixed local runner.
+- [x] Copy only bounded Python source into a disposable workspace.
+- [x] Fix Ruff configuration, rules, target version, and no-fix behavior.
+- [x] Normalize observations without messages, URLs, snippets, or absolute paths.
+- [x] Prove dirty and clean twins plus path, duplicate, identity, limit, and link rejection.
+
 ## Next slices
 
-1. Add one reviewed scanner adapter behind the local runner.
-2. Design a session-scoped network boundary separately; do not make it a
+1. Design a session-scoped network boundary separately; do not make it a
    prerequisite for useful offline work.
-3. Complete provenance, secret, package, and publication review before
+2. Complete provenance, secret, package, and publication review before
    configuring a public remote. Apache-2.0 is selected.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check and 36 tests pass, including the fixed
-  synthetic runner's success, timeout, output-overflow, cleanup, storage, and
-  review paths. The symbolic-link test is skipped because the current Windows
-  account cannot create a test symlink.
+- Windows Python 3.13.12: syntax check and 45 tests pass, including the pinned
+  Ruff dirty/clean twins and scanner boundary rejections. Two symbolic-link tests
+  are skipped because the current Windows account cannot create test symlinks.
 - A fresh local clone of the root commit passes the same validation without
   ignored working-directory inputs.
-- A clean temporary installation builds the `0.4.0a1` wheel and its installed
-  synthetic runner passes cleanup, no-network, and no-arbitrary-command checks.
+- Final installed-package verification for `0.5.0a1` includes the synthetic
+  runner and pinned Ruff adapter.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

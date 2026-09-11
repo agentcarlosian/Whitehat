@@ -120,6 +120,34 @@ def main() -> int:
             ]
         ).stdout
     )
+    ruff_problem = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "scan",
+                "ruff",
+                str(ROOT / "examples" / "scanner" / "problem"),
+                "--json",
+            ]
+        ).stdout
+    )
+    ruff_clean = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "scan",
+                "ruff",
+                str(ROOT / "examples" / "scanner" / "clean"),
+                "--json",
+            ]
+        ).stdout
+    )
     expected_diff = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
     expected_inventory = {"files": 2, "bytes": 31}
     expected_dependencies = {"added": 1, "removed": 1, "changed": 1, "unchanged": 1}
@@ -176,6 +204,10 @@ def main() -> int:
         or synthetic_run.get("profile") != "python.synthetic.echo"
         or synthetic_run.get("effects", {}).get("workspaceCleaned") is not True
         or synthetic_run.get("effects", {}).get("network") is not False
+        or ruff_problem.get("summary", {}).get("codes") != {"F401": 1, "F841": 1}
+        or ruff_problem.get("effects", {}).get("workspaceCleaned") is not True
+        or ruff_problem.get("claims", {}).get("findingValidityEstablished") is not False
+        or ruff_clean.get("summary") != {"observations": 0, "codes": {}}
     ):
         raise SystemExit("golden-path validation failed")
     test_count = sum(
@@ -197,6 +229,7 @@ def main() -> int:
                     "diff": expected_diff,
                     "inventory": expected_inventory,
                     "records": {"resultStored": True, "reviewStored": True},
+                    "ruffScanner": {"clean": 0, "problem": {"F401": 1, "F841": 1}},
                     "syntheticRunner": {"network": False, "workspaceCleaned": True},
                 },
             },

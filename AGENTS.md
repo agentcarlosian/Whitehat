@@ -34,5 +34,6 @@ independent researcher.
 Before completing a behavior change, run:
 
 ```powershell
+python -m pip install ".[scanner-ruff]"
 python -B scripts/validate.py
 ```

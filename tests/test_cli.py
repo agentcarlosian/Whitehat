@@ -1,9 +1,12 @@
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+from whitehat.scanner import RUFF_VERSION
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -161,6 +164,50 @@ class CliTests(unittest.TestCase):
                 "accepted",
                 "--note",
                 "Synthetic boundary reviewed.",
+                "--output",
+                str(review_path),
+                "--json",
+            )
+            self.assertEqual(reviewed.returncode, 0, reviewed.stderr)
+            review = json.loads(reviewed.stdout)
+            self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
+
+    def test_ruff_scanner_can_be_saved_and_reviewed(self) -> None:
+        executable = shutil.which("ruff")
+        if executable is None:
+            self.skipTest(f"Ruff {RUFF_VERSION} is unavailable")
+        version = subprocess.run(
+            [executable, "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if version.stdout.strip() != f"ruff {RUFF_VERSION}":
+            self.skipTest(f"Ruff {RUFF_VERSION} is unavailable")
+        with tempfile.TemporaryDirectory() as temporary:
+            result_path = Path(temporary, "ruff.json")
+            review_path = Path(temporary, "ruff.review.json")
+            completed = self._run(
+                "scan",
+                "ruff",
+                str(ROOT / "examples" / "scanner" / "problem"),
+                "--output",
+                str(result_path),
+                "--json",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = json.loads(completed.stdout)
+            self.assertEqual(result["summary"]["codes"], {"F401": 1, "F841": 1})
+            self.assertEqual(
+                json.loads(result_path.read_text(encoding="utf-8")), result
+            )
+            reviewed = self._run(
+                "review",
+                str(result_path),
+                "--decision",
+                "needs-work",
+                "--note",
+                "Review the normalized observations.",
                 "--output",
                 str(review_path),
                 "--json",

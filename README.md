@@ -17,6 +17,8 @@ This repository currently provides one small, dependency-free Python CLI:
 - `whitehat review` writes a bounded, hash-linked local note for a saved result.
 - `whitehat run synthetic` executes one fixed local child with bounded input,
   output, time, environment, and disposable workspace cleanup.
+- `whitehat scan ruff` runs one pinned, reviewed Ruff adapter over a bounded
+  disposable copy of local Python source.
 
 Local read-only and offline analysis does not require an approval file. Network
 actions, credentials, target changes, external contact, and report submission are
@@ -33,6 +35,13 @@ python -B -m whitehat analyze diff .\examples\before .\examples\after --json
 python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
 python -B -m whitehat run synthetic --message "owned fixture" --json
 python -B scripts\validate.py
+```
+
+The scanner is an optional development dependency:
+
+```powershell
+python -m pip install ".[scanner-ruff]"
+python -B -m whitehat scan ruff .\examples\scanner\problem --json
 ```
 
 See [docs/quickstart.md](docs/quickstart.md) for the shortest operator path and

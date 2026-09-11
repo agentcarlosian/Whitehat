@@ -22,6 +22,7 @@ from .records import (
     write_json_document,
 )
 from .runner import ProcessLimits, RunnerError, run_synthetic
+from .scanner import ScannerError, ScannerLimits, scan_with_ruff
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -73,6 +74,18 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
             f"Payload: {value['output']['payloadBytes']} bytes, "
             f"workspace cleaned: {value['effects']['workspaceCleaned']}"
         )
+        return
+    if value.get("schemaVersion") == "whitehat-scanner-result-v1":
+        print(
+            f"Ruff scan: {value['summary']['observations']} observations, "
+            f"workspace cleaned: {value['effects']['workspaceCleaned']}"
+        )
+        for observation in value["observations"]:
+            location = observation["location"]
+            print(
+                f"{observation['code']:8} {observation['path']}:"
+                f"{location['row']}:{location['column']}"
+            )
         return
     summary = value["summary"]
     print(
@@ -160,6 +173,24 @@ def _parser() -> argparse.ArgumentParser:
     synthetic.add_argument(
         "--json", action="store_true", help="Emit deterministic JSON."
     )
+
+    scan = commands.add_parser("scan", help="Run one reviewed local scanner adapter.")
+    scan_commands = scan.add_subparsers(dest="scan_command", required=True)
+    ruff = scan_commands.add_parser(
+        "ruff", help="Run the pinned Ruff adapter over bounded copied Python source."
+    )
+    ruff.add_argument("source")
+    ruff.add_argument("--max-entries", type=int, default=20_000)
+    ruff.add_argument("--max-source-files", type=int, default=1_000)
+    ruff.add_argument("--max-file-bytes", type=int, default=1024 * 1024)
+    ruff.add_argument("--max-total-bytes", type=int, default=16 * 1024 * 1024)
+    ruff.add_argument("--max-observations", type=int, default=1_000)
+    ruff.add_argument("--timeout-seconds", type=float, default=30.0)
+    ruff.add_argument("--max-stdout-bytes", type=int, default=8 * 1024 * 1024)
+    ruff.add_argument("--max-stderr-bytes", type=int, default=64 * 1024)
+    ruff.add_argument("--workspace-root")
+    _add_output(ruff)
+    ruff.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
     return parser
 
 
@@ -247,7 +278,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args,
             )
             return 0
-    except (DiffError, DependencyError, RecordError, RunnerError) as exc:
+        if args.command == "scan" and args.scan_command == "ruff":
+            limits = ScannerLimits(
+                max_entries=args.max_entries,
+                max_source_files=args.max_source_files,
+                max_file_bytes=args.max_file_bytes,
+                max_total_bytes=args.max_total_bytes,
+                max_observations=args.max_observations,
+                timeout_seconds=args.timeout_seconds,
+                max_stdout_bytes=args.max_stdout_bytes,
+                max_stderr_bytes=args.max_stderr_bytes,
+            )
+            _emit_analysis(
+                scan_with_ruff(args.source, limits, args.workspace_root),
+                args,
+            )
+            return 0
+    except (DiffError, DependencyError, RecordError, RunnerError, ScannerError) as exc:
         failure = {
             "schemaVersion": "whitehat-error-v1",
             "ok": False,

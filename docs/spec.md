@@ -130,5 +130,30 @@ status. It does not return the message or child payload. Process creation and th
 temporary filesystem write are explicit; arbitrary commands and network remain
 false. This profile is a pipeline proof, not an OS sandbox for untrusted code.
 
+## `scan ruff`
+
+```text
+whitehat scan ruff SOURCE [--max-entries N] [--max-source-files N]
+  [--max-file-bytes N] [--max-total-bytes N] [--max-observations N]
+  [--timeout-seconds N] [--max-stdout-bytes N] [--max-stderr-bytes N]
+  [--workspace-root DIR] [--output FILE] [--json]
+```
+
+The first reviewed scanner adapter requires Ruff exactly `0.14.14`. Whitehat
+discovers it by the fixed name `ruff`; the caller cannot provide an executable or
+arguments. A bounded version check and scan both run through the local process
+runner. The executable identity must stay unchanged between them.
+
+The adapter copies only bounded `.py` and `.pyi` regular files into a disposable
+workspace and runs fixed isolated, no-cache, no-fix, no-preview rules `E4`, `E7`,
+`E9`, and `F` for Python 3.11. Source is parsed by Ruff but never imported or
+executed by Whitehat.
+
+Normalized output contains only rule codes, relative paths, locations, and fix
+availability. Raw messages, edit content, documentation URLs, source text,
+absolute paths, and stderr are omitted. Exit `0` is clean, exit `1` represents
+observations, and exit `2` or another status is failure. See
+`docs/scanner-adapters.md` for the reviewed contract and provenance record.
+
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

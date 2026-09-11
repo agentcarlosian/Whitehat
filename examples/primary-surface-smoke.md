@@ -36,3 +36,11 @@ The fixed synthetic-process proof is:
 ```powershell
 python -B -m whitehat run synthetic --message "owned fixture" --repeat 2 --json
 ```
+
+The optional scanner proof uses an owned dirty/clean pair:
+
+```powershell
+python -m pip install ".[scanner-ruff]"
+python -B -m whitehat scan ruff .\examples\scanner\problem --json
+python -B -m whitehat scan ruff .\examples\scanner\clean --json
+```
