@@ -13,6 +13,8 @@ external services and has no persistent background process.
 | Inventory directory | `python -B -m whitehat analyze inventory ROOT --json` | Returns paths, sizes, and hashes |
 | Compare directories | `python -B -m whitehat analyze diff BEFORE AFTER --json` | Reads regular files only |
 | Compare dependencies | `python -B -m whitehat analyze dependencies BEFORE AFTER --json` | Supports pyproject and package-lock |
+| Save an analysis | Add `--output NEW_FILE` | Optional; refuses overwrite |
+| Review a saved result | `python -B -m whitehat review RESULT --decision needs-work --note TEXT --output NEW_REVIEW --json` | Writes one hash-linked local note |
 | Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 

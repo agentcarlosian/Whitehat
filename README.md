@@ -12,6 +12,9 @@ This repository currently provides one small, dependency-free Python CLI:
   executing their contents or returning file contents.
 - `whitehat analyze dependencies` compares Python project declarations or npm
   lockfiles without resolving or downloading packages.
+- Any analysis can persist its exact JSON with `--output FILE`; output is
+  optional and never overwritten.
+- `whitehat review` writes a bounded, hash-linked local note for a saved result.
 
 Local read-only and offline analysis does not require an approval file. Network
 actions, credentials, target changes, external contact, and report submission are

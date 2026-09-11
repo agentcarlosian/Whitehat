@@ -74,5 +74,36 @@ link state, and direct/transitive classification. Registry `resolved` URLs,
 scripts, and package content are not returned. The command never resolves,
 downloads, installs, imports, or executes a dependency.
 
+## Optional result storage
+
+Each `whitehat analyze` command accepts `--output FILE`. Without that option, the
+command writes nothing. With it, Whitehat validates the generated result hash and
+writes the exact canonical JSON to a new file whose parent directory already
+exists. It refuses symbolic-link destinations and existing paths, flushes the
+file, and verifies the stored bytes. Stored results are capped at 64 MiB.
+
+The result's `effects` object describes the analysis itself. The separately
+requested record write is not folded into or allowed to change the analysis hash.
+The output path is not embedded in JSON, avoiding accidental disclosure of an
+absolute local path.
+
+## `review`
+
+```text
+whitehat review RESULT --decision accepted|dismissed|needs-work --note TEXT
+  --output REVIEW [--author TEXT] [--max-result-bytes N] [--json]
+```
+
+Review reloads one supported saved result, rejects duplicate JSON keys and hash
+drift, and writes one new review document without changing the result. The note
+is limited to 4,000 characters and the optional author is explicitly a caller
+assertion, not authenticated identity. Reviews are UTC timestamped and bound to
+the result schema and SHA-256.
+
+`accepted` means only that the analyst accepts the local record for their own
+workflow. All review decisions keep authority, finding validity, impact, external
+action, and submission claims false. The review effects explicitly record the
+requested local file write.
+
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

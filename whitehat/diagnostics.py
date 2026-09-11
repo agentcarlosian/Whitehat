@@ -24,6 +24,8 @@ def doctor_result() -> dict[str, Any]:
             "localDirectoryDiff": True,
             "localFileInventory": True,
             "localReadOnly": True,
+            "localResultStorage": True,
+            "localReviewNotes": True,
             "localSyntheticExecution": False,
             "network": False,
             "credentials": False,

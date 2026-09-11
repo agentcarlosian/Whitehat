@@ -71,6 +71,62 @@ class CliTests(unittest.TestCase):
             {"added": 1, "removed": 1, "changed": 1, "unchanged": 1},
         )
 
+    def test_optional_output_and_local_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            result_path = Path(temporary, "inventory.json")
+            review_path = Path(temporary, "review.json")
+            completed = self._run(
+                "analyze",
+                "inventory",
+                str(ROOT / "examples" / "before"),
+                "--output",
+                str(result_path),
+                "--json",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = json.loads(completed.stdout)
+            self.assertEqual(
+                json.loads(result_path.read_text(encoding="utf-8")), result
+            )
+
+            reviewed = self._run(
+                "review",
+                str(result_path),
+                "--decision",
+                "needs-work",
+                "--note",
+                "Add a controlled comparison.",
+                "--author",
+                "Carlos",
+                "--output",
+                str(review_path),
+                "--json",
+            )
+            self.assertEqual(reviewed.returncode, 0, reviewed.stderr)
+            review = json.loads(reviewed.stdout)
+            self.assertEqual(
+                json.loads(review_path.read_text(encoding="utf-8")), review
+            )
+            self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
+            self.assertEqual(review["decision"], "needs-work")
+
+            overwrite = self._run(
+                "review",
+                str(result_path),
+                "--decision",
+                "accepted",
+                "--note",
+                "Reviewed.",
+                "--output",
+                str(review_path),
+                "--json",
+            )
+            self.assertEqual(overwrite.returncode, 3)
+            self.assertEqual(
+                json.loads(overwrite.stdout)["error"]["code"],
+                "invalid-input",
+            )
+
     def test_invalid_input_is_structured(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             missing = Path(temporary, "missing")

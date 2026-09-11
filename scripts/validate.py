@@ -5,6 +5,7 @@ import platform
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -105,11 +106,56 @@ def main() -> int:
     expected_diff = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
     expected_inventory = {"files": 2, "bytes": 31}
     expected_dependencies = {"added": 1, "removed": 1, "changed": 1, "unchanged": 1}
+    with tempfile.TemporaryDirectory() as temporary:
+        result_path = Path(temporary, "inventory.json")
+        review_path = Path(temporary, "review.json")
+        stored_result = json.loads(
+            _run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "whitehat",
+                    "analyze",
+                    "inventory",
+                    str(ROOT / "examples" / "before"),
+                    "--output",
+                    str(result_path),
+                    "--json",
+                ]
+            ).stdout
+        )
+        stored_review = json.loads(
+            _run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "whitehat",
+                    "review",
+                    str(result_path),
+                    "--decision",
+                    "accepted",
+                    "--note",
+                    "Golden-path local record.",
+                    "--output",
+                    str(review_path),
+                    "--json",
+                ]
+            ).stdout
+        )
+        records_valid = (
+            json.loads(result_path.read_text(encoding="utf-8")) == stored_result
+            and json.loads(review_path.read_text(encoding="utf-8")) == stored_review
+            and stored_review.get("reviewOf", {}).get("resultSha256")
+            == stored_result.get("resultSha256")
+        )
     if (
         not doctor.get("ok")
         or smoke.get("summary") != expected_diff
         or inventory.get("summary") != expected_inventory
         or dependency_comparison.get("summary") != expected_dependencies
+        or not records_valid
     ):
         raise SystemExit("golden-path validation failed")
     test_count = sum(
@@ -130,6 +176,7 @@ def main() -> int:
                     "dependencies": expected_dependencies,
                     "diff": expected_diff,
                     "inventory": expected_inventory,
+                    "records": {"resultStored": True, "reviewStored": True},
                 },
             },
             separators=(",", ":"),

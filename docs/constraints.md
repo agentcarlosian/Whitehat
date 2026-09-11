@@ -12,6 +12,10 @@
 - Dependency comparison returns declared Python requirement strings or selected
   npm lock metadata. It omits npm registry URLs but cannot determine whether a
   dependency declaration itself contains sensitive data.
+- Optional result and review files are ordinary local JSON, not immutable
+  storage, signatures, authenticated identities, or independent execution proof.
+- Analysis output storage is capped at 64 MiB, requires an existing parent
+  directory, and refuses overwrite. Review notes are capped at 4,000 characters.
 - No network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the

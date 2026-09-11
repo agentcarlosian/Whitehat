@@ -21,3 +21,12 @@ The complete local-analysis smoke path also includes:
 python -B -m whitehat analyze inventory .\examples\before --json
 python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
 ```
+
+To exercise optional persistence, create an ignored `tmp` directory and choose
+new filenames:
+
+```powershell
+New-Item -ItemType Directory .\tmp -Force
+python -B -m whitehat analyze inventory .\examples\before --output .\tmp\inventory.json --json
+python -B -m whitehat review .\tmp\inventory.json --decision accepted --note "Local record reviewed." --output .\tmp\inventory.review.json --json
+```

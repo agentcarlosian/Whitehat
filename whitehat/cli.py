@@ -12,6 +12,15 @@ from .dependencies import (
 )
 from .diagnostics import doctor_result
 from .local_diff import DiffError, DiffLimits, compare_directories, inventory_directory
+from .records import (
+    MAX_RESULT_BYTES,
+    REVIEW_DECISIONS,
+    RecordError,
+    create_review_document,
+    load_result_document,
+    save_result_document,
+    write_json_document,
+)
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -48,6 +57,12 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         for change in value["changes"]:
             print(f"{change['kind']:8} {change['key']}")
         return
+    if value.get("schemaVersion") == "whitehat-local-review-v1":
+        print(
+            f"Local review: {value['decision']} for {value['reviewOf']['resultSha256']}"
+        )
+        print(value["note"])
+        return
     summary = value["summary"]
     print(
         "Directory comparison: "
@@ -79,6 +94,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     inventory.add_argument("root")
     _add_scan_limits(inventory)
+    _add_output(inventory)
     inventory.add_argument(
         "--json", action="store_true", help="Emit deterministic JSON."
     )
@@ -87,6 +103,7 @@ def _parser() -> argparse.ArgumentParser:
     diff.add_argument("before")
     diff.add_argument("after")
     _add_scan_limits(diff)
+    _add_output(diff)
     diff.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
 
     dependencies = analyze_commands.add_parser(
@@ -99,9 +116,21 @@ def _parser() -> argparse.ArgumentParser:
         "--max-manifest-bytes", type=int, default=16 * 1024 * 1024
     )
     dependencies.add_argument("--max-dependencies", type=int, default=20_000)
+    _add_output(dependencies)
     dependencies.add_argument(
         "--json", action="store_true", help="Emit deterministic JSON."
     )
+
+    review = commands.add_parser(
+        "review", help="Write a bounded local review of one saved result."
+    )
+    review.add_argument("result")
+    review.add_argument("--decision", choices=sorted(REVIEW_DECISIONS), required=True)
+    review.add_argument("--note", required=True)
+    review.add_argument("--author")
+    review.add_argument("--output", required=True)
+    review.add_argument("--max-result-bytes", type=int, default=MAX_RESULT_BYTES)
+    review.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
     return parser
 
 
@@ -110,6 +139,13 @@ def _add_scan_limits(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--max-files", type=int, default=10_000)
     parser.add_argument("--max-file-bytes", type=int, default=64 * 1024 * 1024)
     parser.add_argument("--max-total-bytes", type=int, default=512 * 1024 * 1024)
+
+
+def _add_output(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--output",
+        help="Optionally store the exact JSON result; refuses overwrite.",
+    )
 
 
 def _scan_limits(args: argparse.Namespace) -> DiffLimits:
@@ -121,6 +157,13 @@ def _scan_limits(args: argparse.Namespace) -> DiffLimits:
     )
 
 
+def _emit_analysis(result: dict[str, Any], args: argparse.Namespace) -> None:
+    saved = save_result_document(result, args.output) if args.output else None
+    _emit(result, args.json)
+    if saved is not None and not args.json:
+        print(f"Saved result: {saved}")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -129,12 +172,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         if args.command == "analyze":
             if args.analysis_command == "inventory":
-                _emit(inventory_directory(args.root, _scan_limits(args)), args.json)
+                _emit_analysis(inventory_directory(args.root, _scan_limits(args)), args)
                 return 0
             if args.analysis_command == "diff":
-                _emit(
+                _emit_analysis(
                     compare_directories(args.before, args.after, _scan_limits(args)),
-                    args.json,
+                    args,
                 )
                 return 0
             if args.analysis_command == "dependencies":
@@ -142,12 +185,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                     max_manifest_bytes=args.max_manifest_bytes,
                     max_dependencies=args.max_dependencies,
                 )
-                _emit(
+                _emit_analysis(
                     compare_dependency_manifests(args.before, args.after, limits),
-                    args.json,
+                    args,
                 )
                 return 0
-    except (DiffError, DependencyError) as exc:
+        if args.command == "review":
+            result = load_result_document(args.result, args.max_result_bytes)
+            review = create_review_document(
+                result, args.decision, args.note, args.author
+            )
+            saved = write_json_document(review, args.output)
+            _emit(review, args.json)
+            if not args.json:
+                print(f"Saved review: {saved}")
+            return 0
+    except (DiffError, DependencyError, RecordError) as exc:
         failure = {
             "schemaVersion": "whitehat-error-v1",
             "ok": False,

@@ -10,6 +10,8 @@ class DoctorTests(unittest.TestCase):
         self.assertTrue(result["capabilities"]["localDependencyComparison"])
         self.assertTrue(result["capabilities"]["localDirectoryDiff"])
         self.assertTrue(result["capabilities"]["localFileInventory"])
+        self.assertTrue(result["capabilities"]["localResultStorage"])
+        self.assertTrue(result["capabilities"]["localReviewNotes"])
         self.assertFalse(result["capabilities"]["network"])
         self.assertFalse(result["capabilities"]["credentials"])
         self.assertFalse(result["capabilities"]["externalContact"])

@@ -15,6 +15,8 @@ independent researcher.
 ## Working model
 
 - Local read-only and offline analysis needs no approval artifact.
+- Local result storage is optional, must be explicitly requested with an output
+  path, and refuses overwrite. A review note is not proof or authorization.
 - Local synthetic execution must be explicit, bounded, and disposable.
 - Network access, credentials, account actions, target mutation, destructive
   operations, payments, contact, disclosure, and submission are not implemented.
