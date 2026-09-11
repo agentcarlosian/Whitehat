@@ -73,8 +73,44 @@ def main() -> int:
             ]
         ).stdout
     )
-    expected = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
-    if not doctor.get("ok") or smoke.get("summary") != expected:
+    inventory = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "analyze",
+                "inventory",
+                str(ROOT / "examples" / "before"),
+                "--json",
+            ]
+        ).stdout
+    )
+    dependency_comparison = json.loads(
+        _run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "whitehat",
+                "analyze",
+                "dependencies",
+                str(ROOT / "examples" / "dependencies" / "before" / "pyproject.toml"),
+                str(ROOT / "examples" / "dependencies" / "after" / "pyproject.toml"),
+                "--json",
+            ]
+        ).stdout
+    )
+    expected_diff = {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1}
+    expected_inventory = {"files": 2, "bytes": 31}
+    expected_dependencies = {"added": 1, "removed": 1, "changed": 1, "unchanged": 1}
+    if (
+        not doctor.get("ok")
+        or smoke.get("summary") != expected_diff
+        or inventory.get("summary") != expected_inventory
+        or dependency_comparison.get("summary") != expected_dependencies
+    ):
         raise SystemExit("golden-path validation failed")
     test_count = sum(
         line.startswith("test_") for line in (tests.stdout + tests.stderr).splitlines()
@@ -90,7 +126,11 @@ def main() -> int:
                 "skipped": skipped,
                 "syntaxFiles": syntax_files,
                 "testsRan": test_count,
-                "goldenPath": expected,
+                "goldenPath": {
+                    "dependencies": expected_dependencies,
+                    "diff": expected_diff,
+                    "inventory": expected_inventory,
+                },
             },
             separators=(",", ":"),
             sort_keys=True,

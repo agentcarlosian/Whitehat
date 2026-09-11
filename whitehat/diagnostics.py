@@ -20,7 +20,9 @@ def doctor_result() -> dict[str, Any]:
             "system": platform.system(),
         },
         "capabilities": {
+            "localDependencyComparison": True,
             "localDirectoryDiff": True,
+            "localFileInventory": True,
             "localReadOnly": True,
             "localSyntheticExecution": False,
             "network": False,

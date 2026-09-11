@@ -40,5 +40,39 @@ The command:
 - detects common file replacement or mutation during hashing;
 - returns deterministic summaries and a result hash.
 
-Success exits `0`. Command-line usage errors exit `2`, invalid inputs exit `3`,
-and configured limit failures exit `4`.
+## `analyze inventory`
+
+```text
+whitehat analyze inventory ROOT [--max-entries N] [--max-files N]
+  [--max-file-bytes N] [--max-total-bytes N] [--json]
+```
+
+Inventory uses the same bounded scanner as directory comparison. It returns
+sorted relative paths, byte sizes, SHA-256 identities, total file/byte counts,
+and a deterministic tree identity. It does not return file contents, write an
+artifact, start a process, or access a network.
+
+## `analyze dependencies`
+
+```text
+whitehat analyze dependencies BEFORE AFTER
+  [--max-manifest-bytes N] [--max-dependencies N] [--json]
+```
+
+Dependency comparison accepts two manifests from the same ecosystem:
+
+- Python `pyproject.toml` static `[project].dependencies` and
+  `[project.optional-dependencies]` declarations;
+- npm `package-lock.json` lockfile versions 1, 2, and 3.
+
+Python results compare normalized package names within their main or optional
+group while preserving each declared requirement string. Dynamic dependencies
+are rejected because their value is unavailable without running a build backend.
+
+npm results compare resolved package locations, versions, integrity values,
+link state, and direct/transitive classification. Registry `resolved` URLs,
+scripts, and package content are not returned. The command never resolves,
+downloads, installs, imports, or executes a dependency.
+
+All commands in this specification exit `0` on success. Command-line usage
+errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

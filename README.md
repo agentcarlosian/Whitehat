@@ -7,8 +7,11 @@ an explicit boundary.
 This repository currently provides one small, dependency-free Python CLI:
 
 - `whitehat doctor` reports the implemented capability boundary.
+- `whitehat analyze inventory` creates a bounded, content-free local file manifest.
 - `whitehat analyze diff` compares two operator-controlled directories without
   executing their contents or returning file contents.
+- `whitehat analyze dependencies` compares Python project declarations or npm
+  lockfiles without resolving or downloading packages.
 
 Local read-only and offline analysis does not require an approval file. Network
 actions, credentials, target changes, external contact, and report submission are
@@ -20,7 +23,9 @@ Requires Python 3.11 or newer.
 
 ```powershell
 python -B -m whitehat doctor --json
+python -B -m whitehat analyze inventory .\examples\before --json
 python -B -m whitehat analyze diff .\examples\before .\examples\after --json
+python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
 python -B scripts\validate.py
 ```
 

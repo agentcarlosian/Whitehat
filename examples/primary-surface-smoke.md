@@ -14,3 +14,10 @@ Expected summary:
 
 The command is local and read-only. It creates no artifact and requires no
 cleanup.
+
+The complete local-analysis smoke path also includes:
+
+```powershell
+python -B -m whitehat analyze inventory .\examples\before --json
+python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
+```

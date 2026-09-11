@@ -159,6 +159,38 @@ def _tree_sha256(records: dict[str, FileRecord]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def inventory_directory(
+    root: str | os.PathLike[str],
+    limits: DiffLimits | None = None,
+) -> dict[str, Any]:
+    active_limits = limits or DiffLimits()
+    active_limits.validate()
+    checked_root = _checked_root(root, "inventory")
+    records = _scan(checked_root, active_limits)
+    files = [{"path": path, **records[path].as_dict()} for path in sorted(records)]
+    result: dict[str, Any] = {
+        "schemaVersion": "whitehat-local-inventory-v1",
+        "ok": True,
+        "limits": active_limits.as_dict(),
+        "summary": {
+            "files": len(records),
+            "bytes": sum(record.size for record in records.values()),
+        },
+        "treeSha256": _tree_sha256(records),
+        "files": files,
+        "effects": {
+            "filesystemWrite": False,
+            "network": False,
+            "processCreation": False,
+        },
+    }
+    canonical = json.dumps(
+        result, ensure_ascii=True, separators=(",", ":"), sort_keys=True
+    )
+    result["resultSha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return result
+
+
 def compare_directories(
     before: str | os.PathLike[str],
     after: str | os.PathLike[str],
@@ -205,12 +237,24 @@ def compare_directories(
         "limits": active_limits.as_dict(),
         "summary": summary,
         "trees": {
-            "before": {"files": len(before_records), "sha256": _tree_sha256(before_records)},
-            "after": {"files": len(after_records), "sha256": _tree_sha256(after_records)},
+            "before": {
+                "files": len(before_records),
+                "sha256": _tree_sha256(before_records),
+            },
+            "after": {
+                "files": len(after_records),
+                "sha256": _tree_sha256(after_records),
+            },
         },
         "changes": changes,
-        "effects": {"filesystemWrite": False, "network": False, "processCreation": False},
+        "effects": {
+            "filesystemWrite": False,
+            "network": False,
+            "processCreation": False,
+        },
     }
-    canonical = json.dumps(result, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
+    canonical = json.dumps(
+        result, ensure_ascii=True, separators=(",", ":"), sort_keys=True
+    )
     result["resultSha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return result

@@ -41,12 +41,44 @@ class CliTests(unittest.TestCase):
             {"added": 1, "deleted": 0, "modified": 1, "unchanged": 1},
         )
 
+    def test_inventory_json(self) -> None:
+        completed = self._run(
+            "analyze",
+            "inventory",
+            str(ROOT / "examples" / "before"),
+            "--json",
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["summary"], {"files": 2, "bytes": 31})
+        self.assertEqual(
+            [record["path"] for record in result["files"]],
+            ["changed.txt", "common.txt"],
+        )
+
+    def test_dependency_comparison_json(self) -> None:
+        completed = self._run(
+            "analyze",
+            "dependencies",
+            str(ROOT / "examples" / "dependencies" / "before" / "pyproject.toml"),
+            str(ROOT / "examples" / "dependencies" / "after" / "pyproject.toml"),
+            "--json",
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout)
+        self.assertEqual(
+            result["summary"],
+            {"added": 1, "removed": 1, "changed": 1, "unchanged": 1},
+        )
+
     def test_invalid_input_is_structured(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             missing = Path(temporary, "missing")
             existing = Path(temporary, "existing")
             existing.mkdir()
-            completed = self._run("analyze", "diff", str(missing), str(existing), "--json")
+            completed = self._run(
+                "analyze", "diff", str(missing), str(existing), "--json"
+            )
         self.assertEqual(completed.returncode, 3)
         result = json.loads(completed.stdout)
         self.assertEqual(result["error"]["code"], "invalid-input")

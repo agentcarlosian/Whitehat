@@ -7,7 +7,9 @@ class DoctorTests(unittest.TestCase):
     def test_doctor_reports_only_implemented_capabilities(self) -> None:
         result = doctor_result()
         self.assertTrue(result["ok"])
+        self.assertTrue(result["capabilities"]["localDependencyComparison"])
         self.assertTrue(result["capabilities"]["localDirectoryDiff"])
+        self.assertTrue(result["capabilities"]["localFileInventory"])
         self.assertFalse(result["capabilities"]["network"])
         self.assertFalse(result["capabilities"]["credentials"])
         self.assertFalse(result["capabilities"]["externalContact"])

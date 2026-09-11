@@ -4,7 +4,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whitehat.local_diff import DiffError, DiffLimitError, DiffLimits, compare_directories
+from whitehat.local_diff import (
+    DiffError,
+    DiffLimitError,
+    DiffLimits,
+    compare_directories,
+)
 
 
 class LocalDiffTests(unittest.TestCase):
@@ -33,7 +38,11 @@ class LocalDiffTests(unittest.TestCase):
         )
         self.assertEqual(
             [(item["kind"], item["path"]) for item in result["changes"]],
-            [("added", "added.txt"), ("modified", "changed.txt"), ("deleted", "deleted.txt")],
+            [
+                ("added", "added.txt"),
+                ("modified", "changed.txt"),
+                ("deleted", "deleted.txt"),
+            ],
         )
         self.assertNotIn("same.txt", json.dumps(result["changes"]))
         self.assertEqual(
@@ -62,7 +71,9 @@ class LocalDiffTests(unittest.TestCase):
             (before / "a.txt").write_text("a", encoding="utf-8")
             (after / "a.txt").write_text("a", encoding="utf-8")
             (after / "b.txt").write_text("b", encoding="utf-8")
-            limits = DiffLimits(max_entries=10, max_files=1, max_file_bytes=10, max_total_bytes=10)
+            limits = DiffLimits(
+                max_entries=10, max_files=1, max_file_bytes=10, max_total_bytes=10
+            )
             with self.assertRaisesRegex(DiffLimitError, "file count"):
                 compare_directories(before, after, limits)
 
