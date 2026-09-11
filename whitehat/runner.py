@@ -86,11 +86,11 @@ class ProcessExecution:
 _PROFILE = re.compile(r"^[a-z][a-z0-9.-]{0,63}$")
 _ENVIRONMENT_KEYS = (
     "COMSPEC",
-    "LD_LIBRARY_PATH",
     "PATHEXT",
     "SYSTEMROOT",
     "WINDIR",
 )
+_RUNTIME_ADDED_ENVIRONMENT_KEYS = frozenset({"LC_CTYPE"})
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -154,6 +154,22 @@ def _validated_arguments(arguments: Sequence[str]) -> list[str]:
             raise RunnerLimitError("fixed argument character limit exceeded")
         validated.append(argument)
     return validated
+
+
+def _validated_child_environment_keys(value: Any) -> list[str]:
+    if (
+        not isinstance(value, list)
+        or any(not isinstance(item, str) for item in value)
+        or value != sorted(set(value))
+    ):
+        raise RunnerError("synthetic child environment keys are invalid")
+    actual = set(value)
+    required = set(_sanitized_environment(Path(".")).keys())
+    if not required.issubset(actual):
+        raise RunnerError("synthetic child omitted a sanitized environment key")
+    if actual - required - _RUNTIME_ADDED_ENVIRONMENT_KEYS:
+        raise RunnerError("synthetic child received an unexpected environment key")
+    return value
 
 
 def _read_bounded(
@@ -377,12 +393,14 @@ def run_synthetic(
     except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
         raise RunnerError("synthetic child returned invalid JSON") from exc
     expected_payload = message * repeat
-    if not isinstance(response, dict) or response != {
-        "schemaVersion": "whitehat-synthetic-response-v1",
-        "payload": expected_payload,
-        "environmentKeys": sorted(_sanitized_environment(Path(".")).keys()),
-    }:
+    if (
+        not isinstance(response, dict)
+        or set(response) != {"schemaVersion", "payload", "environmentKeys"}
+        or response.get("schemaVersion") != "whitehat-synthetic-response-v1"
+        or response.get("payload") != expected_payload
+    ):
         raise RunnerError("synthetic child response did not match the fixed request")
+    environment_keys = _validated_child_environment_keys(response["environmentKeys"])
 
     result: dict[str, Any] = {
         "schemaVersion": "whitehat-synthetic-run-v1",
@@ -400,7 +418,7 @@ def run_synthetic(
             "payloadSha256": hashlib.sha256(
                 expected_payload.encode("utf-8")
             ).hexdigest(),
-            "environmentKeys": response["environmentKeys"],
+            "environmentKeys": environment_keys,
         },
         "process": execution.receipt(),
         "effects": {

@@ -73,7 +73,7 @@ a meaningful side-effect boundary.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check and 57 tests pass, including local network
+- Windows Python 3.13.12: syntax check and 58 tests pass, including local network
   contract timing, scope, budget, effect, stop, and duplicate-key rejection. Two
   symbolic-link tests are skipped because the current account cannot create them.
 - A fresh local clone of the root commit passes the same validation without

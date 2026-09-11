@@ -4,7 +4,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whitehat.runner import ProcessLimits, RunnerLimitError, run_synthetic
+from whitehat.runner import (
+    ProcessLimits,
+    RunnerError,
+    RunnerLimitError,
+    _sanitized_environment,
+    _validated_child_environment_keys,
+    run_synthetic,
+)
 
 
 class RunnerTests(unittest.TestCase):
@@ -70,6 +77,17 @@ class RunnerTests(unittest.TestCase):
                     "too much input", limits=limits, workspace_root=workspace_root
                 )
             self.assertEqual(list(workspace_root.iterdir()), [])
+
+    def test_environment_validation_allows_only_known_runtime_addition(self) -> None:
+        required = sorted(_sanitized_environment(Path(".")).keys())
+        self.assertEqual(_validated_child_environment_keys(required), required)
+        with_runtime_locale = sorted([*required, "LC_CTYPE"])
+        self.assertEqual(
+            _validated_child_environment_keys(with_runtime_locale),
+            with_runtime_locale,
+        )
+        with self.assertRaisesRegex(RunnerError, "unexpected environment key"):
+            _validated_child_environment_keys(sorted([*required, "SECRET_CANARY"]))
 
 
 if __name__ == "__main__":
