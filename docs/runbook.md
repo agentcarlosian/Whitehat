@@ -1,0 +1,32 @@
+# Runbook
+
+## Scope
+
+This runbook covers the local Whitehat alpha. It requires no credentials or
+external services and has no persistent background process.
+
+## Routine commands
+
+| Task | Command | Notes |
+| --- | --- | --- |
+| Health check | `python -B -m whitehat doctor --json` | Reports implemented boundaries |
+| Compare directories | `python -B -m whitehat analyze diff BEFORE AFTER --json` | Reads regular files only |
+| Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
+| Show version | `python -B -m whitehat --version` | Prints the package version |
+
+## Failure handling
+
+- Exit `2`: command-line usage is invalid. Check `--help`.
+- Exit `3`: an input path is invalid, changed during inspection, or contains a
+  link or unsupported entry. Stabilize the input and retry.
+- Exit `4`: a configured resource limit was exceeded. Narrow the input or set a
+  reviewed larger local limit.
+
+The commands do not create a state database or background worker, so recovery is
+normally just correcting the input and rerunning the command.
+
+## Release boundary
+
+Do not configure a public remote, tag, publish, or distribute the package until
+the exact Apache-2.0 tree passes provenance, secret, packaging, and platform
+review.
