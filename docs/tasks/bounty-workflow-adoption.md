@@ -37,7 +37,11 @@ credentials, contact, publication, submission, or automatic merge is authorized.
 - [x] Packets and typed evidence renderers.
 - [x] Staged binding and provenance.
 - [x] Candidate histories, comparison changes, and coverage.
-- [ ] End-to-end CLI examples, docs, full validation, release audit and PR checks.
+- [x] End-to-end CLI examples, docs, full validation, release audit and draft PR.
+
+Review: [PR #3](https://github.com/agentcarlosian/Whitehat/pull/3). Its required
+platform checks and release-audit results are the current remote verification
+record; this document records implementation and local evidence.
 
 Closure: selected workflows work through CLI and installed package, meaningful
 positive/negative fixtures pass, and a reviewable PR has completed checks.
@@ -60,3 +64,11 @@ positive/negative fixtures pass, and a reviewable PR has completed checks.
   The native evaluation's expected comparison shape was updated for the new
   metadataChanged count; the original detection outcomes remain identical.
 - No new runtime dependency, external target, real credential or publication.
+- Clean audit at `23b7da4` passed: 132 tracked files, 35 release inputs, zero
+  configured secret-pattern matches, canonical Apache-2.0, a 43-file sdist,
+  a 34-file wheel and installed `0.11.0a1` diagnostics.
+- Initial macOS CI exposed the `/var` versus `/private/var` temporary-directory
+  alias: resolving only the manifest root rejected contained evidence. Packet
+  creation now compares lexical paths before resolving the common root and
+  checking descendants for links/escapes. Existing packet tests reproduce the
+  failure on macOS and verify the correction in the PR matrix.

@@ -37,7 +37,11 @@ def initialize_packet(
 ) -> dict:
     if not 1 <= len(evidence_paths) <= 20:
         raise ReportError("packet requires 1-20 explicitly selected evidence files")
-    root = Path(output).parent.resolve(strict=True)
+    # Compare the caller's path spellings before resolving the common root.
+    # macOS /var is an alias for /private/var. Resolving only the root would
+    # incorrectly classify its own children as outside. contained_path then
+    # resolves that root and rejects links/escapes below it.
+    root = Path(output).parent.absolute()
     references = []
     for index, value in enumerate(evidence_paths):
         try:
