@@ -37,7 +37,7 @@ bounty workflows; locality is an implementation property, not the headline.
 - [x] Verify checkout matches GitHub `7e47505`; create the feature branch.
 - [x] Complete priorities 1-4 and adversarial/compatibility tests.
 - [x] Complete adoption and research-quality workflow.
-- [ ] Full validation, installed-package checks, and technical release audit.
+- [x] Full validation, installed-package checks, and technical release audit.
 - [ ] Record results/limitations and prepare the reviewable change.
 
 Closure requires completed verification for implemented claims. Native tool,
@@ -56,5 +56,9 @@ passed 71 tests on Ubuntu/Python 3.11 and 3.13 plus release CI at `7e47505`.
   and Markdown export. Tests cover malformed JSON, paths, redaction, input budgets,
   tool identity rejection, review tamper, and overwrite refusal.
 - Ruff correctness lint passes. The project-only 0.9.0a1 package install passes.
-- Technical release audit and expanded hosted CI remain to be recorded against
-  the final committed tree. No public release or visibility change is authorized.
+- Technical release audit passed at `27bb836`: 97 tracked files, 24 release inputs,
+  zero high-confidence secret matches, canonical Apache-2.0, 32-file sdist,
+  23-file wheel, and clean installed `0.9.0a1` diagnostics. Installed imports and
+  toolkit discovery also passed in isolated Python mode.
+- Expanded hosted CI remains to be recorded. No public release or visibility
+  change is authorized.
