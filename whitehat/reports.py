@@ -382,15 +382,20 @@ def compare_results(before_path: str, after_path: str) -> dict[str, Any]:
     after = checked_research_result(after_path)
     old = {v["fingerprint"]: v for v in before["observations"]}
     new = {v["fingerprint"]: v for v in after["observations"]}
-    introduced, absent, unchanged = sorted(new.keys() - old.keys()), sorted(old.keys() - new.keys()), sorted(new.keys() & old.keys())
+    introduced, absent = sorted(new.keys() - old.keys()), sorted(old.keys() - new.keys())
+    shared = sorted(new.keys() & old.keys())
+    changed = [k for k in shared if old[k] != new[k]]
+    unchanged = [k for k in shared if k not in changed]
     identity_keys = ("kind", "tool", "toolVersion", "configSha256", "format", "sourceSuffixes", "excludedDirectories")
     comparable = all(before["provenance"].get(k) == after["provenance"].get(k) for k in identity_keys)
     return seal({"schemaVersion": "whitehat-research-comparison-v1", "ok": True,
         "beforeSha256": before["resultSha256"], "afterSha256": after["resultSha256"],
-        "summary": {"introduced": len(introduced), "absent": len(absent), "unchanged": len(unchanged)},
+        "summary": {"introduced": len(introduced), "absent": len(absent), "unchanged": len(unchanged), "metadataChanged": len(changed)},
         "introduced": [new[k] for k in introduced], "absent": [old[k] for k in absent],
         "unchanged": unchanged, "claims": dict(CLAIMS),
+        "metadataChanged": [{"fingerprint": k, "before": old[k], "after": new[k]} for k in changed],
         "sameAnalysisProfile": comparable,
+        "comparisonSuitability": "same-profile" if comparable else "not-comparable",
         "effects": {"network": False, "processCreation": False},
         "interpretation": "Absence is not proof of a fix; compare scan coverage and tool/rule identities. Fingerprints include source line numbers.",
     })

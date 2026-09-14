@@ -12,11 +12,18 @@ For web/API work, Whitehat now imports and compares HTTP captures across labeled
 identities, assesses explicit access expectations, replays approved HTTP(S)
 requests, and compares API contracts. Start with the
 [web/API walkthrough](docs/web-api-quickstart.md).
+For the complete capture-to-report workflow, use the
+[bounty packet walkthrough](docs/bounty-workflow.md): prepare a captured request,
+bind a created object ID, assemble selected evidence, and track candidate retests.
 
 ## What you can do
 
 | Task | Implemented support |
 | --- | --- |
+| Prepare research requests | Selected HAR entry to concrete request and unapproved session draft; staged ID binding |
+| Assemble evidence packets | Hash-pinned selected exchanges, comparisons, controls and Markdown reproduction steps |
+| Track candidate retests | Per-candidate decisions, explicit duplicate relationships, comparison suitability and history |
+| Inspect research coverage | Separate route observation, identity/object access outcomes and scenario completion |
 | Compare API access | HAR/request-response imports, selected JSON evidence, identity/object access matrix |
 | Replay approved requests | Exact prepared requests, session credential references, persistent budgets, HTTPS |
 | Review API changes | OpenAPI inventory/coverage and oasdiff 1.32.0 with effective authentication comparison |

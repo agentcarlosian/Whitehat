@@ -28,7 +28,7 @@ def main() -> int:
                 raise RuntimeError(f"{name} expected {expected} source observations")
             save_result_document(result, root / "results" / f"{name}.json")
         comparison = compare_results(str(root / "results/vulnerable.json"), str(root / "results/fixed.json"))
-        if comparison["summary"] != {"introduced": 0, "absent": 5, "unchanged": 0}:
+        if comparison["summary"] != {"introduced": 0, "absent": 5, "unchanged": 0, "metadataChanged": 0}:
             raise RuntimeError("baseline comparison failed")
         for name, expected in (("secrets", 1), ("negative", 0)):
             result = scan_native(str(ROOT / "examples/research" / name), "betterleaks", tools["betterleaks"])

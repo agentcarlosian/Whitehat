@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -184,9 +185,13 @@ def exchange(
     except ValueError as exc:
         raise ReportError("invalid query parameters") from exc
     posted = request.get("postData", {})
-    if not isinstance(posted, dict) or not isinstance(posted.get("text", ""), str):
+    if not isinstance(posted, dict) or (
+        posted.get("text") is not None and not isinstance(posted["text"], str)
+    ):
         raise ReportError("invalid captured request body")
-    request_raw = posted.get("text", "").encode("utf-8")
+    request_raw = (posted.get("text") or "").encode("utf-8")
+    if not isinstance(posted.get("mimeType", ""), str):
+        raise ReportError("invalid captured request MIME type")
     request_json = json_summary(request_raw, [])
     body_parameters = sorted(
         k
@@ -202,7 +207,7 @@ def exchange(
                 {
                     text(k, "form parameter", 128)
                     for k, _ in parse_qsl(
-                        posted.get("text", ""),
+                        posted.get("text") or "",
                         keep_blank_values=True,
                         max_num_fields=100,
                     )
@@ -220,7 +225,9 @@ def exchange(
     content = response.get("content", {})
     if not isinstance(content, dict):
         raise ReportError("invalid response content")
-    body = content.get("text", "")
+    body = content.get("text") or ""
+    if content.get("text") is not None and not isinstance(content["text"], str):
+        raise ReportError("invalid captured response body")
     if not isinstance(body, str) or len(body) > MAX_BODY * 2:
         raise ReportLimitError("response text limit exceeded")
     encoding = content.get("encoding")
@@ -250,13 +257,13 @@ def exchange(
         "request": {
             "headerNames": _headers(request.get("headers", [])),
             "urlSha256": hashlib.sha256(request["url"].encode("utf-8")).hexdigest(),
-            "bodyCaptured": "text" in posted,
+            "bodyCaptured": isinstance(posted.get("text"), str),
             "bodySha256": hashlib.sha256(request_raw).hexdigest(),
             "jsonShape": request_json["shape"],
         },
         "response": {
             "status": status,
-            "bodyCaptured": "text" in content,
+            "bodyCaptured": isinstance(content.get("text"), str),
             "headerNames": _headers(response.get("headers", [])),
             "bodyBytes": len(raw),
             "bodySha256": hashlib.sha256(raw).hexdigest(),
@@ -288,17 +295,8 @@ def evidence_document(
     )
 
 
-def import_capture(
-    path: str,
-    project: str,
-    *,
-    format_name: str = "har",
-    identity: str = "unlabeled",
-    object_id: str = "unlabeled",
-    operation: str = "unlabeled",
-    selected: list[str] | None = None,
-) -> dict[str, Any]:
-    raw = read_bytes(Path(path))
+def capture_entries(raw: bytes, format_name: str = "har") -> list[dict[str, Any]]:
+    """Read an archive as data; never run producer extensions or scripts."""
     value = parse_json(raw)
     if not isinstance(value, dict):
         raise ReportError("capture must be an object")
@@ -316,14 +314,35 @@ def import_capture(
         raise ReportError("unsupported capture format")
     if not isinstance(entries, list) or len(entries) > MAX_EXCHANGES:
         raise ReportError("capture entries must be a bounded array")
-    records = []
     for entry in entries:
         if (
             not isinstance(entry, dict)
             or not isinstance(entry.get("request"), dict)
-            or not isinstance(entry.get("response"), dict)
+            or (
+                entry.get("response") is not None
+                and not isinstance(entry["response"], dict)
+            )
         ):
-            raise ReportError("capture entry requires request and response")
+            raise ReportError(
+                "capture entry requires a request and optional response object"
+            )
+    return entries
+
+
+def import_capture(
+    path: str,
+    project: str,
+    *,
+    format_name: str = "har",
+    identity: str = "unlabeled",
+    object_id: str = "unlabeled",
+    operation: str = "unlabeled",
+    selected: list[str] | None = None,
+) -> dict[str, Any]:
+    raw = read_bytes(Path(path))
+    entries = capture_entries(raw, format_name)
+    records, indexes, incomplete, diagnostics = [], [], [], []
+    for index, entry in enumerate(entries):
         binding = entry.get("_whitehat", {})
         if not isinstance(binding, dict) or set(binding) - {
             "identityId",
@@ -331,17 +350,39 @@ def import_capture(
             "operationId",
         }:
             raise ReportError("invalid capture labels")
-        records.append(
-            exchange(
-                project,
-                entry["request"],
-                entry["response"],
-                identity=binding.get("identityId", identity),
-                object_id=binding.get("objectId", object_id),
-                operation=binding.get("operationId", operation),
-                selected=selected or [],
-            )
+        response = entry.get("response")
+        missing = response is None or (
+            type(response.get("status")) is int and response["status"] == 0
         )
+        # Validate every retained request/body/header even for incomplete entries.
+        # The placeholder is internal only and is never emitted as an exchange.
+        checked_response = dict(response or {})
+        if missing:
+            checked_response["status"] = 200
+        record = exchange(
+            project,
+            entry["request"],
+            checked_response,
+            identity=binding.get("identityId", identity),
+            object_id=binding.get("objectId", object_id),
+            operation=binding.get("operationId", operation),
+            selected=selected or [],
+        )
+        if missing:
+            incomplete.append(
+                {
+                    "entryIndex": index,
+                    "context": record["context"],
+                    "reason": "no-http-response",
+                }
+            )
+        else:
+            records.append(record)
+            indexes.append(index)
+        if "_webSocketMessages" in entry:
+            diagnostics.append(
+                {"entryIndex": index, "code": "websocket-messages-not-imported"}
+            )
     return evidence_document(
         project,
         records,
@@ -351,14 +392,54 @@ def import_capture(
             "captureSha256": hashlib.sha256(raw).hexdigest(),
             "executionVerified": False,
             "identityBinding": "operator-asserted",
+            "entryIndexes": indexes,
+            "incompleteEntries": incomplete,
+            "diagnostics": diagnostics,
         },
     )
 
 
 def load_evidence(path: str) -> dict[str, Any]:
     value = load_result_document(path)
+    return validate_evidence(value)
+
+
+def validate_evidence(value: dict[str, Any]) -> dict[str, Any]:
+    from .records import validate_result_document
+
+    validate_result_document(value)
     if value["schemaVersion"] != HTTP_SCHEMA or value.get("claims") != CLAIMS:
         raise ReportError("expected HTTP evidence")
+    provenance = value.get("provenance")
+    if not isinstance(provenance, dict):
+        raise ReportError("invalid HTTP evidence provenance")
+    for key in ("incompleteEntries", "diagnostics", "evaluations"):
+        items = provenance.get(key, [])
+        if (
+            not isinstance(items, list)
+            or len(items) > MAX_EXCHANGES
+            or any(not isinstance(v, dict) for v in items)
+        ):
+            raise ReportError("invalid HTTP evidence provenance records")
+    if provenance.get("profile") == "explicit-scenario":
+        planned, executed = (
+            provenance.get("plannedSteps"),
+            provenance.get("executedSteps"),
+        )
+        if (
+            type(planned) is not int
+            or not 1 <= planned <= 20
+            or type(executed) is not int
+            or not 0 <= executed <= planned
+            or len(provenance.get("evaluations", [])) != executed
+        ):
+            raise ReportError("invalid scenario completion counts")
+        for evaluation in provenance["evaluations"]:
+            if set(evaluation) != {"stepId", "outcome", "evidenceSha256"} or evaluation[
+                "outcome"
+            ] not in ("consistent", "mismatch"):
+                raise ReportError("invalid scenario evaluation")
+            label(evaluation["stepId"], "scenario step")
     project = label(value.get("projectId"), "project")
     records = value.get("exchanges")
     if not isinstance(records, list) or len(records) > MAX_EXCHANGES:
@@ -392,12 +473,33 @@ def load_evidence(path: str) -> dict[str, Any]:
             raise ReportError("invalid HTTP context fields")
         for key in ("identityId", "objectId", "operationId"):
             label(context[key], key)
+        for key in ("queryNames", "bodyParameters"):
+            names = context[key]
+            if (
+                not isinstance(names, list)
+                or len(names) > 2000
+                or any(not isinstance(n, str) or len(n) > 256 for n in names)
+            ):
+                raise ReportError("invalid HTTP parameter context")
         if not isinstance(context["method"], str) or not re.fullmatch(
             r"[A-Z]{3,16}", context["method"]
         ):
             raise ReportError("invalid evidence method")
         if endpoint(context["endpoint"]) != context["endpoint"]:
             raise ReportError("invalid evidence endpoint")
+        request = item["request"]
+        if not isinstance(request, dict) or set(request) != {
+            "headerNames",
+            "urlSha256",
+            "bodyCaptured",
+            "bodySha256",
+            "jsonShape",
+        }:
+            raise ReportError("invalid request evidence fields")
+        if type(request["bodyCaptured"]) is not bool or not isinstance(
+            request["jsonShape"], dict
+        ):
+            raise ReportError("invalid request evidence types")
         response = item["response"]
         if not isinstance(response, dict) or set(response) != {
             "status",
@@ -414,6 +516,24 @@ def load_evidence(path: str) -> dict[str, Any]:
             or type(response["bodyCaptured"]) is not bool
         ):
             raise ReportError("invalid response status/capture flag")
+        for headers in (request["headerNames"], response["headerNames"]):
+            if not isinstance(headers, list) or len(headers) > 100:
+                raise ReportError("invalid evidence header names")
+            _headers([{"name": name} for name in headers])
+        for hash_value in (
+            request["urlSha256"],
+            request["bodySha256"],
+            response["bodySha256"],
+        ):
+            if not isinstance(hash_value, str) or not re.fullmatch(
+                r"[a-f0-9]{64}", hash_value
+            ):
+                raise ReportError("invalid request/response digest")
+        if (
+            type(response["bodyBytes"]) is not int
+            or not 0 <= response["bodyBytes"] <= MAX_BODY
+        ):
+            raise ReportError("invalid response byte count")
         data = response["json"]
         if not isinstance(data, dict) or set(data) != {
             "parsed",
@@ -433,9 +553,33 @@ def load_evidence(path: str) -> dict[str, Any]:
             data["selectedPointers"]
         ):
             raise ReportError("invalid JSON evidence selection")
+        for scalar in data["values"].values():
+            if (
+                isinstance(scalar, (dict, list))
+                or (isinstance(scalar, float) and not math.isfinite(scalar))
+                or (
+                    isinstance(scalar, str)
+                    and (len(scalar) > 256 or any(ord(c) < 32 for c in scalar))
+                )
+            ):
+                raise ReportError("selected evidence must be a bounded scalar")
+        if (not data["parsed"] or not response["bodyCaptured"]) and data["values"]:
+            raise ReportError(
+                "uncaptured/unparsed responses cannot contain selected values"
+            )
         payload = {k: v for k, v in item.items() if k != "evidenceSha256"}
         if digest(payload) != item["evidenceSha256"]:
             raise ReportError("HTTP evidence hash mismatch")
+    if provenance.get("profile") == "explicit-scenario":
+        if provenance["executedSteps"] != len(records) or len(
+            {e["stepId"] for e in provenance["evaluations"]}
+        ) != len(provenance["evaluations"]):
+            raise ReportError("scenario steps and exchanges differ")
+        if any(
+            e["evidenceSha256"] != r["evidenceSha256"]
+            for e, r in zip(provenance["evaluations"], records)
+        ):
+            raise ReportError("scenario evaluation references a different exchange")
     return value
 
 

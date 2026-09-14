@@ -240,5 +240,32 @@ The result is hash-bound to the commit and release inventory. Success means
 publication authorization, publication performed, and network effects false.
 See `docs/release-readiness.md` and Decision 0003.
 
+## Capture preparation, packets and candidate histories
+
+```text
+whitehat http prepare CAPTURE --project ID --index N --output-dir NEW_DIRECTORY
+  [--format har|capture] [--identity ID] [--object ID] [--operation ID] [--json]
+whitehat http bind PLAN --output-dir NEW_DIRECTORY [--json]
+whitehat packet init --project ID --title TITLE --evidence RESULT [--evidence RESULT] --output MANIFEST [--json]
+whitehat packet check MANIFEST [--output RESULT] [--json]
+whitehat packet export MANIFEST --output MARKDOWN [--preset generic|hackerone|bugcrowd] [--json]
+whitehat candidate init NEW_DIRECTORY --id ID --project ID --title TITLE [--json]
+whitehat candidate record DIRECTORY --evidence RESULT --select ID --decision DECISION --note TEXT
+  [--retest-of SEQUENCE] [--related ID --relation possible-duplicate|same-candidate] [--json]
+whitehat candidate history DIRECTORY [--output RESULT] [--json]
+whitehat api coverage SCHEMA --project ID --evidence HTTP_RESULT [--evidence HTTP_RESULT]
+  [--matrix MATRIX] [--scenario PLAN] [--output RESULT] [--json]
+```
+
+The versioned schemas, selection semantics, limits, scope and complete owned
+walkthrough are defined in [bounty-workflow.md](bounty-workflow.md) and Decision
+0006. These commands perform no network requests, process execution, credential
+reads or session-ledger changes. Prepared inputs are explicitly requested files;
+terminal receipts omit raw requests. Packet and candidate commands preserve
+prior result files. Draft completeness is informational and does not prevent
+export; malformed paths/manifests fail. Retest profile mismatch is recorded as
+not-comparable, never an automatic fix. Scenario coverage describes existing
+receipts against supplied plans and does not execute them.
+
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

@@ -96,7 +96,7 @@ class ReportTests(unittest.TestCase):
             repeated.write_bytes(b"")
             save_result_document(import_report(str(repeated), "nuclei"), after)
             comparison = compare_results(str(before), str(after))
-            self.assertEqual(comparison["summary"], {"introduced": 0, "absent": 1, "unchanged": 0})
+            self.assertEqual(comparison["summary"], {"introduced": 0, "absent": 1, "unchanged": 0, "metadataChanged": 0})
             self.assertIn("not proof", comparison["interpretation"])
             self.assertFalse(any(comparison["claims"].values()))
 

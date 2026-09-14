@@ -62,6 +62,10 @@ and temporary state are disposed. It is not a general OS sandbox.
 
 ## Replay approved research requests
 
+The [capture-to-report walkthrough](bounty-workflow.md) adds request/session
+drafting, staged ID binding, selected evidence packets, candidate retests and
+identity/scenario coverage to the evidence path above.
+
 See [replay sessions](http-replay.md) for actual HTTP(S) replay, credential
 references, the request-hash preflight, and explicit stateful scenarios.
 Do not send the checked-in `.invalid` example; it is an unapproved template.

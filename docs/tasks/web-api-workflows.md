@@ -34,7 +34,11 @@ External HTTPS transport must remain distinct from its mocked/TLS fixture proof.
 - [x] Session-bound replay and owned API controls.
 - [x] OpenAPI inventory and pinned oasdiff.
 - [x] Schemathesis and stateful evaluation.
-- [ ] Full tests, installed package, release audit, CI, and reviewable PR.
+- [x] Full tests, installed package, release audit, CI, and reviewable PR.
+
+PR #2 merged at `c04fb29653581a78febad810990fb0d19aeccf97`.
+Post-merge run `34836887970` passed Windows 3.11/3.13, Ubuntu 3.11/3.13,
+macOS 3.13 and release audit. This task is complete.
 
 ## Verification checkpoint
 

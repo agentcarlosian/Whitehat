@@ -79,7 +79,9 @@ Request paths are relative to the scenario and contained there. All request
 hashes, origins, identities, mutation permissions and evidence selectors are
 checked before starting. An expectation mismatch records evidence and stops the
 session. This profile uses literal prepared requests; dynamic extraction and
-substitution of newly generated IDs is not implemented.
+substitution of newly generated IDs during execution is not implemented.
+The separate [staged binding workflow](bounty-workflow.md) prepares new concrete
+requests offline from selected evidence for a subsequent reviewed session.
 
 ## Verification limits
 
