@@ -35,6 +35,11 @@
 - The initial design is HTTPS observation-only with GET/HEAD and all credential,
   mutation, third-party-data, contact, and submission effects false. Broader
   network behavior requires a separate design and implementation review.
+- The release audit is a bounded technical check, not legal advice or an
+  originality, trademark, maintenance, publication, or distribution decision.
+- Secret scanning uses explicit high-confidence patterns and cannot prove that a
+  tree contains no sensitive data. Human review remains required before public
+  visibility.
 - No network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the

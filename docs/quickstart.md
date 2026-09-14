@@ -61,5 +61,15 @@ python -B -m whitehat session validate .\examples\network-session.synthetic.json
 The result must keep `networkEngineImplemented`, `networkExecutionAuthorized`,
 and `networkExecutionPerformed` false. Offline commands never require this file.
 
+From a clean commit, run the separate technical release audit:
+
+```powershell
+python -m pip install ".[release]"
+python -B -m whitehat release audit --json
+```
+
+Success reports `technical-audit-passed` while keeping publication authorization
+and publication performed false.
+
 If Python cannot import `whitehat`, confirm that the command is running from the
 repository root. Use `python --version` to confirm Python 3.11 or newer.

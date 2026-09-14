@@ -176,5 +176,22 @@ is `valid-design-contract` with legal authority, implemented network engine,
 network execution authorization, and execution performed all false. See
 `docs/network-session-boundary.md` and Decision 0002.
 
+## `release audit`
+
+```text
+whitehat release audit [--root DIR] [--output FILE] [--json]
+```
+
+The technical audit requires a clean Git commit and the pinned `release` optional
+dependencies. It scans tracked text, validates the Apache license and literal
+source inventory, builds one sdist and wheel from a disposable export, rejects
+unexpected archive members, verifies packaged source bytes, performs a clean
+wheel installation, and removes all temporary artifacts.
+
+The result is hash-bound to the commit and release inventory. Success means
+`technical-audit-passed`; it always keeps legal clearance, originality proof,
+publication authorization, publication performed, and network effects false.
+See `docs/release-readiness.md` and Decision 0003.
+
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.

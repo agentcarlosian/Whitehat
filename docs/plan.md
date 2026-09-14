@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: requested runner, scanner, and network-boundary design complete
+Status: publication audit implemented; clean-commit proof and loopback network slice next
 
 Primary surface: `python -m whitehat`
 
@@ -64,16 +64,27 @@ a meaningful side-effect boundary.
 - [x] Implement local contract validation while keeping network execution absent.
 - [x] Prove offline commands do not require or discover session state.
 
+## Publication audit implementation
+
+- [x] Add provenance and third-party tool records.
+- [x] Add a literal release-source inventory covering every package module.
+- [x] Add tracked and packaged high-confidence secret-pattern scanning.
+- [x] Build sdist and wheel from a disposable tracked-file-only export.
+- [x] Verify archive membership, package-source bytes, Apache license, and clean install.
+- [x] Keep publication and legal/originality claims false.
+- [ ] Run the full audit from the committed implementation and record CI evidence.
+
 ## Next slices
 
-1. Complete provenance, secret, package, and publication review before
-   configuring a public remote. Apache-2.0 is selected.
-2. Implement network execution only after a separate explicit owner decision and
-   the acceptance gates in `docs/network-session-boundary.md`.
+1. Commit and run the technical publication audit locally and in CI while keeping
+   the repository private.
+2. Implement the first owned-loopback network execution slice; external HTTPS
+   remains blocked until its remaining transport gates are proven.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check and 58 tests pass, including local network
+- Windows Python 3.13.12: syntax check and 63 tests pass, including release
+  inventory, license, secret-pattern, and archive-path policy tests plus local network
   contract timing, scope, budget, effect, stop, and duplicate-key rejection. Two
   symbolic-link tests are skipped because the current account cannot create them.
 - A fresh local clone of the root commit passes the same validation without
@@ -81,6 +92,7 @@ a meaningful side-effect boundary.
 - A clean temporary installation builds `0.6.0a1` with the optional Ruff extra;
   its synthetic runner, dirty/clean Ruff scans, and local-only session validator
   all pass their exact effect and claim checks.
+- Full `0.7.0a1` release audit evidence requires the implementation commit.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

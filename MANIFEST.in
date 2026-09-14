@@ -1,0 +1,8 @@
+include LICENSE
+include MANIFEST.in
+include PROVENANCE.md
+include README.md
+include THIRD_PARTY.md
+include pyproject.toml
+include release-files.txt
+recursive-include whitehat *.py

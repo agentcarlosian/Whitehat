@@ -39,3 +39,11 @@ Before completing a behavior change, run:
 python -m pip install ".[scanner-ruff]"
 python -B scripts/validate.py
 ```
+
+Before a visibility, tag, or package-release decision, also run from a clean
+commit:
+
+```powershell
+python -m pip install ".[release]"
+python -B -m whitehat release audit --json
+```

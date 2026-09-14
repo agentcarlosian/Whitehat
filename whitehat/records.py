@@ -26,6 +26,7 @@ SUPPORTED_RESULT_SCHEMAS = frozenset(
         "whitehat-local-diff-v1",
         "whitehat-local-inventory-v1",
         "whitehat-network-session-validation-v1",
+        "whitehat-release-audit-v1",
         "whitehat-scanner-result-v1",
         "whitehat-synthetic-run-v1",
     }

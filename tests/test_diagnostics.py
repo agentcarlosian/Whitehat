@@ -14,6 +14,7 @@ class DoctorTests(unittest.TestCase):
         self.assertTrue(result["capabilities"]["localReviewNotes"])
         self.assertTrue(result["capabilities"]["localSyntheticExecution"])
         self.assertTrue(result["capabilities"]["networkSessionValidation"])
+        self.assertTrue(result["capabilities"]["releaseAudit"])
         self.assertTrue(result["capabilities"]["ruffScannerAdapter"])
         self.assertFalse(result["capabilities"]["network"])
         self.assertFalse(result["capabilities"]["credentials"])

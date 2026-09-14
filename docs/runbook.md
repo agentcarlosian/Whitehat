@@ -19,6 +19,8 @@ external services and has no persistent background process.
 | Install Ruff adapter | `python -m pip install ".[scanner-ruff]"` | Installs exact optional version |
 | Scan Python source | `python -B -m whitehat scan ruff SOURCE --json` | Fixed rules; no fixes or source execution |
 | Validate session design | `python -B -m whitehat session validate DOCUMENT --json` | Local validation only; no network authority |
+| Install release tools | `python -m pip install ".[release]"` | Pinned build frontend/backend |
+| Audit release | `python -B -m whitehat release audit --json` | Clean commit only; never publishes |
 | Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 

@@ -29,6 +29,7 @@ def doctor_result() -> dict[str, Any]:
             "localSyntheticExecution": True,
             "network": False,
             "networkSessionValidation": True,
+            "releaseAudit": True,
             "credentials": False,
             "ruffScannerAdapter": True,
             "targetMutation": False,

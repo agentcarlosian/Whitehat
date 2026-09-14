@@ -26,6 +26,7 @@ from .records import (
     save_result_document,
     write_json_document,
 )
+from .release_audit import ReleaseAuditError, audit_release
 from .runner import ProcessLimits, RunnerError, run_synthetic
 from .scanner import ScannerError, ScannerLimits, scan_with_ruff
 
@@ -98,6 +99,13 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
             f"{value['evaluatedAt']}"
         )
         print("Network engine implemented: false; execution authorized: false")
+        return
+    if value.get("schemaVersion") == "whitehat-release-audit-v1":
+        print(
+            f"Release audit: {value['status']} at {value['commitSha'][:12]} "
+            f"with {value['secrets']['matches']} secret matches"
+        )
+        print("Publication authorized: false; publication performed: false")
         return
     summary = value["summary"]
     print(
@@ -220,6 +228,15 @@ def _parser() -> argparse.ArgumentParser:
     validate_session.add_argument(
         "--json", action="store_true", help="Emit deterministic JSON."
     )
+
+    release = commands.add_parser("release", help="Run technical release checks.")
+    release_commands = release.add_subparsers(dest="release_command", required=True)
+    audit = release_commands.add_parser(
+        "audit", help="Audit a clean tracked export and built distributions."
+    )
+    audit.add_argument("--root", default=".")
+    _add_output(audit)
+    audit.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
     return parser
 
 
@@ -332,11 +349,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args,
             )
             return 0
+        if args.command == "release" and args.release_command == "audit":
+            _emit_analysis(audit_release(args.root), args)
+            return 0
     except (
         DiffError,
         DependencyError,
         NetworkSessionError,
         RecordError,
+        ReleaseAuditError,
         RunnerError,
         ScannerError,
     ) as exc:

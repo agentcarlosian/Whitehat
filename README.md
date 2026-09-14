@@ -21,6 +21,8 @@ This repository currently provides one small, dependency-free Python CLI:
   disposable copy of local Python source.
 - `whitehat session validate` checks a short-lived future-network design locally;
   it never enables or performs network access.
+- `whitehat release audit` builds and inspects a tracked-file-only sdist and wheel
+  while keeping publication authorization false.
 
 Local read-only and offline analysis does not require an approval file. Network
 actions, credentials, target changes, external contact, and report submission are
@@ -45,6 +47,13 @@ The scanner is an optional development dependency:
 ```powershell
 python -m pip install ".[scanner-ruff]"
 python -B -m whitehat scan ruff .\examples\scanner\problem --json
+```
+
+The private repository's technical publication audit is optional and separate:
+
+```powershell
+python -m pip install ".[release]"
+python -B -m whitehat release audit --json
 ```
 
 See [docs/quickstart.md](docs/quickstart.md) for the shortest operator path and

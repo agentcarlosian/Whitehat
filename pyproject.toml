@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whitehat"
-version = "0.6.0a1"
+version = "0.7.0a1"
 description = "Local-first tools for authorized security research"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,6 +21,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+release = ["build==1.4.2", "setuptools==80.10.2"]
 scanner-ruff = ["ruff==0.14.14"]
 
 [project.scripts]

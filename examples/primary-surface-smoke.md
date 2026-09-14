@@ -50,3 +50,10 @@ The future-network boundary is validated separately and locally:
 ```powershell
 python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
 ```
+
+The release audit is intentionally separate and requires a clean commit:
+
+```powershell
+python -m pip install ".[release]"
+python -B -m whitehat release audit --json
+```
