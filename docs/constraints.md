@@ -2,8 +2,9 @@
 
 - Python 3.11 or newer is required.
 - The runtime uses only the Python standard library.
-- Only local `doctor`, file inventory, directory comparison, and dependency
-  manifest comparison are implemented.
+- Implemented research surfaces include source/dependency comparison, report
+  imports, Opengrep and Betterleaks adapters, baseline comparison, portable
+  workspaces, structured case notes, linked reviews, and Markdown export.
 - Directory comparison is intended for stable, operator-controlled inputs. It is
   not an atomic filesystem snapshot and is not a sandbox for hostile filesystems.
 - Symbolic links and non-regular entries are rejected rather than followed.
@@ -22,10 +23,18 @@
 - Timeout and overflow kill the fixed child. Descendant-process containment is
   not claimed; the fixed child installs an audit hook denying process and socket
   APIs, and no arbitrary-child profile exists.
-- Ruff `0.14.14` is the only scanner adapter. It is an optional external tool,
-  not a runtime dependency or vendored component. The adapter verifies version
-  text and executable hash but does not independently prove tool provenance or
-  operating-system network isolation.
+- Opengrep core `1.30.0` and Betterleaks `1.8.1` are optional research tools;
+  Ruff `0.14.14` remains a correctness adapter. Tool setup downloads literal pinned
+  assets only when explicitly invoked. Native engines and their companions are
+  hash checked; this is not independent provenance or OS network isolation.
+- Opengrep supports `.py` and `.js` with five authored syntactic sink rules;
+  it does not prove taint flow or authorization. Betterleaks scans the documented
+  text suffixes, with live validation and archive/encoding recursion disabled.
+- Native scans default to 1,000 files, 1 MiB per file, 16 MiB total input, 1,000
+  observations, and 30 seconds of process wall time. Opengrep additionally uses
+  one job, a three-second per-rule/file timeout, and a 512 MiB engine memory limit.
+- OSV, SARIF, ZAP, Nuclei, and secret-report imports are non-executing format
+  adapters, not proof that the upstream scanner completed or a target was tested.
 - Scanner output is static-analysis metadata. A rule match, clean result, exit
   code, or fix suggestion does not establish reachability, exploitability,
   finding validity, impact, severity, eligibility, or authorization.
@@ -46,7 +55,7 @@
 - Secret scanning uses explicit high-confidence patterns and cannot prove that a
   tree contains no sensitive data. Human review remains required before public
   visibility.
-- No network, credential, browser, arbitrary-command, account, target-mutation,
+- No external-target network, credential, browser, arbitrary-command, account, target-mutation,
   destructive, payment, contact, disclosure, or submission capability exists.
 - The project is licensed under Apache-2.0. Publication remains blocked until the
   exact tree completes its release review.

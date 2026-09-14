@@ -1,0 +1,1 @@
+{"template-id":"owned-header-check","type":"http","matched-at":"https://owned.example.invalid/dashboard?key=synthetic-private-value#ignored","info":{"name":"Owned example","severity":"info"},"request":"must not be retained","response":"must not be retained"}

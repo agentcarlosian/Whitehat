@@ -1,87 +1,78 @@
-# Quickstart
+# Source-review walkthrough
 
-This is the shortest verified path through the Whitehat CLI on Windows, Linux, or
-macOS with Python 3.11 or newer. No credentials, environment variables, services,
-or external accounts are required.
+Start from a checkout with Python 3.11+. All commands below work in PowerShell
+and POSIX shells. If `python` is named `python3` on your system, substitute it.
+Use a fresh output directory each time; Whitehat does not overwrite results.
 
-From the repository root:
+## Install the CLI and the explicit research tools
 
-```powershell
-python -B -m whitehat doctor --json
-python -B -m whitehat analyze inventory .\examples\before --json
-python -B -m whitehat analyze diff .\examples\before .\examples\after --json
-python -B -m whitehat analyze dependencies .\examples\dependencies\before\pyproject.toml .\examples\dependencies\after\pyproject.toml --json
-python -B -m whitehat run synthetic --message "owned fixture" --json
-python -B scripts\validate.py
+```sh
+python -m pip install .
+python scripts/setup_tools.py --destination .whitehat/tools
+python -m whitehat tools
+python -m whitehat init .whitehat-source-review --title "Owned source comparison"
 ```
 
-Inventory should report two files and 31 bytes. The directory comparison should
-report one added path, one modified path, no deleted paths, and one unchanged
-file. Dependency comparison should report one added, one removed, one changed,
-and one unchanged declaration. Validation should finish with an `ok: true` JSON
-result.
+Native setup supports Windows/Linux x64. Other platforms can follow the report
+import path in the README. Tool downloads require Internet access; analysis of
+these fixtures does not. No target source is imported or executed.
 
-Optional local recording is explicit:
+## Find and compare observations
 
-```powershell
-New-Item -ItemType Directory .\tmp -Force
-python -B -m whitehat analyze inventory .\examples\before --output .\tmp\inventory.json --json
-python -B -m whitehat review .\tmp\inventory.json --decision needs-work --note "Add a controlled comparison." --output .\tmp\inventory.review.json --json
+```sh
+python -m whitehat scan opengrep examples/research/vulnerable --output .whitehat-source-review/results/before.json
+python -m whitehat scan opengrep examples/research/fixed --output .whitehat-source-review/results/after.json
+python -m whitehat scan opengrep examples/research/negative --output .whitehat-source-review/results/control.json
+python -m whitehat compare .whitehat-source-review/results/before.json .whitehat-source-review/results/after.json --output .whitehat-source-review/results/comparison.json
 ```
 
-The two output paths must not already exist. They are ignored local artifacts;
-ordinary analysis without `--output` remains write-free.
+Expected: five observations in the vulnerable twin, zero in the fixed twin, zero
+in the strings-only control. Comparison reports five absent observations.
+Absence alone does not prove a fix: inspect the actual change and scan coverage.
+The baseline fingerprints include line numbers; moved lines may appear as changed.
 
-The synthetic runner needs no approval artifact and exposes no arbitrary command:
+## Investigate and record a decision
 
-```powershell
-python -B -m whitehat run synthetic --message "owned fixture" --repeat 2 --json
+Edit `.whitehat-source-review/case.json`: identify the controlled input, intended
+permission, exact version, hypothesis, reproduction status, negative control,
+duplicate assessment, and next action. For this static demonstration leave
+reproduction `not-attempted` unless you actually ran a separate controlled test.
+The five authored rules cover eval, Python pickle deserialization, and shell
+command construction. They do not establish dataflow or attacker reachability.
+
+```sh
+python -m whitehat review .whitehat-source-review/results/before.json --decision needs-work --note "Static sink patterns found; attacker-controlled reachability remains unverified." --output .whitehat-source-review/notes/review.json
+python -m whitehat report .whitehat-source-review/results/before.json --case .whitehat-source-review/case.json --review .whitehat-source-review/notes/review.json --output .whitehat-source-review/exports/review.md
 ```
 
-The result should report `python.synthetic.echo`, process creation, no network or
-arbitrary command, and `workspaceCleaned: true` without returning the message.
+Open the Markdown packet. It contains rule explanations, relative locations,
+provenance, the analyst's case, and the matching review note. Evidence references
+are displayed as text and never opened or embedded.
 
-Install and run the optional reviewed scanner:
+## Bring other research artifacts
 
-```powershell
-python -m pip install ".[scanner-ruff]"
-python -B -m whitehat scan ruff .\examples\scanner\problem --json
-python -B -m whitehat scan ruff .\examples\scanner\clean --json
+```sh
+python -m whitehat import examples/reports/osv.json --format osv
+python -m whitehat import examples/reports/source.sarif --format sarif
+python -m whitehat import examples/reports/zap.json --format zap
+python -m whitehat import examples/reports/nuclei.jsonl --format nuclei
+python -m whitehat scan secrets examples/research/secrets
 ```
 
-The first command reports `F401` and `F841`; the clean twin reports zero
-observations. Neither result establishes a security finding.
+The OSV example is a made-up package/advisory. ZAP and Nuclei use reserved
+`.invalid` hosts. The secret example is an owned marker, never a credential.
+For absolute source paths in a report, use `--source-root` to strip the exact
+lexical prefix. The importer does not open that source directory.
 
-Validate the separate future-network design without opening a socket:
+## Developer verification
 
-```powershell
-python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
+Install development dependencies before running validation:
+
+```sh
+python -m pip install ".[scanner-ruff,release]"
+python -B scripts/validate.py
+python -B scripts/evaluate_research.py
 ```
 
-The result must keep `networkEngineImplemented`, `networkExecutionAuthorized`,
-and `networkExecutionPerformed` false. Offline commands never require this file.
-
-From a clean commit, run the separate technical release audit:
-
-```powershell
-python -m pip install ".[release]"
-python -B -m whitehat release audit --json
-```
-
-Success reports `technical-audit-passed` while keeping publication authorization
-and publication performed false.
-
-Owned-loopback execution requires a currently active copy of the checked-in
-loopback template, a local HTTP server on its exact port, and a new ignored state
-path:
-
-```powershell
-python -B -m whitehat network observe-loopback .\tmp\loopback-session.json --state .\tmp\loopback.sqlite3 --path /observe --json
-python -B -m whitehat network stop .\tmp\loopback-session.json --state .\tmp\loopback.sqlite3 --json
-```
-
-The checked-in template is historical and intentionally not a standing grant.
-External targets are unsupported.
-
-If Python cannot import `whitehat`, confirm that the command is running from the
-repository root. Use `python --version` to confirm Python 3.11 or newer.
+`evaluate_research.py` requires the explicitly installed native tools and fails
+if they are missing; it does not silently replace native scans with mocks.

@@ -5,14 +5,26 @@ on:
   push:
     branches:
       - main
+      - 'codex/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.11", "3.13"]
+        include:
+          - os: macos-latest
+            python-version: "3.13"
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -25,8 +37,16 @@ jobs:
       - name: Install pinned scanner dependency
         run: python -m pip install "ruff==0.14.14"
 
+      - name: Install reviewed native research tools
+        if: runner.os != 'macOS'
+        run: python scripts/setup_tools.py --destination .whitehat/tools
+
       - name: Validate the repository
         run: python -B scripts/validate.py
+
+      - name: Evaluate actual security research engines
+        if: runner.os != 'macOS'
+        run: python -B scripts/evaluate_research.py
 
       - name: Verify package installation
         run: |
@@ -34,6 +54,8 @@ jobs:
           whitehat doctor --json
           whitehat run synthetic --message "installed CI fixture" --json
           whitehat scan ruff examples/scanner/problem --json
+          whitehat import examples/reports/osv.json --format osv --json
+          whitehat tools --json
           whitehat session validate examples/network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
 
   release-audit:

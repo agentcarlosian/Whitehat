@@ -1,0 +1,17 @@
+{
+  "results": [{
+    "source": {"path": "package-lock.json", "type": "lockfile"},
+    "packages": [{
+      "package": {"name": "whitehat-owned-demo", "version": "1.0.0", "ecosystem": "npm"},
+      "vulnerabilities": [{
+        "id": "WHITEHAT-DEMO-001",
+        "aliases": ["WHITEHAT-ALIAS-001"],
+        "summary": "Synthetic advisory, not a real vulnerable package",
+        "affected": [{
+          "package": {"name": "whitehat-owned-demo", "ecosystem": "npm"},
+          "ranges": [{"type": "SEMVER", "events": [{"introduced": "0"}, {"fixed": "1.0.1"}]}]
+        }]
+      }]
+    }]
+  }]
+}

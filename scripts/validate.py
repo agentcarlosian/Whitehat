@@ -33,7 +33,8 @@ def _syntax_check() -> int:
     checked = 0
     for path in sorted(ROOT.rglob("*.py")):
         if any(
-            part in {".git", ".venv", "__pycache__", "build", "dist"}
+            part in {".git", ".venv", ".whitehat", "__pycache__", "build", "dist"}
+            or part.startswith(".whitehat-")
             for part in path.parts
         ):
             continue

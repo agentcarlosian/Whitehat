@@ -2,14 +2,22 @@
 
 ## Scope
 
-This runbook covers the local Whitehat alpha. It requires no credentials or
-external services and has no persistent background process.
+This runbook covers the Whitehat research alpha. Analysis and imports require no
+external account. Explicit native tool setup uses upstream release downloads.
+There is no persistent background service.
 
 ## Routine commands
 
 | Task | Command | Notes |
 | --- | --- | --- |
 | Health check | `python -B -m whitehat doctor --json` | Reports implemented boundaries |
+| Toolkit compatibility | `python -m whitehat tools` | Lists pins, platforms, and import formats |
+| Create research workspace | `python -m whitehat init NEW_DIRECTORY --title TITLE` | Creates inputs/results/notes/exports and case.json |
+| Security source scan | `python -m whitehat scan opengrep SOURCE` | Authored Python/JavaScript rules; explicit tool setup required |
+| Secret pattern scan | `python -m whitehat scan secrets SOURCE` | Betterleaks; no live credential validation |
+| Import tool output | `python -m whitehat import REPORT --format FORMAT` | osv, sarif, zap, nuclei, opengrep, betterleaks, gitleaks |
+| Compare research results | `python -m whitehat compare BEFORE AFTER` | New/absent/unchanged fingerprints, profile comparison |
+| Export review | `python -m whitehat report RESULT --case CASE --review REVIEW --output NEW_MARKDOWN` | Case and review are optional; no external submission |
 | Inventory directory | `python -B -m whitehat analyze inventory ROOT --json` | Returns paths, sizes, and hashes |
 | Compare directories | `python -B -m whitehat analyze diff BEFORE AFTER --json` | Reads regular files only |
 | Compare dependencies | `python -B -m whitehat analyze dependencies BEFORE AFTER --json` | Supports pyproject and package-lock |
@@ -34,8 +42,10 @@ external services and has no persistent background process.
 - Exit `4`: a configured resource limit was exceeded. Narrow the input or set a
   reviewed larger local limit.
 
-The commands do not create a state database or background worker, so recovery is
-normally just correcting the input and rerunning the command.
+Research commands store only explicitly requested artifacts. The owned-loopback
+profile uses its explicit SQLite ledger. Recovery depends on the command: fix an
+invalid report, narrow an oversized source set, or follow the loopback stop/recovery
+procedure. Never interpret an incomplete scan as a clean result.
 
 ## Release boundary
 

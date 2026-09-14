@@ -11,10 +11,14 @@ whitehat/cli.py
 whitehat/dependencies.py
 whitehat/diagnostics.py
 whitehat/local_diff.py
+whitehat/native_tools.py
 whitehat/network_engine.py
 whitehat/network_session.py
 whitehat/records.py
 whitehat/release_audit.py
+whitehat/reports.py
+whitehat/research.py
 whitehat/runner.py
 whitehat/scanner.py
+whitehat/security_rules.py
 whitehat/synthetic_child.py

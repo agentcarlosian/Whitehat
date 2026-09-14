@@ -1,3 +1,3 @@
-"""Whitehat local-first security research tools."""
+"""Whitehat security research and bounty workflow tools."""
 
-__version__ = "0.8.0a1"
+__version__ = "0.9.0a1"

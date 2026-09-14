@@ -7,12 +7,32 @@ The primary interface is `python -m whitehat`; installation also provides the
 deterministic for stable inputs; process results additionally retain observed
 runtime identity, byte counts, exit status, cleanup, and elapsed time.
 
+## Research workflow
+
+`scan opengrep` and `scan secrets` run the pinned native profiles documented in
+`docs/toolkit.md`. `import REPORT --format FORMAT` normalizes existing OSV,
+SARIF, ZAP, Nuclei, Opengrep, Betterleaks, and Gitleaks output into
+`whitehat-research-result-v1`. Native and imported results share fingerprints,
+relative source locations, explanations, reported context, and false finding claims.
+
+`compare BEFORE AFTER` reports introduced, absent, and unchanged fingerprints in
+`whitehat-research-comparison-v1`, plus whether the recorded analysis profiles
+match. `init NEW_DIRECTORY` creates a portable workspace and
+`whitehat-research-case-v1` notes. `report RESULT --case CASE --review REVIEW
+--output NEW_MARKDOWN` exports a readable packet; the case/review arguments are
+optional, and a supplied review must bind the exact result hash.
+
+Cases record title, target/version, hypothesis, boundary, reproduction status,
+negative control, duplicate assessment, next action, and relative evidence
+references. Analyst assertions and scanner severity do not become validated
+findings. External evidence references are never opened or embedded.
+
 ## Risk model
 
 | Level | Activity | Initial behavior |
 | --- | --- | --- |
 | L0 | Local read-only and prepared offline analysis | Available without approval artifacts |
-| L1 | Local synthetic processes or containers | Planned; explicit invocation and bounded resources |
+| L1 | Fixed synthetic and reviewed native analysis processes | Implemented with explicit invocation and bounded resources; no arbitrary executable profile |
 | N0 | Owned IPv4 loopback observation | Implemented through exact session and local ledger |
 | N1 | External network access to an authorized asset | Not implemented; requires remaining transport gates |
 | H1 | Credentials, mutation, destructive work, money, contact, disclosure, submission | Not implemented; exact human authorization required |

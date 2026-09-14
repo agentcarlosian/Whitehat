@@ -1,6 +1,6 @@
 # Whitehat development guide
 
-Whitehat is one local-first security research product with one Python package and
+Whitehat is one security research toolkit with one Python package and
 one command-line interface. Keep changes small, testable, and useful to an
 independent researcher.
 

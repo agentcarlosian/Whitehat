@@ -53,6 +53,13 @@ Those remain explicit owner decisions based on the exact audited commit.
 
 ## Latest local checkpoint
 
+The research-toolkit `0.9.0a1` audit passed at `27bb836`: 97 tracked files,
+24 release inputs, zero high-confidence secret-pattern matches, a 32-file sdist,
+a 23-file wheel, and clean installed diagnostics. Subsequent fixes and final
+platform results are reviewed in [PR #1](https://github.com/agentcarlosian/Whitehat/pull/1).
+
+### Previous alpha checkpoint
+
 The `0.8.0a1` audit passed at commit
 `66f5264c0cf6d8dd9494c83e01f09803a0292c90` with:
 

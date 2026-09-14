@@ -1,5 +1,9 @@
 # Reviewed scanner adapters
 
+Research adapters and report-format support are documented in
+[toolkit compatibility](toolkit.md). This page preserves the Ruff correctness
+profile; Ruff is not the security-analysis workflow shown in the quickstart.
+
 Updated: 2026-09-11
 
 ## Adapter policy
