@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: technical publication audit and owned-loopback network proof complete locally
+Status: technical publication audit and owned-loopback network proof complete locally; CI pending
 
 Primary surface: `python -m whitehat`
 
@@ -88,8 +88,7 @@ a meaningful side-effect boundary.
 
 ## Next slices
 
-1. Commit the owned-loopback proof, rerun the technical release audit at the new
-   version, and verify normal plus release CI while keeping the repository private.
+1. Push the audited private checkpoint and verify normal plus release CI.
 2. Treat external HTTPS execution as a later explicit decision; remaining DNS,
    TLS, address-pinning, identification, and live-policy gates are still open.
 
@@ -104,8 +103,9 @@ a meaningful side-effect boundary.
 - A clean temporary installation builds `0.6.0a1` with the optional Ruff extra;
   its synthetic runner, dirty/clean Ruff scans, and local-only session validator
   all pass their exact effect and claim checks.
-- `0.7.0a1` technical audit passed locally at `4798261`; `0.8.0a1` must pass after
-  the loopback commit.
+- `0.7.0a1` technical audit passed locally at `4798261`. The `0.8.0a1` audit
+  passed at `66f5264`: 61 tracked files, 20 release inputs, zero secret matches,
+  canonical Apache-2.0, 28-file sdist, 19-file wheel, and clean installation.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

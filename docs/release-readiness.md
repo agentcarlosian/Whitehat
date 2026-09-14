@@ -50,3 +50,21 @@ directories are removed when the command exits.
 - That a package should be tagged, uploaded, promoted, or supported.
 
 Those remain explicit owner decisions based on the exact audited commit.
+
+## Latest local checkpoint
+
+The `0.8.0a1` audit passed at commit
+`66f5264c0cf6d8dd9494c83e01f09803a0292c90` with:
+
+- 61 tracked files scanned;
+- 20 literal release-source files;
+- zero high-confidence secret-pattern matches;
+- canonical Apache-2.0 SHA-256
+  `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
+- 28 source-distribution files;
+- 19 wheel files;
+- clean installed `0.8.0a1` diagnostics with owned loopback true and external
+  network false.
+
+The generated distributions were temporary and were removed after inspection.
+CI must rerun the audit for the final pushed commit.
