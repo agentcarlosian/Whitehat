@@ -7,9 +7,15 @@ pyproject.toml
 release-files.txt
 whitehat/__init__.py
 whitehat/__main__.py
+whitehat/api_fixture.py
+whitehat/api_schema.py
+whitehat/api_testing.py
 whitehat/cli.py
 whitehat/dependencies.py
 whitehat/diagnostics.py
+whitehat/dns_worker.py
+whitehat/http_evidence.py
+whitehat/http_replay.py
 whitehat/local_diff.py
 whitehat/native_tools.py
 whitehat/network_engine.py
@@ -20,5 +26,6 @@ whitehat/reports.py
 whitehat/research.py
 whitehat/runner.py
 whitehat/scanner.py
+whitehat/schemathesis_worker.py
 whitehat/security_rules.py
 whitehat/synthetic_child.py

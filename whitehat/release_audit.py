@@ -366,13 +366,15 @@ def _installed_smoke(wheel: Path, workspace: Path) -> dict[str, Any]:
     if (
         result.get("ok") is not True
         or capabilities.get("loopbackNetworkExecution") is not True
-        or capabilities.get("externalNetwork") is not False
+        or capabilities.get("externalNetwork") is not True
+        or capabilities.get("sessionBoundHttpReplay") is not True
     ):
         raise ReleaseAuditError("installed doctor boundary check failed")
     return {
         "version": result["version"],
         "loopbackNetwork": True,
-        "externalNetwork": False,
+        "externalNetwork": True,
+        "sessionBoundReplay": True,
     }
 
 

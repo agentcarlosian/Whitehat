@@ -34,8 +34,9 @@ findings. External evidence references are never opened or embedded.
 | L0 | Local read-only and prepared offline analysis | Available without approval artifacts |
 | L1 | Fixed synthetic and reviewed native analysis processes | Implemented with explicit invocation and bounded resources; no arbitrary executable profile |
 | N0 | Owned IPv4 loopback observation | Implemented through exact session and local ledger |
-| N1 | External network access to an authorized asset | Not implemented; requires remaining transport gates |
-| H1 | Credentials, mutation, destructive work, money, contact, disclosure, submission | Not implemented; exact human authorization required |
+| N1 | Exact HTTP(S) replay | Implemented under Decision 0005, current sessions and approved request hashes |
+| H1 | Credentials and controlled mutations | Bearer/cookie references and explicitly permitted prepared methods only |
+| H2 | Destruction, money, contact, disclosure, submission | Not implemented |
 
 ## `doctor`
 
@@ -206,7 +207,7 @@ whitehat network observe-loopback SESSION --state SQLITE --path PATH
 whitehat network stop SESSION --state SQLITE [--json]
 ```
 
-The only executable network profile accepts `owned-loopback` sessions and exact
+This legacy network profile accepts `owned-loopback` sessions and exact
 IPv4 `127.0.0.1` targets. It uses the real UTC clock, HTTP GET, a direct
 standard-library connection, no proxy, no redirect following, no request body,
 and no credentials. Exact path scope and every session budget are checked before
@@ -220,7 +221,7 @@ is never automatically retried.
 Responses are not retained. Complete bounded bodies produce only a SHA-256;
 oversized bodies produce a partial-byte count and no body hash. HTTP 429 and 3xx
 responses stop the session. Diagnostics report network and loopback execution
-true while external network remains false. See Decision 0004.
+true. Decision 0005 separately adds the `http replay` capability and its own session schema.
 
 ## `release audit`
 

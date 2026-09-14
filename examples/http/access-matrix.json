@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "whitehat-access-matrix-v1",
+  "projectId": "owned-api",
+  "rows": [
+    {
+      "id": "alice-private-a",
+      "identityId": "alice",
+      "objectId": "private-a",
+      "operationId": "read-object",
+      "method": "GET",
+      "endpoint": "https://owned.example.invalid/objects/private-a",
+      "expect": "allow",
+      "proof": {
+        "pointer": "/marker",
+        "equals": "owned-private-a"
+      }
+    },
+    {
+      "id": "bob-private-a",
+      "identityId": "bob",
+      "objectId": "private-a",
+      "operationId": "read-object",
+      "method": "GET",
+      "endpoint": "https://owned.example.invalid/objects/private-a",
+      "expect": "deny",
+      "proof": {
+        "pointer": "/marker",
+        "equals": "owned-private-a"
+      }
+    },
+    {
+      "id": "bob-shared",
+      "identityId": "bob",
+      "objectId": "shared",
+      "operationId": "read-object",
+      "method": "GET",
+      "endpoint": "https://owned.example.invalid/objects/shared",
+      "expect": "allow",
+      "proof": {
+        "pointer": "/marker",
+        "equals": "owned-shared"
+      }
+    },
+    {
+      "id": "revoked-private-a",
+      "identityId": "revoked",
+      "objectId": "private-a",
+      "operationId": "read-object",
+      "method": "GET",
+      "endpoint": "https://owned.example.invalid/objects/private-a",
+      "expect": "deny",
+      "proof": {
+        "pointer": "/marker",
+        "equals": "owned-private-a"
+      }
+    }
+  ]
+}

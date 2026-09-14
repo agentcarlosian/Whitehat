@@ -8,10 +8,19 @@ Whitehat connects focused analysis with the work that follows: compare results,
 record a hypothesis and negative control, and export a readable research review.
 It is built for independent researchers working on explicitly authorized targets.
 
+For web/API work, Whitehat now imports and compares HTTP captures across labeled
+identities, assesses explicit access expectations, replays approved HTTP(S)
+requests, and compares API contracts. Start with the
+[web/API walkthrough](docs/web-api-quickstart.md).
+
 ## What you can do
 
 | Task | Implemented support |
 | --- | --- |
+| Compare API access | HAR/request-response imports, selected JSON evidence, identity/object access matrix |
+| Replay approved requests | Exact prepared requests, session credential references, persistent budgets, HTTPS |
+| Review API changes | OpenAPI inventory/coverage and oasdiff 1.32.0 with effective authentication comparison |
+| Test lifecycle expectations | Explicit approved scenarios; Schemathesis 4.27.1 on an owned disposable API |
 | Review risky source patterns | Opengrep 1.30.0 with five authored Python/JavaScript rules |
 | Triage dependency advisories | Import OSV-Scanner JSON with package/version, aliases, and reported fixes |
 | Bring your existing tools | Import SARIF 2.1.0, ZAP JSON, Nuclei HTTP JSONL, Opengrep JSON, Betterleaks/Gitleaks JSON |
@@ -73,11 +82,12 @@ false-positive controls, review notes, and export. Every research command suppor
 
 ## Research boundaries
 
-Importing a report never runs its scanner or contacts its target. Native scans
-parse a bounded disposable copy of source. External target scanning, credential
-use, and submission are not implemented; the existing network implementation is
-an explicit owned-loopback test profile. Tool setup downloads are separate from
-research execution. [Capabilities and limits](docs/constraints.md)
+Importing a report never runs its scanner or contacts its target. Replay is an
+explicit action under a current session and exact prepared-request hashes;
+credentials are referenced separately. Schemathesis's first execution profile
+uses only the owned API fixture. Automatic target discovery, login, broad scanning,
+and submission are not provided. Tool setup downloads are separate from research
+execution. [Replay contract](docs/http-replay.md) · [Capabilities and limits](docs/constraints.md)
 
 ## Contribute
 

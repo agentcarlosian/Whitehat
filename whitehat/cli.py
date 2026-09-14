@@ -37,6 +37,10 @@ from .scanner import ScannerError, ScannerLimits, scan_with_ruff
 from .native_tools import scan_native, toolkit_status
 from .reports import FORMATS, compare_results, import_report
 from .research import export_markdown, initialize_workspace
+from .http_evidence import import_capture, compare_http, assess_access
+from .http_replay import replay, request_preview, stop_session, run_scenario
+from .api_schema import inventory_schema, compare_schema, coverage
+from .api_testing import test_owned_api
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -81,6 +85,29 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         return
     if value.get("schemaVersion") == "whitehat-markdown-export-v1":
         print(f"Exported research review ({value['bytes']} bytes), SHA-256 {value['markdownSha256']}")
+        return
+    if value.get("schemaVersion") == "whitehat-http-evidence-v1":
+        print(f"HTTP evidence: {len(value['exchanges'])} exchanges in {value['projectId']}")
+        for entry in value["exchanges"]:
+            c = entry["context"]
+            print(f"{c['identityId']} {c['method']} {c['endpoint']} -> {entry['response']['status']}")
+        return
+    if value.get("schemaVersion") == "whitehat-http-comparison-v1":
+        print(f"HTTP comparison: {len(value['shapeChanges'])} structural and {len(value['valueChanges'])} selected-value changes")
+        print(f"Status: {value['status']['before']} -> {value['status']['after']}")
+        return
+    if value.get("schemaVersion") == "whitehat-request-preview-v1":
+        print(f"{value['method']} {value['endpoint']}\nRequest SHA-256: {value['requestSha256']}")
+        return
+    if value.get("schemaVersion") == "whitehat-replay-stop-v1":
+        print(f"Stopped replay session {value['sessionId']}")
+        return
+    if value.get("schemaVersion") == "whitehat-api-inventory-v1":
+        for op in value["operations"]:
+            print(f"{op['method']} {op['path']} - {op['operationId']} (anonymous declared: {op['anonymousDeclared']})")
+        return
+    if value.get("schemaVersion") == "whitehat-api-coverage-v1":
+        print(f"API coverage: {len(value['observedOperations'])} observed, {len(value['unobservedOperations'])} unobserved, {len(value['undocumentedRequests'])} undocumented/ambiguous requests")
         return
     if value.get("schemaVersion") == "whitehat-local-inventory-v1":
         print(
@@ -209,6 +236,77 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--review", help="Hash-linked Whitehat review note for this result.")
     report.add_argument("--output", required=True)
     report.add_argument("--json", action="store_true")
+
+    http = commands.add_parser("http", help="Import HTTP evidence, compare responses, and assess access expectations.")
+    http_commands = http.add_subparsers(dest="http_command", required=True)
+    capture = http_commands.add_parser("import", help="Import HAR 1.2 or an explicit request/response capture.")
+    capture.add_argument("capture")
+    capture.add_argument("--format", choices=("har", "capture"), default="har")
+    capture.add_argument("--project", required=True)
+    capture.add_argument("--identity", default="unlabeled")
+    capture.add_argument("--object", default="unlabeled")
+    capture.add_argument("--operation", default="unlabeled")
+    capture.add_argument("--select", action="append", default=[], help="Retain one explicitly selected nonsensitive scalar JSON pointer.")
+    _add_output(capture)
+    capture.add_argument("--json", action="store_true")
+    http_compare = http_commands.add_parser("compare", help="Compare two selected exchanges, preserving identity and status context.")
+    http_compare.add_argument("before")
+    http_compare.add_argument("after")
+    http_compare.add_argument("--before-index", type=int, default=0)
+    http_compare.add_argument("--after-index", type=int, default=0)
+    http_compare.add_argument("--ignore", action="append", default=[])
+    _add_output(http_compare)
+    http_compare.add_argument("--json", action="store_true")
+    access = http_commands.add_parser("assess", help="Assess explicit identity/object/access expectations against saved evidence.")
+    access.add_argument("matrix")
+    access.add_argument("--evidence", action="append", required=True)
+    _add_output(access)
+    access.add_argument("--json", action="store_true")
+    preview = http_commands.add_parser("preview", help="Validate a prepared request and show its approval hash without sending it.")
+    preview.add_argument("request")
+    preview.add_argument("--json", action="store_true")
+    replay_cmd = http_commands.add_parser("replay", help="Replay one exact approved request with a session identity.")
+    replay_cmd.add_argument("request")
+    replay_cmd.add_argument("--session", required=True)
+    replay_cmd.add_argument("--identity", required=True)
+    replay_cmd.add_argument("--state", required=True)
+    _add_output(replay_cmd)
+    replay_cmd.add_argument("--json", action="store_true")
+    stop_replay = http_commands.add_parser("stop", help="Stop subsequent requests in the named replay session.")
+    stop_replay.add_argument("session")
+    stop_replay.add_argument("--state", required=True)
+    stop_replay.add_argument("--json", action="store_true")
+    scenario = http_commands.add_parser("scenario", help="Run explicit approved requests and state expectations in sequence.")
+    scenario.add_argument("scenario")
+    scenario.add_argument("--session", required=True)
+    scenario.add_argument("--state", required=True)
+    _add_output(scenario)
+    scenario.add_argument("--json", action="store_true")
+
+    api = commands.add_parser("api", help="Inspect prepared API schemas and research changes.")
+    api_commands = api.add_subparsers(dest="api_command", required=True)
+    inventory = api_commands.add_parser("inventory", help="Inventory OpenAPI operations and effective authentication declarations.")
+    inventory.add_argument("schema")
+    inventory.add_argument("--project", required=True)
+    _add_output(inventory)
+    inventory.add_argument("--json", action="store_true")
+    api_diff = api_commands.add_parser("diff", help="Compare prepared OpenAPI schemas using pinned oasdiff and authentication semantics.")
+    api_diff.add_argument("before")
+    api_diff.add_argument("after")
+    api_diff.add_argument("--project", required=True)
+    api_diff.add_argument("--tool-path")
+    _add_output(api_diff)
+    api_diff.add_argument("--json", action="store_true")
+    api_coverage = api_commands.add_parser("coverage", help="Compare observed HTTP operations with a prepared schema.")
+    api_coverage.add_argument("schema")
+    api_coverage.add_argument("--evidence", required=True)
+    api_coverage.add_argument("--project", required=True)
+    _add_output(api_coverage)
+    api_coverage.add_argument("--json", action="store_true")
+    owned_test = api_commands.add_parser("test-owned", help="Run pinned Schemathesis and explicit lifecycle checks on an owned disposable mini-API.")
+    owned_test.add_argument("--vulnerable", action="store_true")
+    _add_output(owned_test)
+    owned_test.add_argument("--json", action="store_true")
 
     analyze = commands.add_parser("analyze", help="Run local read-only analysis.")
     analyze_commands = analyze.add_subparsers(dest="analysis_command", required=True)
@@ -401,6 +499,37 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         if args.command == "report":
             _emit(export_markdown(args.result, args.output, case_path=args.case, review_path=args.review), args.json)
+            return 0
+        if args.command == "http":
+            if args.http_command == "preview":
+                _emit(request_preview(args.request), args.json)
+                return 0
+            if args.http_command == "stop":
+                _emit(stop_session(args.session, args.state), args.json)
+                return 0
+            if args.http_command == "import":
+                result = import_capture(args.capture, args.project, format_name=args.format, identity=args.identity,
+                    object_id=args.object, operation=args.operation, selected=args.select)
+            elif args.http_command == "compare":
+                result = compare_http(args.before, args.after, args.before_index, args.after_index, args.ignore)
+            elif args.http_command == "replay":
+                result = replay(args.session, args.request, args.identity, args.state)
+            elif args.http_command == "scenario":
+                result = run_scenario(args.scenario, args.session, args.state)
+            else:
+                result = assess_access(args.matrix, args.evidence)
+            _emit_analysis(result, args)
+            return 0
+        if args.command == "api":
+            if args.api_command == "inventory":
+                result = inventory_schema(args.schema, args.project)
+            elif args.api_command == "diff":
+                result = compare_schema(args.before, args.after, args.project, args.tool_path)
+            elif args.api_command == "test-owned":
+                result = test_owned_api(args.vulnerable)
+            else:
+                result = coverage(args.schema, args.evidence, args.project)
+            _emit_analysis(result, args)
             return 0
         if args.command == "import":
             _emit_analysis(import_report(args.report, args.format, args.source_root), args)

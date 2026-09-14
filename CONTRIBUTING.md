@@ -10,10 +10,11 @@ Create a virtual environment with `python -m venv .venv`. Activate it with
 Then run:
 
 ```sh
-python -m pip install ".[scanner-ruff,release]"
+python -m pip install ".[scanner-ruff,release,api,api-test,test-tls]"
 python scripts/setup_tools.py --destination .whitehat/tools
 python -B scripts/validate.py
 python -B scripts/evaluate_research.py
+python -B scripts/evaluate_web.py
 ```
 
 Core runtime dependencies remain empty. Native engines are installed separately.

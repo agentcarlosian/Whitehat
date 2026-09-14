@@ -32,6 +32,10 @@ SUPPORTED_RESULT_SCHEMAS = frozenset(
         "whitehat-synthetic-run-v1",
         "whitehat-research-result-v1",
         "whitehat-research-comparison-v1",
+        "whitehat-http-evidence-v1",
+        "whitehat-http-comparison-v1",
+        "whitehat-api-inventory-v1",
+        "whitehat-api-coverage-v1",
     }
 )
 REVIEW_DECISIONS = frozenset({"accepted", "dismissed", "needs-work"})

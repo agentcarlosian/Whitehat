@@ -18,8 +18,9 @@ class DoctorTests(unittest.TestCase):
         self.assertTrue(result["capabilities"]["ruffScannerAdapter"])
         self.assertTrue(result["capabilities"]["network"])
         self.assertTrue(result["capabilities"]["loopbackNetworkExecution"])
-        self.assertFalse(result["capabilities"]["externalNetwork"])
-        self.assertFalse(result["capabilities"]["credentials"])
+        self.assertTrue(result["capabilities"]["externalNetwork"])
+        self.assertTrue(result["capabilities"]["sessionBoundHttpReplay"])
+        self.assertTrue(result["capabilities"]["credentials"])
         self.assertFalse(result["capabilities"]["externalContact"])
         self.assertFalse(result["capabilities"]["submission"])
 

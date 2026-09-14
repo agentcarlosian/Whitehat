@@ -2,11 +2,10 @@
 
 Updated: 2026-09-14
 
-Status: research toolkit and adoption implemented in draft PR #1; platform
-validation and review handoff in progress. The baseline technical
-publication audit and owned-loopback proof passed CI at `7e47505`.
+Status: toolkit PR #1 merged at `47befa7`, with post-merge CI passed.
+Web/API research workflows are now active under the owner's approved order.
 
-Current acceptance criteria and execution order: [research toolkit](tasks/research-toolkit.md).
+Current acceptance criteria and execution order: [web/API workflows](tasks/web-api-workflows.md).
 The foundation record below describes completed work and does not select new work.
 
 Primary surface: `python -m whitehat`

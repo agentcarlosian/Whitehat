@@ -38,24 +38,29 @@
 - Scanner output is static-analysis metadata. A rule match, clean result, exit
   code, or fix suggestion does not establish reachability, exploitability,
   finding validity, impact, severity, eligibility, or authorization.
-- Network-session validation and owned IPv4 loopback execution are implemented.
-  External network execution is not. A contract, approver assertion, policy URL,
-  and validation result do not establish legal authority.
-- The initial design is HTTPS observation-only with GET/HEAD and all credential,
-  mutation, third-party-data, contact, and submission effects false. Broader
-  network behavior requires a separate design and implementation review.
-- The implemented transport is HTTP GET to exact `127.0.0.1` only. It does not
-  prove external HTTPS, DNS/public-address filtering, TLS, IPv6 loopback,
-  authenticated requests, mutating methods, or operating-system network isolation.
-- The SQLite ledger is local coordination state, not authority or tamper-proof
-  evidence. An abrupt process crash can leave a conservative active reservation
-  that requires operator review rather than automatic retry.
+- Replay supports exact prepared HTTP(S) requests under a current session. Plain
+  HTTP is limited to owned 127.0.0.1; external HTTPS requires public-address
+  checks and normal TLS certificate/hostname verification. The initial profile
+  uses ordinary ASCII paths and HTTP/1.1; redirects, proxies, retries, raw framing,
+  automatic login, and dynamic identifier substitution are unsupported.
+- Credential references are explicit environment names. No credential discovery
+  or provider validation exists. Method-based mutation permission does not prove
+  that a request is free of side effects; reviewed request hashes remain required.
+- Session budgets and a single in-flight request are enforced with a bound SQLite
+  ledger. Failed attempts are consumed. Stop blocks subsequent requests. A crash
+  can leave an active reservation for operator review; the ledger is not authority.
+- Generated Schemathesis testing runs only on the owned mini-API. Its audit hook,
+  nonce, connection cap and process deadline are not an OS sandbox. Reusable
+  stateful scenarios outside that fixture contain only exact approved requests.
+- HTTP evidence omits raw headers/bodies and query values. Explicit scalar
+  selectors may retain sensitive values; review selectors and exports. Missing
+  captured bodies never prove that a sensitive field was absent.
 - The release audit is a bounded technical check, not legal advice or an
   originality, trademark, maintenance, publication, or distribution decision.
 - Secret scanning uses explicit high-confidence patterns and cannot prove that a
   tree contains no sensitive data. Human review remains required before public
   visibility.
-- No external-target network, credential, browser, arbitrary-command, account, target-mutation,
-  destructive, payment, contact, disclosure, or submission capability exists.
+- Browser control, arbitrary commands, automatic account actions, destructive
+  operations, payments, contact, disclosure, and submission are not provided.
 - The project is licensed under Apache-2.0. Publication remains blocked until the
   exact tree completes its release review.
