@@ -52,6 +52,9 @@ External HTTPS transport must remain distinct from its mocked/TLS fixture proof.
   nonce-bound owned fixture. The explicit lifecycle scenario detects the broken
   deletion regardless of generated coverage. Fixed and broken evaluations pass.
 - Isolated installed CLI preview and API inventory pass for 0.10.0a1.
+- Technical release audit passed at `24c7b88`: 121 tracked files, 31 literal
+  release inputs, zero high-confidence secret-pattern matches, a 39-file sdist,
+  a 30-file wheel, and clean installed session-bound replay diagnostics.
 - No third-party targets or real credentials were used. DNS is mocked in the
   owned TLS hostname/pinning test. External generated testing and dynamic ID
   substitution remain outside the implemented profiles.
