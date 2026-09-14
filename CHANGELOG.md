@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.11.0a1 — capture-to-report adoption
+
+- Preserve incomplete HAR entries and null-body capture state with explicit diagnostics.
+- Prepare selected captured requests and unapproved credential-reference session drafts.
+- Bind a selected created ID into one concrete follow-up request path segment offline.
+- Assemble hash-pinned evidence manifests, typed HTTP/comparison/access renderers,
+  informational content checks, and generic/HackerOne/Bugcrowd Markdown drafts.
+- Add per-candidate decision histories, explicit duplicate relationships and
+  conservative retest comparability. Report severity/description metadata changes.
+- Extend API coverage with identity/object access cases and explicit scenario steps
+  and transitions, preserving untested/conflicting outcomes.
+- Add a complete owned CLI evaluation and refresh completed-work documentation.
+
+No runtime dependencies or new network capabilities were added. Live dynamic
+substitution, relational assertions, Burp XML and GraphQL remain future work.
+This is an alpha development checkpoint, not a published package release.
+
 ## 0.10.0a1 — web/API workflows
 
 - Preserve HTTP method/input context in ZAP observations.

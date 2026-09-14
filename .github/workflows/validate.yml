@@ -52,6 +52,9 @@ jobs:
         if: runner.os != 'macOS'
         run: python -B scripts/evaluate_web.py
 
+      - name: Evaluate capture, packet, binding, triage and coverage workflows
+        run: python -B scripts/evaluate_bounty.py
+
       - name: Verify package installation
         run: |
           python -m pip install --no-deps .
@@ -63,6 +66,7 @@ jobs:
           whitehat http preview examples/http/request.example.json --json
           whitehat api inventory examples/api/before.json --project owned-api --json
           whitehat session validate examples/network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
+          python -B scripts/evaluate_bounty.py --installed
 
   release-audit:
     needs: validate

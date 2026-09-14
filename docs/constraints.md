@@ -55,6 +55,18 @@
 - HTTP evidence omits raw headers/bodies and query values. Explicit scalar
   selectors may retain sensitive values; review selectors and exports. Missing
   captured bodies never prove that a sensitive field was absent.
+- Capture preparation writes selected raw request data only to its explicit
+  output directory. Credentials recognized in captures are removed or rejected;
+  this does not guarantee arbitrary request data is nonsensitive. Session drafts
+  are unapproved and binding creates concrete follow-up requests without sending.
+- Evidence packets accept only supported normalized result types, explicit
+  selections and contained hash-pinned paths. Content readiness is informational.
+  Missing or changed evidence is not embedded as verified content. Candidate
+  history is hash-linked operator-controlled storage, not signatures or immutable
+  storage. Retest conclusions remain analyst assertions.
+- Staged binding supports one ordinary string ID in one declared path segment.
+  It does not change request origins, credentials, queries, bodies, sessions or
+  ledgers. See the complete [workflow contract](bounty-workflow.md).
 - The release audit is a bounded technical check, not legal advice or an
   originality, trademark, maintenance, publication, or distribution decision.
 - Secret scanning uses explicit high-confidence patterns and cannot prove that a

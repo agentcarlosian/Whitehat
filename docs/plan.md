@@ -2,10 +2,11 @@
 
 Updated: 2026-09-14
 
-Status: toolkit PR #1 merged at `47befa7`, with post-merge CI passed.
-Web/API research workflows are now active under the owner's approved order.
+Status: toolkit PR #1 and Web/API PR #2 are merged. Web/API main is `c04fb29`,
+with post-merge Windows, Ubuntu, macOS and release checks passed.
+Bounty workflow adoption priorities 1, 2, 3 and 5 are active.
 
-Current acceptance criteria and execution order: [web/API workflows](tasks/web-api-workflows.md).
+Current acceptance criteria: [bounty workflow adoption](tasks/bounty-workflow-adoption.md).
 The foundation record below describes completed work and does not select new work.
 
 Primary surface: `python -m whitehat`
@@ -92,8 +93,9 @@ a meaningful side-effect boundary.
 
 ## Next slices
 
-Follow the ordered toolkit and adoption task linked above. External HTTPS
-execution remains a separate capability design.
+Follow the selected bounty workflow adoption task linked above. Exact-request
+HTTPS replay is implemented under Decision 0005; these new artifacts do not
+widen its execution contract.
 
 ## Alpha-foundation verification (historical)
 

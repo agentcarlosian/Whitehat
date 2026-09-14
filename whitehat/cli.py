@@ -41,6 +41,9 @@ from .http_evidence import import_capture, compare_http, assess_access
 from .http_replay import replay, request_preview, stop_session, run_scenario
 from .api_schema import inventory_schema, compare_schema, coverage
 from .api_testing import test_owned_api
+from .preparation import prepare_capture, bind_request
+from .packets import initialize_packet, check_packet, export_packet
+from .candidates import DECISIONS, initialize_candidate, record_decision, candidate_history
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -77,6 +80,7 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
     if value.get("schemaVersion") == "whitehat-research-comparison-v1":
         summary = value["summary"]
         print(f"Research comparison: {summary['introduced']} introduced, {summary['absent']} absent, {summary['unchanged']} unchanged")
+        print(f"Metadata changes: {summary.get('metadataChanged', 0)}; comparison: {value.get('comparisonSuitability', 'unspecified')}")
         print(value["interpretation"])
         return
     if value.get("schemaVersion") == "whitehat-workspace-v1":
@@ -88,6 +92,9 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         return
     if value.get("schemaVersion") == "whitehat-http-evidence-v1":
         print(f"HTTP evidence: {len(value['exchanges'])} exchanges in {value['projectId']}")
+        incomplete = value.get("provenance", {}).get("incompleteEntries", [])
+        if incomplete:
+            print(f"Incomplete capture entries: {len(incomplete)} (no HTTP response)")
         for entry in value["exchanges"]:
             c = entry["context"]
             print(f"{c['identityId']} {c['method']} {c['endpoint']} -> {entry['response']['status']}")
@@ -108,6 +115,39 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         return
     if value.get("schemaVersion") == "whitehat-api-coverage-v1":
         print(f"API coverage: {len(value['observedOperations'])} observed, {len(value['unobservedOperations'])} unobserved, {len(value['undocumentedRequests'])} undocumented/ambiguous requests")
+        for case in value.get("accessCases", []):
+            print(f"Access {case['rowId']}: {case['outcome']}")
+        for scenario in value.get("scenarios", []):
+            for step in scenario["steps"]:
+                print(f"Scenario step {step['stepId']}: {step['outcome']}")
+        return
+    if value.get("schemaVersion") == "whitehat-preparation-v1":
+        print(f"Prepared {value['method']} {value['endpoint']}")
+        print(f"Request SHA-256: {value['requestSha256']}")
+        for diagnostic in value["diagnostics"]:
+            print("  " + diagnostic["code"])
+        print("Request artifacts written; session approval is still required for execution.")
+        return
+    if value.get("schemaVersion") in {"whitehat-packet-init-v1", "whitehat-packet-check-v1", "whitehat-packet-export-v1"}:
+        print("Packet manifest SHA-256: " + value["manifestSha256"])
+        if "contentComplete" in value:
+            print("Content complete: " + str(value["contentComplete"]))
+            for issue in value["issues"]:
+                print(f"  {issue['code']}: {issue['item']}")
+        return
+    if value.get("schemaVersion") == "whitehat-candidate-init-v1":
+        print(f"Created candidate {value['candidateId']}: {value['title']}")
+        return
+    if value.get("schemaVersion") == "whitehat-candidate-decision-v1":
+        print(f"Candidate {value['candidateId']} decision {value['sequence']}: {value['decision']}")
+        print(value["note"])
+        if value["comparisonSuitable"] is False:
+            print("Retest evidence is not comparable to the selected prior decision.")
+        return
+    if value.get("schemaVersion") == "whitehat-candidate-history-v1":
+        print("Candidate " + value["candidate"]["candidateId"])
+        for item in value["decisions"]:
+            print(f"{item['sequence']}: {item['decision']} - {item['note']}")
         return
     if value.get("schemaVersion") == "whitehat-local-inventory-v1":
         print(
@@ -237,8 +277,63 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--output", required=True)
     report.add_argument("--json", action="store_true")
 
+    packet = commands.add_parser("packet", help="Assemble selected evidence into a reproducible research draft.")
+    packet_commands = packet.add_subparsers(dest="packet_command", required=True)
+    packet_init = packet_commands.add_parser("init", help="Create a manifest with explicitly selected normalized evidence.")
+    packet_init.add_argument("--project", required=True)
+    packet_init.add_argument("--title", default="Research draft")
+    packet_init.add_argument("--evidence", action="append", required=True)
+    packet_init.add_argument("--output", required=True)
+    packet_init.add_argument("--json", action="store_true")
+    packet_check = packet_commands.add_parser("check", help="Verify evidence links and report missing draft content.")
+    packet_check.add_argument("manifest")
+    _add_output(packet_check)
+    packet_check.add_argument("--json", action="store_true")
+    packet_export = packet_commands.add_parser("export", help="Render selected evidence and draft completeness as Markdown.")
+    packet_export.add_argument("manifest")
+    packet_export.add_argument("--preset", choices=("generic", "hackerone", "bugcrowd"), default="generic")
+    packet_export.add_argument("--output", required=True)
+    packet_export.add_argument("--json", action="store_true")
+
+    candidate = commands.add_parser("candidate", help="Record per-candidate decisions and explicit retest history.")
+    candidate_commands = candidate.add_subparsers(dest="candidate_command", required=True)
+    candidate_init = candidate_commands.add_parser("init", help="Create a candidate directory and empty decision history.")
+    candidate_init.add_argument("directory")
+    candidate_init.add_argument("--id", required=True)
+    candidate_init.add_argument("--project", required=True)
+    candidate_init.add_argument("--title", required=True)
+    candidate_init.add_argument("--json", action="store_true")
+    decision = candidate_commands.add_parser("record", help="Append a hash-linked decision selecting observations or exchanges.")
+    decision.add_argument("directory")
+    decision.add_argument("--evidence", required=True)
+    decision.add_argument("--select", action="append", default=[])
+    decision.add_argument("--decision", choices=sorted(DECISIONS), required=True)
+    decision.add_argument("--note", required=True)
+    decision.add_argument("--retest-of", type=int)
+    decision.add_argument("--related")
+    decision.add_argument("--relation", choices=("possible-duplicate", "same-candidate"))
+    decision.add_argument("--json", action="store_true")
+    history = candidate_commands.add_parser("history", help="Validate and display a candidate's linked decisions.")
+    history.add_argument("directory")
+    _add_output(history)
+    history.add_argument("--json", action="store_true")
+
     http = commands.add_parser("http", help="Import HTTP evidence, compare responses, and assess access expectations.")
     http_commands = http.add_subparsers(dest="http_command", required=True)
+    prepare = http_commands.add_parser("prepare", help="Prepare one source capture entry and an unapproved session draft.")
+    prepare.add_argument("capture")
+    prepare.add_argument("--format", choices=("har", "capture"), default="har")
+    prepare.add_argument("--index", type=int, default=0)
+    prepare.add_argument("--project", required=True)
+    prepare.add_argument("--identity", default="researcher")
+    prepare.add_argument("--object", default="object")
+    prepare.add_argument("--operation", default="operation")
+    prepare.add_argument("--output-dir", required=True)
+    prepare.add_argument("--json", action="store_true")
+    binding = http_commands.add_parser("bind", help="Bind a selected evidence ID into one declared path segment offline.")
+    binding.add_argument("plan")
+    binding.add_argument("--output-dir", required=True)
+    binding.add_argument("--json", action="store_true")
     capture = http_commands.add_parser("import", help="Import HAR 1.2 or an explicit request/response capture.")
     capture.add_argument("capture")
     capture.add_argument("--format", choices=("har", "capture"), default="har")
@@ -299,7 +394,9 @@ def _parser() -> argparse.ArgumentParser:
     api_diff.add_argument("--json", action="store_true")
     api_coverage = api_commands.add_parser("coverage", help="Compare observed HTTP operations with a prepared schema.")
     api_coverage.add_argument("schema")
-    api_coverage.add_argument("--evidence", required=True)
+    api_coverage.add_argument("--evidence", action="append", required=True)
+    api_coverage.add_argument("--matrix", help="Explicit identity/object access expectations.")
+    api_coverage.add_argument("--scenario", action="append", default=[], help="Explicit scenario plan for step and transition coverage.")
     api_coverage.add_argument("--project", required=True)
     _add_output(api_coverage)
     api_coverage.add_argument("--json", action="store_true")
@@ -500,7 +597,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "report":
             _emit(export_markdown(args.result, args.output, case_path=args.case, review_path=args.review), args.json)
             return 0
+        if args.command == "packet":
+            if args.packet_command == "init":
+                _emit(initialize_packet(args.output, args.project, args.title, args.evidence), args.json)
+            elif args.packet_command == "export":
+                _emit(export_packet(args.manifest, args.output, args.preset), args.json)
+            else:
+                _emit_analysis(check_packet(args.manifest), args)
+            return 0
+        if args.command == "candidate":
+            if args.candidate_command == "init":
+                _emit(initialize_candidate(args.directory, args.id, args.project, args.title), args.json)
+            elif args.candidate_command == "record":
+                _emit(record_decision(args.directory, args.evidence, args.select, args.decision, args.note, args.retest_of, args.related, args.relation), args.json)
+            else:
+                _emit_analysis(candidate_history(args.directory), args)
+            return 0
         if args.command == "http":
+            if args.http_command == "prepare":
+                _emit(prepare_capture(args.capture, args.output_dir, args.project, index=args.index, identity=args.identity,
+                                      object_id=args.object, operation=args.operation, format_name=args.format), args.json)
+                return 0
+            if args.http_command == "bind":
+                _emit(bind_request(args.plan, args.output_dir), args.json)
+                return 0
             if args.http_command == "preview":
                 _emit(request_preview(args.request), args.json)
                 return 0
@@ -528,7 +648,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             elif args.api_command == "test-owned":
                 result = test_owned_api(args.vulnerable)
             else:
-                result = coverage(args.schema, args.evidence, args.project)
+                result = coverage(args.schema, args.evidence, args.project, args.matrix, args.scenario)
             _emit_analysis(result, args)
             return 0
         if args.command == "import":
@@ -646,12 +766,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         ReleaseAuditError,
         RunnerError,
         ScannerError,
+        OSError,
     ) as exc:
         failure = {
             "schemaVersion": "whitehat-error-v1",
             "ok": False,
-            "error": {"code": exc.error_code, "message": str(exc)},
+            "error": {"code": getattr(exc, "error_code", "invalid-input"),
+                      "message": "filesystem operation failed; check input/output paths and permissions" if isinstance(exc, OSError) else str(exc)},
         }
         _emit(failure, bool(getattr(args, "json", False)))
-        return exc.exit_code
+        return getattr(exc, "exit_code", 3)
     raise AssertionError("unhandled command")

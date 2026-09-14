@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "whitehat-access-matrix-v1",
+  "projectId": "owned-api",
+  "rows": [
+    {"id": "owner-read", "identityId": "alice", "objectId": "owned-item", "operationId": "read", "method": "GET", "endpoint": "https://owned.example.invalid/items/owned-42", "expect": "allow", "proof": {"pointer": "/marker", "equals": "owned-item"}},
+    {"id": "other-user-read", "identityId": "bob", "objectId": "owned-item", "operationId": "read", "method": "GET", "endpoint": "https://owned.example.invalid/items/owned-42", "expect": "deny", "proof": {"pointer": "/marker", "equals": "owned-item"}}
+  ]
+}

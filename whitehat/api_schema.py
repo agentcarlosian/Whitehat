@@ -319,17 +319,26 @@ def compare_schema(
     )
 
 
-def coverage(schema_path: str, evidence_path: str, project: str) -> dict[str, Any]:
+def coverage(
+    schema_path: str,
+    evidence_path: str | list[str],
+    project: str,
+    matrix_path: str | None = None,
+    scenario_paths: list[str] | None = None,
+) -> dict[str, Any]:
     inventory = inventory_schema(schema_path, project)
-    evidence = load_evidence(evidence_path)
-    if evidence["projectId"] != project:
+    paths = [evidence_path] if isinstance(evidence_path, str) else evidence_path
+    if not isinstance(paths, list) or not 1 <= len(paths) <= 20:
+        raise ReportError("coverage requires 1-20 evidence files")
+    documents = [load_evidence(p) for p in paths]
+    if any(d["projectId"] != project for d in documents):
         raise ReportError("schema/evidence project mismatch")
     from urllib.parse import urlsplit
 
     operations = inventory["operations"]
     seen = set()
     undocumented = []
-    for entry in evidence["exchanges"]:
+    for entry in (entry for doc in documents for entry in doc["exchanges"]):
         context = entry["context"]
         path = urlsplit(context["endpoint"]).path
         matches = []
@@ -347,6 +356,31 @@ def coverage(schema_path: str, evidence_path: str, project: str) -> dict[str, An
                     "reason": "unmatched" if not matches else "ambiguous",
                 }
             )
+    access = []
+    if matrix_path:
+        from .http_evidence import assess_access
+
+        assessment = assess_access(matrix_path, paths)
+        matrix = parse_json(read_bytes(Path(matrix_path), 256 * 1024))
+        rows = {r["id"]: r for r in matrix["rows"]}
+        for evaluation in assessment["provenance"]["evaluations"]:
+            row = rows[evaluation["rowId"]]
+            access.append(
+                {
+                    **evaluation,
+                    **{
+                        k: row[k]
+                        for k in (
+                            "identityId",
+                            "objectId",
+                            "operationId",
+                            "method",
+                            "endpoint",
+                        )
+                    },
+                }
+            )
+    scenario_coverage = _scenario_coverage(scenario_paths or [], documents, project)
     return seal(
         {
             "schemaVersion": "whitehat-api-coverage-v1",
@@ -357,7 +391,150 @@ def coverage(schema_path: str, evidence_path: str, project: str) -> dict[str, An
                 op for i, op in enumerate(operations) if i not in seen
             ],
             "undocumentedRequests": undocumented,
+            "accessCases": access,
+            "scenarios": scenario_coverage,
+            "evidenceResults": sorted({d["resultSha256"] for d in documents}),
+            "interpretation": "Route observation is not authorization or state-transition coverage. Access and scenario outcomes refer only to supplied explicit expectations.",
             "claims": dict(CLAIMS),
             "effects": {"network": False},
         }
     )
+
+
+def _scenario_coverage(
+    paths: list[str], documents: list[dict], project: str
+) -> list[dict]:
+    from .evidence_links import contained_path, fields
+    from .http_evidence import digest, label
+    from .http_replay import prepared_request
+
+    if len(paths) > 20:
+        raise ReportError("coverage supports at most 20 scenario plans")
+    result = []
+    for path in paths:
+        source = Path(path)
+        plan = fields(
+            parse_json(read_bytes(source, 256 * 1024)),
+            {"schemaVersion", "projectId", "steps"},
+            "scenario plan",
+        )
+        if (
+            plan["schemaVersion"] != "whitehat-http-scenario-v1"
+            or plan["projectId"] != project
+        ):
+            raise ReportError("coverage scenario schema/project mismatch")
+        if not isinstance(plan["steps"], list) or not 1 <= len(plan["steps"]) <= 20:
+            raise ReportError("coverage scenario requires 1-20 steps")
+        step_ids, prepared_requests = [], []
+        for step in plan["steps"]:
+            fields(step, {"id", "request", "identityId", "expect"}, "scenario step")
+            step_ids.append(label(step["id"], "step"))
+            label(step["identityId"], "identity")
+            prepared_requests.append(
+                prepared_request(
+                    parse_json(
+                        read_bytes(
+                            contained_path(source.parent, step["request"]), 128 * 1024
+                        )
+                    )
+                )
+            )
+        if len(step_ids) != len(set(step_ids)):
+            raise ReportError("duplicate scenario step ID")
+        matched = [
+            d
+            for d in documents
+            if d.get("provenance", {}).get("profile") == "explicit-scenario"
+            and d["provenance"].get("scenarioSha256") == digest(plan)
+        ]
+        compatible, incompatible = [], []
+        for document in matched:
+            if document["provenance"]["plannedSteps"] != len(step_ids) or len(document["exchanges"]) > len(step_ids):
+                raise ReportError("scenario receipt counts differ from its plan")
+            matches_requests = True
+            for index, entry in enumerate(document["exchanges"]):
+                request = prepared_requests[index]
+                context = entry["context"]
+                if (
+                    any(
+                        context[k] != request[k]
+                        for k in ("method", "objectId", "operationId")
+                    )
+                    or context["identityId"] != plan["steps"][index]["identityId"]
+                    or entry["request"]["urlSha256"]
+                    != hashlib.sha256(request["url"].encode("utf-8")).hexdigest()
+                    or entry["request"]["bodySha256"]
+                    != hashlib.sha256(
+                        (request["body"] or "").encode("utf-8")
+                    ).hexdigest()
+                ):
+                    matches_requests = False
+            (compatible if matches_requests else incompatible).append(document)
+        matched = compatible
+        steps = []
+        for step_id in step_ids:
+            evaluations = []
+            for document in matched:
+                known = {e["evidenceSha256"] for e in document["exchanges"]}
+                entries = document["provenance"].get("evaluations", [])
+                if not isinstance(entries, list) or len(entries) > len(step_ids):
+                    raise ReportError("invalid scenario evaluations")
+                for index, evaluation in enumerate(entries):
+                    fields(
+                        evaluation,
+                        {"stepId", "outcome", "evidenceSha256"},
+                        "scenario evaluation",
+                    )
+                    if (
+                        evaluation["stepId"] != step_ids[index]
+                        or evaluation["evidenceSha256"] not in known
+                        or evaluation["outcome"] not in {"consistent", "mismatch"}
+                    ):
+                        raise ReportError(
+                            "scenario receipt does not match plan/evidence"
+                        )
+                    if evaluation["stepId"] == step_id:
+                        evaluations.append(evaluation)
+            outcomes = {e["outcome"] for e in evaluations}
+            outcome = (
+                "not-tested"
+                if not outcomes
+                else "conflicting"
+                if len(outcomes) > 1
+                else next(iter(outcomes))
+            )
+            steps.append(
+                {
+                    "stepId": step_id,
+                    "outcome": outcome,
+                    "evidenceSha256": sorted(
+                        {e["evidenceSha256"] for e in evaluations}
+                    ),
+                }
+            )
+        transitions = []
+        for index in range(1, len(step_ids)):
+            receipts = [
+                d["resultSha256"]
+                for d in matched
+                if len(d["provenance"]["evaluations"]) > index
+            ]
+            transitions.append(
+                {
+                    "from": step_ids[index - 1],
+                    "to": step_ids[index],
+                    "outcome": "observed" if receipts else "not-tested",
+                    "evidenceResults": sorted(set(receipts)),
+                }
+            )
+        result.append(
+            {
+                "scenarioSha256": digest(plan),
+                "steps": steps,
+                "transitions": transitions,
+                "notComparableResults": sorted(
+                    {d["resultSha256"] for d in incompatible}
+                ),
+            }
+        )
+    return result

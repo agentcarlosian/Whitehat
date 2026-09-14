@@ -36,6 +36,18 @@ There is no persistent background service.
 
 ## Failure handling
 
+For capture preparation, evidence packets, staged binding, candidate decisions
+and access/scenario coverage, use [the complete bounty workflow](bounty-workflow.md).
+`python -B scripts/evaluate_bounty.py` verifies this path with owned fixtures;
+add `--output-dir NEW_DIRECTORY` to retain the example report and input artifacts.
+
+If a packet reports changed evidence, inspect the source and deliberately update
+the manifest's hash/selection only after review. Never silently refresh a pin.
+If candidate history reports a gap or altered predecessor, recover the original
+files from your own backup; do not delete prior decisions to manufacture a clean
+history. New source lines, selectors or identity/object bindings can make a retest
+not comparable even when the human believes it concerns the same candidate.
+
 - Exit `2`: command-line usage is invalid. Check `--help`.
 - Exit `3`: an input path is invalid, changed during inspection, or contains a
   link or unsupported entry. Stabilize the input and retry.
