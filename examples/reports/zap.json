@@ -1,0 +1,9 @@
+{
+  "@version": "synthetic",
+  "site": [{
+    "@name": "https://owned.example.invalid",
+    "alerts": [{"alertRef": "10020-1", "riskcode": "1",
+      "instances": [{"uri": "https://owned.example.invalid/dashboard?session=synthetic-private-value", "evidence": "omitted evidence"}]
+    }]
+  }]
+}

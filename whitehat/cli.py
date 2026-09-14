@@ -34,6 +34,9 @@ from .records import (
 from .release_audit import ReleaseAuditError, audit_release
 from .runner import ProcessLimits, RunnerError, run_synthetic
 from .scanner import ScannerError, ScannerLimits, scan_with_ruff
+from .native_tools import scan_native, toolkit_status
+from .reports import FORMATS, compare_results, import_report
+from .research import export_markdown, initialize_workspace
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -51,6 +54,33 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         return
     if value.get("schemaVersion") == "whitehat-error-v1":
         print(f"Error: {value['error']['message']}")
+        return
+    if value.get("schemaVersion") == "whitehat-toolkit-v1":
+        for tool in value["native"]:
+            print(f"{tool['tool']} {tool['version']} ({', '.join(tool['platforms'])})")
+        print("Report imports: " + ", ".join(value["imports"]))
+        print("Explicit setup: " + value["setup"])
+        return
+    if value.get("schemaVersion") == "whitehat-research-result-v1":
+        print(f"Research results: {value['summary']['observations']} observations")
+        for item in value["observations"]:
+            location = item["path"] or item["endpoint"] or "(no location)"
+            if item["line"] is not None:
+                location += f":{item['line']}"
+            print(f"{item['tool']} / {item['ruleId']}  {location}")
+            print("  " + item["explanation"])
+        return
+    if value.get("schemaVersion") == "whitehat-research-comparison-v1":
+        summary = value["summary"]
+        print(f"Research comparison: {summary['introduced']} introduced, {summary['absent']} absent, {summary['unchanged']} unchanged")
+        print(value["interpretation"])
+        return
+    if value.get("schemaVersion") == "whitehat-workspace-v1":
+        print(f"Created research workspace: {value['title']}")
+        print("Edit case.json; use inputs/, results/, notes/, and exports/.")
+        return
+    if value.get("schemaVersion") == "whitehat-markdown-export-v1":
+        print(f"Exported research review ({value['bytes']} bytes), SHA-256 {value['markdownSha256']}")
         return
     if value.get("schemaVersion") == "whitehat-local-inventory-v1":
         print(
@@ -142,7 +172,7 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="whitehat",
-        description="Local-first tools for authorized security research.",
+        description="Security research and authorized bounty workflows.",
     )
     parser.add_argument("--version", action="version", version=__version__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -151,6 +181,34 @@ def _parser() -> argparse.ArgumentParser:
         "doctor", help="Report implemented capability boundaries."
     )
     doctor.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
+
+    toolkit = commands.add_parser("tools", help="List reviewed tools, versions, platforms, and import formats.")
+    toolkit.add_argument("--json", action="store_true")
+
+    report_import = commands.add_parser("import", help="Normalize an existing security report without running its tool.")
+    report_import.add_argument("report")
+    report_import.add_argument("--format", required=True, choices=FORMATS)
+    report_import.add_argument("--source-root", help="Lexical prefix to strip from absolute report paths; no files are opened there.")
+    report_import.add_argument("--json", action="store_true")
+    _add_output(report_import)
+
+    compare = commands.add_parser("compare", help="Compare saved research results by observation fingerprint.")
+    compare.add_argument("before")
+    compare.add_argument("after")
+    compare.add_argument("--json", action="store_true")
+    _add_output(compare)
+
+    initialize = commands.add_parser("init", help="Create a portable research workspace in a new directory.")
+    initialize.add_argument("directory")
+    initialize.add_argument("--title", default="Security research review")
+    initialize.add_argument("--json", action="store_true")
+
+    report = commands.add_parser("report", help="Export a saved research result and optional case/review as Markdown.")
+    report.add_argument("result")
+    report.add_argument("--case", help="Structured research case JSON.")
+    report.add_argument("--review", help="Hash-linked Whitehat review note for this result.")
+    report.add_argument("--output", required=True)
+    report.add_argument("--json", action="store_true")
 
     analyze = commands.add_parser("analyze", help="Run local read-only analysis.")
     analyze_commands = analyze.add_subparsers(dest="analysis_command", required=True)
@@ -233,6 +291,20 @@ def _parser() -> argparse.ArgumentParser:
     ruff.add_argument("--workspace-root")
     _add_output(ruff)
     ruff.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
+
+    for name, description in (("opengrep", "Analyze Python/JavaScript with authored security rules."),
+                              ("secrets", "Detect potential secrets with pinned Betterleaks; no live credential checks.")):
+        native = scan_commands.add_parser(name, help=description)
+        native.add_argument("source")
+        native.add_argument("--tool-path", help="Exact pinned native executable; version and companion hashes must match.")
+        native.add_argument("--max-entries", type=int, default=20_000)
+        native.add_argument("--max-source-files", type=int, default=1_000)
+        native.add_argument("--max-file-bytes", type=int, default=1024 * 1024)
+        native.add_argument("--max-total-bytes", type=int, default=16 * 1024 * 1024)
+        native.add_argument("--max-observations", type=int, default=1_000)
+        native.add_argument("--timeout-seconds", type=float, default=30.0)
+        native.add_argument("--json", action="store_true")
+        _add_output(native)
 
     session = commands.add_parser(
         "session", help="Validate a local design contract for future network work."
@@ -320,6 +392,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "doctor":
             _emit(doctor_result(), args.json)
+            return 0
+        if args.command == "tools":
+            _emit(toolkit_status(), args.json)
+            return 0
+        if args.command == "init":
+            _emit(initialize_workspace(args.directory, args.title), args.json)
+            return 0
+        if args.command == "report":
+            _emit(export_markdown(args.result, args.output, case_path=args.case, review_path=args.review), args.json)
+            return 0
+        if args.command == "import":
+            _emit_analysis(import_report(args.report, args.format, args.source_root), args)
+            return 0
+        if args.command == "compare":
+            _emit_analysis(compare_results(args.before, args.after), args)
+            return 0
+        if args.command == "scan" and args.scan_command in {"opengrep", "secrets"}:
+            limits = ScannerLimits(max_entries=args.max_entries, max_source_files=args.max_source_files,
+                max_file_bytes=args.max_file_bytes, max_total_bytes=args.max_total_bytes,
+                max_observations=args.max_observations, timeout_seconds=args.timeout_seconds)
+            tool = "opengrep" if args.scan_command == "opengrep" else "betterleaks"
+            _emit_analysis(scan_native(args.source, tool, args.tool_path, limits), args)
             return 0
         if args.command == "analyze":
             if args.analysis_command == "inventory":

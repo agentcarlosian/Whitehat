@@ -1,0 +1,14 @@
+{
+  "version": "2.1.0",
+  "runs": [{
+    "tool": {"driver": {"name": "owned-demo", "rules": [{"id": "review-eval"}]}},
+    "results": [{
+      "ruleId": "review-eval",
+      "level": "warning",
+      "message": {"text": "Synthetic untrusted analyzer text, deliberately omitted on import"},
+      "locations": [{"physicalLocation": {
+        "artifactLocation": {"uri": "handlers.py"}, "region": {"startLine": 7}
+      }}]
+    }]
+  }]
+}

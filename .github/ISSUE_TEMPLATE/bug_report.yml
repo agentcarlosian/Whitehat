@@ -1,0 +1,22 @@
+name: Bug report
+description: A reproducible defect in Whitehat using an owned fixture
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Whitehat version, Python version, and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Use synthetic input. Do not include credentials, private program material, or real-target captures.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true

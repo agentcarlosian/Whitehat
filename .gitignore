@@ -9,6 +9,7 @@ dist/
 .ruff_cache/
 .pytest_cache/
 .whitehat/
+.whitehat-*/
 artifacts/
 private/
 tmp/

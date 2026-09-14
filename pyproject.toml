@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whitehat"
-version = "0.8.0a1"
-description = "Local-first tools for authorized security research"
+version = "0.9.0a1"
+description = "Security research toolkit for code analysis, scanner triage, and reproducible bounty reviews"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
@@ -23,6 +23,12 @@ classifiers = [
 [project.optional-dependencies]
 release = ["build==1.4.2", "setuptools==80.10.2"]
 scanner-ruff = ["ruff==0.14.14"]
+
+[project.urls]
+Repository = "https://github.com/agentcarlosian/Whitehat"
+Documentation = "https://github.com/agentcarlosian/Whitehat/blob/main/docs/quickstart.md"
+Issues = "https://github.com/agentcarlosian/Whitehat/issues"
+Changelog = "https://github.com/agentcarlosian/Whitehat/blob/main/CHANGELOG.md"
 
 [project.scripts]
 whitehat = "whitehat.cli:main"

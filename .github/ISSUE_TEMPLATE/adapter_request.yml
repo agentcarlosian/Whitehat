@@ -1,0 +1,22 @@
+name: Adapter or research workflow
+description: Propose a focused integration or research improvement
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Research task and expected benefit
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Tool, version, license, input/output format, and effects
+      description: Link to primary documentation. Specify import-only or native execution.
+    validations:
+      required: true
+  - type: textarea
+    id: controls
+    attributes:
+      label: Owned positive and negative controls
+    validations:
+      required: true

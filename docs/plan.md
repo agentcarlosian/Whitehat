@@ -1,14 +1,18 @@
 # Whitehat development plan
 
-Updated: 2026-09-11
+Updated: 2026-09-14
 
-Status: technical publication audit and owned-loopback network proof complete locally; CI pending
+Status: research toolkit and adoption implementation active. The baseline technical
+publication audit and owned-loopback proof passed CI at `7e47505`.
+
+Current acceptance criteria and execution order: [research toolkit](tasks/research-toolkit.md).
+The foundation record below describes completed work and does not select new work.
 
 Primary surface: `python -m whitehat`
 
 ## Product objective
 
-Build one practical local-first security research toolkit. Routine local work
+Build one practical security research and bounty toolkit. Routine analysis
 should be direct. Controls should become stricter only when an operation crosses
 a meaningful side-effect boundary.
 
@@ -88,9 +92,8 @@ a meaningful side-effect boundary.
 
 ## Next slices
 
-1. Push the audited private checkpoint and verify normal plus release CI.
-2. Treat external HTTPS execution as a later explicit decision; remaining DNS,
-   TLS, address-pinning, identification, and live-policy gates are still open.
+Follow the ordered toolkit and adoption task linked above. External HTTPS
+execution remains a separate capability design.
 
 ## Current verification
 
