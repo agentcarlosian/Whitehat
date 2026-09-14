@@ -32,7 +32,10 @@ def _run(arguments: list[str]) -> subprocess.CompletedProcess[str]:
 def _syntax_check() -> int:
     checked = 0
     for path in sorted(ROOT.rglob("*.py")):
-        if ".git" in path.parts or "__pycache__" in path.parts:
+        if any(
+            part in {".git", ".venv", "__pycache__", "build", "dist"}
+            for part in path.parts
+        ):
             continue
         source = path.read_text(encoding="utf-8")
         compile(source, str(path), "exec")

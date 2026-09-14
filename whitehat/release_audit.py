@@ -275,6 +275,7 @@ def _verify_sdist(
         raise ReleaseAuditError("sdist is missing a required release file")
     allowed_generated = {
         "PKG-INFO",
+        "setup.cfg",
         "whitehat.egg-info/PKG-INFO",
         "whitehat.egg-info/SOURCES.txt",
         "whitehat.egg-info/dependency_links.txt",
@@ -297,8 +298,8 @@ def _verify_sdist(
             raise ReleaseAuditError(
                 f"sdist source bytes do not match: {record['path']}"
             )
-    for relative in inventory:
-        _scan_content_for_secrets(f"sdist:{relative}", relative_files[relative])
+    for relative, content in relative_files.items():
+        _scan_content_for_secrets(f"sdist:{relative}", content)
     return {
         "filename": artifact.name,
         "sha256": _sha256(artifact.read_bytes()),
