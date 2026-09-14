@@ -1,7 +1,6 @@
 import json
+import importlib.metadata
 import os
-import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -21,20 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def ruff_is_available() -> bool:
-    executable = shutil.which("ruff")
-    if executable is None:
+    try:
+        version = importlib.metadata.version("ruff")
+    except importlib.metadata.PackageNotFoundError:
         return False
-    import subprocess
-
-    completed = subprocess.run(
-        [executable, "--version"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    return (
-        completed.returncode == 0 and completed.stdout.strip() == f"ruff {RUFF_VERSION}"
-    )
+    return version == RUFF_VERSION
 
 
 class ScannerTests(unittest.TestCase):
@@ -131,7 +121,10 @@ class ScannerTests(unittest.TestCase):
             source_root.mkdir()
             workspace_root.mkdir()
             (source_root / "file.py").write_text("pass\n", encoding="utf-8")
-            with patch("whitehat.scanner.shutil.which", return_value=sys.executable):
+            with patch(
+                "whitehat.scanner.importlib.metadata.distribution"
+            ) as distribution:
+                distribution.return_value.version = "999.0.0"
                 with self.assertRaisesRegex(ScannerError, "version must be exactly"):
                     scan_with_ruff(source_root, workspace_root=workspace_root)
             self.assertEqual(list(workspace_root.iterdir()), [])

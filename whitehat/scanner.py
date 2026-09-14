@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import os
-import shutil
 import stat
+import sys
 from collections import Counter, deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,17 +98,19 @@ def _checked_source_root(value: str | os.PathLike[str]) -> Path:
     return resolved
 
 
-def _resolve_ruff() -> Path:
-    candidate = shutil.which("ruff")
-    if candidate is None:
-        raise ScannerError(f"Ruff {RUFF_VERSION} is required but was not found")
+def _ruff_distribution_identity() -> str:
     try:
-        executable = Path(candidate).resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise ScannerError(f"Ruff executable is unavailable: {exc}") from exc
-    if not executable.is_file():
-        raise ScannerError("Ruff executable must be a regular file")
-    return executable
+        distribution = importlib.metadata.distribution("ruff")
+    except importlib.metadata.PackageNotFoundError as exc:
+        raise ScannerError(
+            f"Ruff {RUFF_VERSION} is required but is not installed"
+        ) from exc
+    if distribution.version != RUFF_VERSION:
+        raise ScannerError(f"Ruff version must be exactly {RUFF_VERSION}")
+    record = distribution.read_text("RECORD")
+    if not record:
+        raise ScannerError("Ruff distribution RECORD is unavailable")
+    return hashlib.sha256(record.encode("utf-8")).hexdigest()
 
 
 def _verify_ruff_version(executable: Path, workspace_root: Path | None) -> str:
@@ -115,7 +118,7 @@ def _verify_ruff_version(executable: Path, workspace_root: Path | None) -> str:
         execution = execute_fixed_profile(
             profile="scanner.ruff.version",
             executable=executable,
-            arguments=["--version"],
+            arguments=["-I", "-m", "ruff", "--version"],
             limits=ProcessLimits(
                 timeout_seconds=5.0,
                 max_input_bytes=1,
@@ -340,7 +343,8 @@ def scan_with_ruff(
         raise ScannerError(f"workspace root is unavailable: {exc}") from exc
     if workspace_parent is not None and not workspace_parent.is_dir():
         raise ScannerError("workspace root must be a directory")
-    executable = _resolve_ruff()
+    distribution_sha256 = _ruff_distribution_identity()
+    executable = Path(sys.executable).resolve(strict=True)
     executable_sha256 = _verify_ruff_version(executable, workspace_parent)
     source_summary: dict[str, Any] = {}
     copied_root: Path | None = None
@@ -353,6 +357,9 @@ def scan_with_ruff(
 
     def arguments(workspace: Path) -> list[str]:
         return [
+            "-I",
+            "-m",
+            "ruff",
             "check",
             "--isolated",
             "--no-cache",
@@ -402,6 +409,7 @@ def scan_with_ruff(
             "adapterVersion": "1",
             "toolVersion": RUFF_VERSION,
             "executableSha256": executable_sha256,
+            "distributionRecordSha256": distribution_sha256,
             "rules": ["E4", "E7", "E9", "F"],
             "targetVersion": "py311",
         },

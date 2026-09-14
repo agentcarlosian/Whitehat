@@ -1,5 +1,5 @@
 import json
-import shutil
+import importlib.metadata
 import subprocess
 import sys
 import tempfile
@@ -173,16 +173,11 @@ class CliTests(unittest.TestCase):
             self.assertEqual(review["reviewOf"]["resultSha256"], result["resultSha256"])
 
     def test_ruff_scanner_can_be_saved_and_reviewed(self) -> None:
-        executable = shutil.which("ruff")
-        if executable is None:
+        try:
+            version_text = importlib.metadata.version("ruff")
+        except importlib.metadata.PackageNotFoundError:
             self.skipTest(f"Ruff {RUFF_VERSION} is unavailable")
-        version = subprocess.run(
-            [executable, "--version"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if version.stdout.strip() != f"ruff {RUFF_VERSION}":
+        if version_text != RUFF_VERSION:
             self.skipTest(f"Ruff {RUFF_VERSION} is unavailable")
         with tempfile.TemporaryDirectory() as temporary:
             result_path = Path(temporary, "ruff.json")

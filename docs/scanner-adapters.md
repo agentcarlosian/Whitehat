@@ -19,19 +19,22 @@ scanner observation is not a vulnerability finding.
   vendored or redistributed in this repository.
 - Whitehat installation extra: `python -m pip install ".[scanner-ruff]"`
 
-The adapter resolves `ruff` from the process path, runs a separate bounded
-`ruff --version` check, and requires the exact text `ruff 0.14.14`. The executable
-SHA-256 from that check must match the scan process.
+The adapter loads the Ruff distribution installed beside Whitehat's current
+Python interpreter, requires version `0.14.14`, and hashes its installed
+`RECORD`. It then runs a separate bounded `python -I -m ruff --version` check and
+requires the exact text `ruff 0.14.14`. The Python executable SHA-256 from that
+check must match the scan process.
 
 The scan command is fixed by Whitehat:
 
 ```text
-ruff check --isolated --no-cache --output-format json --no-fix --no-preview
+python -I -m ruff check --isolated --no-cache --output-format json --no-fix --no-preview
   --select E4,E7,E9,F --target-version py311 <disposable-source-copy>
 ```
 
-The caller cannot supply an executable, command, rule selector, configuration,
-fix switch, preview switch, target version, or additional argument.
+The caller cannot supply a Python environment, executable, command, rule
+selector, configuration, fix switch, preview switch, target version, or
+additional argument. Ambient `PATH` cannot substitute a different Ruff binary.
 
 ### Input boundary
 
