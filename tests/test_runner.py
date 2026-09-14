@@ -3,6 +3,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from whitehat.runner import (
     ProcessLimits,
@@ -88,6 +89,17 @@ class RunnerTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(RunnerError, "unexpected environment key"):
             _validated_child_environment_keys(sorted([*required, "SECRET_CANARY"]))
+
+    def test_corefoundation_addition_is_specific_to_macos(self) -> None:
+        required = sorted(_sanitized_environment(Path(".")).keys())
+        keys = sorted([*required, "__CF_USER_TEXT_ENCODING"])
+        with patch("whitehat.runner.sys.platform", "darwin"):
+            self.assertEqual(_validated_child_environment_keys(keys), keys)
+            with self.assertRaisesRegex(RunnerError, "unexpected environment key"):
+                _validated_child_environment_keys(sorted([*keys, "SECRET_CANARY"]))
+        with patch("whitehat.runner.sys.platform", "linux"):
+            with self.assertRaisesRegex(RunnerError, "unexpected environment key"):
+                _validated_child_environment_keys(keys)
 
 
 if __name__ == "__main__":

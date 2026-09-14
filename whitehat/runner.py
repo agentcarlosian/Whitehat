@@ -167,7 +167,12 @@ def _validated_child_environment_keys(value: Any) -> list[str]:
     required = set(_sanitized_environment(Path(".")).keys())
     if not required.issubset(actual):
         raise RunnerError("synthetic child omitted a sanitized environment key")
-    unexpected = actual - required - _RUNTIME_ADDED_ENVIRONMENT_KEYS
+    runtime_additions = _RUNTIME_ADDED_ENVIRONMENT_KEYS
+    if sys.platform == "darwin":
+        # CoreFoundation creates this locale key in the fixed Python child.
+        # Confirmed by the names-only macOS CI diagnostic; never inherit its value.
+        runtime_additions = runtime_additions | {"__CF_USER_TEXT_ENCODING"}
+    unexpected = actual - required - runtime_additions
     if unexpected:
         names = [key if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", key) else "(invalid name)"
                  for key in sorted(unexpected)]

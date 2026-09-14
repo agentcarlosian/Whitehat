@@ -2,7 +2,8 @@
 
 Updated: 2026-09-14
 
-Status: research toolkit and adoption implementation active. The baseline technical
+Status: research toolkit and adoption implemented in draft PR #1; platform
+validation and review handoff in progress. The baseline technical
 publication audit and owned-loopback proof passed CI at `7e47505`.
 
 Current acceptance criteria and execution order: [research toolkit](tasks/research-toolkit.md).
@@ -95,7 +96,7 @@ a meaningful side-effect boundary.
 Follow the ordered toolkit and adoption task linked above. External HTTPS
 execution remains a separate capability design.
 
-## Current verification
+## Alpha-foundation verification (historical)
 
 - Windows Python 3.13.12: syntax check and 71 tests pass, including release
   inventory, license, secret-pattern, and archive-path policy tests plus local network

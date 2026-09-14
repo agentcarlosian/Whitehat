@@ -38,7 +38,7 @@ bounty workflows; locality is an implementation property, not the headline.
 - [x] Complete priorities 1-4 and adversarial/compatibility tests.
 - [x] Complete adoption and research-quality workflow.
 - [x] Full validation, installed-package checks, and technical release audit.
-- [ ] Record results/limitations and prepare the reviewable change.
+- [x] Record results/limitations and prepare draft PR #1 for review.
 
 Closure requires completed verification for implemented claims. Native tool,
 hosted CI, and synthetic parser evidence must be distinguished. The baseline
@@ -60,5 +60,11 @@ passed 71 tests on Ubuntu/Python 3.11 and 3.13 plus release CI at `7e47505`.
   zero high-confidence secret matches, canonical Apache-2.0, 32-file sdist,
   23-file wheel, and clean installed `0.9.0a1` diagnostics. Installed imports and
   toolkit discovery also passed in isolated Python mode.
-- Expanded hosted CI remains to be recorded. No public release or visibility
-  change is authorized.
+- Expanded CI at `3a12f47` and `7f747bf` passed both Windows and Ubuntu Python
+  3.11/3.13 jobs, including native tool evaluation. macOS exposed a pre-existing
+  fixed-child environment mismatch. The diagnostic identified only
+  `__CF_USER_TEXT_ENCODING`; the fix allows this CoreFoundation addition on
+  Darwin only and still rejects unrelated environment keys on every platform.
+- Follow final checks in [PR #1](https://github.com/agentcarlosian/Whitehat/pull/1).
+  The workflow now cancels duplicate push/PR runs for the same branch.
+  No public release or visibility change is authorized.

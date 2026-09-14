@@ -11,6 +11,8 @@
 - Add contribution/security guidance, issue templates, compatibility guidance,
   research templates, and native fixture evaluation.
 - Position Whitehat around security research and authorized bounty workflows.
+- Normalize the verified CoreFoundation child-environment addition on macOS;
+  preserve strict rejection of unrelated environment keys.
 
 This version is an alpha development checkpoint, not a published release.
 
