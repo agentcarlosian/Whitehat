@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.10.0a1 — web/API workflows
+
+- Preserve HTTP method/input context in ZAP observations.
+- Add project-bound HAR/capture evidence, semantic response comparison, and access matrices.
+- Add exact-request session replay with bearer/cookie references, public-address
+  pinning, TLS verification, bounded transfers, persistent budgets and stop controls.
+- Add explicit prepared-request scenarios and selected-value state expectations.
+- Add OpenAPI 3.0/3.1 inventory/coverage and pinned oasdiff 1.32.0 comparison.
+- Add Schemathesis 4.27.1's owned API profile and deterministic lifecycle twins.
+- Add HTTP/TLS/security-control fixtures and a complete web research walkthrough.
+
+External generated scanning and dynamic ID substitution are not implemented.
+This is an alpha development checkpoint, not a public package release.
+
 ## 0.9.0a1 — research toolkit
 
 - Add pinned native Opengrep and Betterleaks adapters with explicit verified setup.

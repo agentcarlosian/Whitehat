@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "whitehat-replay-session-v1",
+  "sessionId": "example-session",
+  "projectId": "owned-api",
+  "origin": "https://owned.example.invalid",
+  "startsAt": "2026-09-14T00:00:00Z",
+  "expiresAt": "2026-09-14T01:00:00Z",
+  "authority": {
+    "policy": "Replace with the exact reviewed program policy or owned-lab record",
+    "reviewedAt": "2026-09-14T00:00:00Z",
+    "approved": false,
+    "researcherControlled": true
+  },
+  "requestSha256": [
+    "630cc7cb315c5be1a724243c87db9185cb6dde2dd7575efd82ff4b34c56f7d28"
+  ],
+  "identities": [
+    {
+      "id": "alice",
+      "auth": "bearer",
+      "credentialEnv": "WHITEHAT_CREDENTIAL_ALICE"
+    },
+    {
+      "id": "bob",
+      "auth": "bearer",
+      "credentialEnv": "WHITEHAT_CREDENTIAL_BOB"
+    }
+  ],
+  "responsePointers": [
+    "/marker"
+  ],
+  "budgets": {
+    "maxRequests": 10,
+    "minDelayMs": 1000,
+    "timeoutSeconds": 5,
+    "maxResponseBytes": 65536
+  },
+  "allowMutation": false
+}

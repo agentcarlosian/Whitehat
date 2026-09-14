@@ -17,6 +17,17 @@ from .security_rules import EXPLANATIONS, RULES, RULES_VERSION, SECRET_CONFIG
 # Release asset SHA-256s from GitHub's official release API, verified 2026-09-14.
 # Member SHA-256s are verified against those archives during explicit setup.
 TOOLS = {
+    "oasdiff": {
+        "version": "1.32.0", "license": "Apache-2.0", "repo": "oasdiff/oasdiff",
+        "platforms": {
+            "windows-x64": {"asset": "oasdiff_1.32.0_windows_amd64.tar.gz",
+                "sha256": "163fde638f5ad8381e0d09d380cdb5c00ef496c6bd3a8fcefd2608f649aa72f4",
+                "executable": "oasdiff.exe", "members": {"oasdiff.exe": "61deb49f5ea72d64928456abf4bc79cca12747f3f4ef742ff238dc11e3985ee8"}},
+            "linux-x64": {"asset": "oasdiff_1.32.0_linux_amd64.tar.gz",
+                "sha256": "5b2050787cfee2a9a3ba7b25cb50fe2c5cc45cdf5b96fbc51a4a60107f8b4aad",
+                "executable": "oasdiff", "members": {"oasdiff": "602607fe1356edce5665c54eed41325425860e973fc4c72833a5440334fa70ab"}},
+        },
+    },
     "opengrep": {
         "version": "1.30.0", "license": "LGPL-2.1", "repo": "opengrep/opengrep",
         "platforms": {
@@ -173,7 +184,7 @@ def scan_native(source: str, tool: str, tool_path: str | None = None,
     # The shared process supervisor currently enforces a 30-second upper bound.
     if limits.timeout_seconds > 30:
         raise ReportLimitError("native scan timeout must be at most 30 seconds")
-    if tool not in TOOLS:
+    if tool not in {"opengrep", "betterleaks"}:
         raise ReportError("unsupported native scanner")
     spec = TOOLS[tool]["platforms"][platform_key()]
     executable, _ = verify_tool(tool, tool_path or Path(".whitehat/tools") / tool / spec["executable"])

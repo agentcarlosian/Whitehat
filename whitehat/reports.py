@@ -290,8 +290,12 @@ def _zap(value: Any, root: str | None) -> list[dict[str, Any]]:
                 instances = [{"uri": site.get("@name")}]
             for instance in instances:
                 instance = _object(instance, "instance")
+                method = instance.get("method")
+                if method is not None and (not isinstance(method, str) or not re.fullmatch(r"[A-Z]{3,16}", method)):
+                    raise ReportError("invalid ZAP HTTP method")
+                context = {"httpMethod": method, "parameter": text(instance["param"], "parameter") if instance.get("param") else None}
                 out.append(observation("zap", rule, url=endpoint(instance.get("uri")),
-                    severity=_severity(alert.get("riskcode")), category="web-observation"))
+                    severity=_severity(alert.get("riskcode")), category="web-observation", context=context))
                 if len(out) > MAX_OBSERVATIONS:
                     raise ReportLimitError("observation count limit exceeded")
     return out

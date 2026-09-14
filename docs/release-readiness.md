@@ -33,7 +33,8 @@ The audit:
     inventory.
 11. Scans packaged text for the same secret patterns.
 12. Installs the wheel without an index or dependencies into a disposable virtual
-    environment and checks `whitehat doctor --json` with network false.
+    environment and checks `whitehat doctor --json` without making a network
+    request, verifying the declared session-bound replay capability.
 
 The audit output includes the commit, release-tree identity, archive hashes,
 member counts, installed version, tool versions, secret-match count, and false

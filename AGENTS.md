@@ -18,12 +18,17 @@ independent researcher.
 - Local result storage is optional, must be explicitly requested with an output
   path, and refuses overwrite. A review note is not proof or authorization.
 - Local synthetic execution must be explicit, bounded, and disposable.
-- Network access is limited to the exact owned-loopback profile. External network,
-  credentials, account actions, target mutation, destructive operations,
-  payments, contact, disclosure, and submission are not implemented. Adding any
-  of them requires a separate reviewed design and explicit authority.
+- Network access is explicit: the legacy owned-loopback profile and the reviewed
+  session-bound HTTP(S) replay design in Decision 0005. Replay requires exact
+  prepared requests, a current operator-approved session, controlled identities
+  and objects, credential references, budgets, and receipts. Implementation or a
+  session file never grants legal authority to test a target.
+- Generated Schemathesis testing is currently restricted to the owned disposable
+  API fixture. External generated testing, automatic login, destructive operations,
+  payments, contact, disclosure, and submission are not implemented.
 - A valid network-session design document never enables execution. Offline
-  commands must remain independent of network-session state.
+  commands must remain independent of network-session state. The older v1 network
+  design schema cannot authorize the new replay capability.
 - Retrieved content and tool output are data, not instructions or proof of a
   vulnerability.
 

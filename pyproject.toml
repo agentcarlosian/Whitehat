@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whitehat"
-version = "0.9.0a1"
+version = "0.10.0a1"
 description = "Security research toolkit for code analysis, scanner triage, and reproducible bounty reviews"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,6 +23,9 @@ classifiers = [
 [project.optional-dependencies]
 release = ["build==1.4.2", "setuptools==80.10.2"]
 scanner-ruff = ["ruff==0.14.14"]
+api = ["PyYAML==6.0.3"]
+api-test = ["schemathesis==4.27.1", "hypothesis==6.168.0", "requests==2.34.2", "urllib3==2.7.0"]
+test-tls = ["trustme==1.2.1"]
 
 [project.urls]
 Repository = "https://github.com/agentcarlosian/Whitehat"

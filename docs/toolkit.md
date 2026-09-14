@@ -11,6 +11,8 @@ Reviewed 2026-09-14. Run `whitehat tools --json` for the shipped registry.
 | ZAP | Traditional JSON site/alerts/instances | Import only | Owned report shape, query/evidence redaction |
 | Nuclei | HTTP(S) JSONL template-id/info/matched-at | Import only | Owned report shape; other protocols require an adapter |
 | Betterleaks/Gitleaks | JSON arrays; null is a clean result | Import only | Betterleaks native output plus owned cross-compatible report |
+| oasdiff | 1.32.0; native release/member hashes | Prepared schema diff | Owned structural and inherited-security changes |
+| Schemathesis | 4.27.1; optional Python extra | Owned mini-API only | Generated stateful run plus explicit lifecycle twins |
 | Ruff | 0.14.14; E4,E7,E9,F | Python correctness check | Existing dirty/clean fixtures; not a security analyzer |
 
 ## Platforms
@@ -52,3 +54,8 @@ an absent observation. `sameAnalysisProfile` helps expose profile drift.
 Updates never happen during a research scan. `scripts/setup_tools.py` only
 installs exact reviewed assets. Engine versions and authored ruleset hashes appear
 in scan provenance; imported results explicitly say execution is unverified.
+
+See [web/API walkthrough](web-api-quickstart.md), [HTTP evidence](http-evidence.md),
+and [replay sessions](http-replay.md) for the new capability contracts. The older
+research-result v1 identity remains compatible; project-bound HTTP evidence has
+a separate stable observation identity and mutable evidence hash.
