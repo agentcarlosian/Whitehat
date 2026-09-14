@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import html
-import json
 import os
 from pathlib import Path
 from typing import Any
@@ -16,6 +15,12 @@ CASE_SCHEMA = "whitehat-research-case-v1"
 CASE_FIELDS = {"schemaVersion", "title", "target", "versions", "hypothesis", "boundary",
                "reproduction", "negativeControl", "duplicateAssessment", "nextAction", "evidenceReferences"}
 NOTE_FIELDS = ("target", "versions", "hypothesis", "boundary", "negativeControl", "duplicateAssessment", "nextAction")
+NOTE_LABELS = {"target": "Target", "versions": "Versions", "hypothesis": "Hypothesis",
+               "boundary": "Boundary", "negativeControl": "Negative control",
+               "duplicateAssessment": "Duplicate assessment", "nextAction": "Next action"}
+CONTEXT_LABELS = {"package": "Package", "ecosystem": "Ecosystem", "version": "Reported version",
+                  "aliases": "Advisory aliases", "fixedVersionsReported": "Fixed versions reported",
+                  "matchStatus": "Match status", "reachability": "Reachability", "withdrawn": "Advisory withdrawn"}
 
 
 def case_template(title: str) -> dict[str, Any]:
@@ -112,7 +117,7 @@ def export_markdown(result_path: str, output_path: str, *, case_path: str | None
              f"Result SHA-256: `{result['resultSha256']}`", "",
              f"Observations: {len(result['observations'])}", ""]
     for field in NOTE_FIELDS:
-        lines.extend([f"## {field}", "", _markdown(case[field]), ""])
+        lines.extend([f"## {NOTE_LABELS[field]}", "", _markdown(case[field]), ""])
     lines.extend(["## Reproduction", "", f"Analyst-reported status: {_markdown(case['reproduction']['status'])}", "", _markdown(case["reproduction"]["notes"]), ""])
     if review:
         lines.extend(["## Review decision", "", _markdown(review["decision"]), "", _markdown(review["note"]), ""])
@@ -127,12 +132,20 @@ def export_markdown(result_path: str, output_path: str, *, case_path: str | None
                       _markdown(item.get("explanation", "Inspect the underlying evidence.")), "",
                       f"Tool-reported severity: {_markdown(item.get('severityReported') or 'unspecified')}", ""])
         if item.get("context"):
-            # Context is small structured metadata from the adapter, escaped as text.
-            lines.extend([_markdown(json.dumps(item["context"], sort_keys=True, ensure_ascii=True)), ""])
+            for key, value in sorted(item["context"].items()):
+                if isinstance(value, list):
+                    value = ", ".join(str(v) for v in value) or "None reported"
+                lines.append(f"- {_markdown(CONTEXT_LABELS.get(key, key))}: {_markdown(value)}")
+            lines.append("")
     lines.extend(["## Evidence references", "", "References are not opened or embedded by this exporter.", ""])
     lines.extend(f"- {_markdown(reference)}" for reference in case["evidenceReferences"])
-    lines.extend(["", "## Provenance", "", _markdown(json.dumps(result["provenance"], sort_keys=True, ensure_ascii=True)), "",
-                  "This packet records research. It does not establish authorization, exploitability, impact, eligibility, or a validated finding.", ""])
+    lines.extend(["", "## Provenance", "", "The result JSON contains the complete machine-readable provenance and process receipt.", ""])
+    for key, label in (("kind", "Origin"), ("tool", "Tool"), ("toolVersion", "Tool version"),
+                       ("format", "Imported format"), ("reportSha256", "Imported report SHA-256"),
+                       ("sourceTreeSha256", "Source tree SHA-256"), ("configSha256", "Rules/config SHA-256")):
+        if key in result["provenance"]:
+            lines.append(f"- {label}: {_markdown(result['provenance'][key])}")
+    lines.extend(["", "This packet records research. It does not establish authorization, exploitability, impact, eligibility, or a validated finding.", ""])
     content = "\n".join(lines).encode("utf-8")
     if len(content) > 16 * 1024 * 1024:
         raise RecordError("Markdown export size limit exceeded")

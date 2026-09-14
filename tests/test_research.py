@@ -27,7 +27,7 @@ class ResearchWorkflowTests(unittest.TestCase):
             export_markdown(str(result_path), str(output), case_path=str(root / "case.json"), review_path=str(review_path))
             content = output.read_text()
             self.assertIn("Verify reachability", content)
-            self.assertIn("fixedVersionsReported", content)
+            self.assertIn("1\\.0\\.1", content)
             self.assertIn(result["resultSha256"], content)
             self.assertNotIn(str(root), content)
             with self.assertRaises(RecordError):

@@ -42,7 +42,7 @@ def main() -> int:
         write_json_document(review, root / "notes/review.json")
         exported = export_markdown(str(path), str(root / "exports/review.md"),
             case_path=str(root / "case.json"), review_path=str(root / "notes/review.json"))
-        if not exported["ok"] or "fixedVersionsReported" not in (root / "exports/review.md").read_text():
+        if not exported["ok"] or "Fixed versions reported" not in (root / "exports/review.md").read_text():
             raise RuntimeError("review export failed")
     print(json.dumps({"ok": True, "platform": platform_key(), "nativeFixtures": counts,
         "baseline": comparison["summary"], "reviewExport": True,

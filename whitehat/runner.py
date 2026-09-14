@@ -167,8 +167,11 @@ def _validated_child_environment_keys(value: Any) -> list[str]:
     required = set(_sanitized_environment(Path(".")).keys())
     if not required.issubset(actual):
         raise RunnerError("synthetic child omitted a sanitized environment key")
-    if actual - required - _RUNTIME_ADDED_ENVIRONMENT_KEYS:
-        raise RunnerError("synthetic child received an unexpected environment key")
+    unexpected = actual - required - _RUNTIME_ADDED_ENVIRONMENT_KEYS
+    if unexpected:
+        names = [key if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", key) else "(invalid name)"
+                 for key in sorted(unexpected)]
+        raise RunnerError("synthetic child received an unexpected environment key: " + ", ".join(names))
     return value
 
 
