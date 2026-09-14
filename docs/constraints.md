@@ -29,12 +29,18 @@
 - Scanner output is static-analysis metadata. A rule match, clean result, exit
   code, or fix suggestion does not establish reachability, exploitability,
   finding validity, impact, severity, eligibility, or authorization.
-- Network-session validation is implemented, but network execution is not. The
-  synthetic contract, approver assertion, policy URL, and validation result do
-  not establish legal authority or authorize a socket.
+- Network-session validation and owned IPv4 loopback execution are implemented.
+  External network execution is not. A contract, approver assertion, policy URL,
+  and validation result do not establish legal authority.
 - The initial design is HTTPS observation-only with GET/HEAD and all credential,
   mutation, third-party-data, contact, and submission effects false. Broader
   network behavior requires a separate design and implementation review.
+- The implemented transport is HTTP GET to exact `127.0.0.1` only. It does not
+  prove external HTTPS, DNS/public-address filtering, TLS, IPv6 loopback,
+  authenticated requests, mutating methods, or operating-system network isolation.
+- The SQLite ledger is local coordination state, not authority or tamper-proof
+  evidence. An abrupt process crash can leave a conservative active reservation
+  that requires operator review rather than automatic retry.
 - The release audit is a bounded technical check, not legal advice or an
   originality, trademark, maintenance, publication, or distribution decision.
 - Secret scanning uses explicit high-confidence patterns and cannot prove that a

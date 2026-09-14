@@ -21,6 +21,8 @@ external services and has no persistent background process.
 | Validate session design | `python -B -m whitehat session validate DOCUMENT --json` | Local validation only; no network authority |
 | Install release tools | `python -m pip install ".[release]"` | Pinned build frontend/backend |
 | Audit release | `python -B -m whitehat release audit --json` | Clean commit only; never publishes |
+| Observe owned loopback | `python -B -m whitehat network observe-loopback SESSION --state SQLITE --path PATH --json` | Exact 127.0.0.1 GET only |
+| Stop loopback session | `python -B -m whitehat network stop SESSION --state SQLITE --json` | Monotonic user stop |
 | Validate repository | `python -B scripts/validate.py` | Syntax, tests, and golden-path checks |
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 

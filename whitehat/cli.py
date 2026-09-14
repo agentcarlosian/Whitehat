@@ -17,6 +17,11 @@ from .network_session import (
     load_and_validate_network_session,
     parse_evaluation_time,
 )
+from .network_engine import (
+    NetworkExecutionError,
+    execute_loopback_observation,
+    stop_loopback_session,
+)
 from .records import (
     MAX_RESULT_BYTES,
     REVIEW_DECISIONS,
@@ -98,7 +103,24 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
             f"Network session design: {value['sessionId']} is valid at "
             f"{value['evaluatedAt']}"
         )
-        print("Network engine implemented: false; execution authorized: false")
+        print(
+            f"Network engine implemented: "
+            f"{str(value['claims']['networkEngineImplemented']).lower()}; "
+            "execution authorized by validation: false"
+        )
+        return
+    if value.get("schemaVersion") == "whitehat-loopback-observation-v1":
+        print(
+            f"Loopback observation {value['request']['sequence']}: "
+            f"HTTP {value['response']['status']} ({value['response']['bytesRead']} bytes)"
+        )
+        print(
+            f"Outcome: {value['response']['outcome']}; "
+            f"remaining requests: {value['ledger']['remainingRequests']}"
+        )
+        return
+    if value.get("schemaVersion") == "whitehat-loopback-stop-v1":
+        print(f"Loopback session stopped: {value['sessionId']} ({value['stopReason']})")
         return
     if value.get("schemaVersion") == "whitehat-release-audit-v1":
         print(
@@ -237,6 +259,29 @@ def _parser() -> argparse.ArgumentParser:
     audit.add_argument("--root", default=".")
     _add_output(audit)
     audit.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
+
+    network = commands.add_parser(
+        "network", help="Execute the owned-loopback network profile only."
+    )
+    network_commands = network.add_subparsers(dest="network_command", required=True)
+    observe_loopback = network_commands.add_parser(
+        "observe-loopback", help="Make one bounded GET to exact IPv4 loopback."
+    )
+    observe_loopback.add_argument("session")
+    observe_loopback.add_argument("--state", required=True)
+    observe_loopback.add_argument("--path", required=True)
+    _add_output(observe_loopback)
+    observe_loopback.add_argument(
+        "--json", action="store_true", help="Emit deterministic JSON."
+    )
+    stop_loopback = network_commands.add_parser(
+        "stop", help="Apply the monotonic user stop to an owned-loopback session."
+    )
+    stop_loopback.add_argument("session")
+    stop_loopback.add_argument("--state", required=True)
+    stop_loopback.add_argument(
+        "--json", action="store_true", help="Emit deterministic JSON."
+    )
     return parser
 
 
@@ -352,9 +397,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "release" and args.release_command == "audit":
             _emit_analysis(audit_release(args.root), args)
             return 0
+        if args.command == "network":
+            if args.network_command == "observe-loopback":
+                _emit_analysis(
+                    execute_loopback_observation(
+                        args.session,
+                        args.state,
+                        args.path,
+                    ),
+                    args,
+                )
+                return 0
+            if args.network_command == "stop":
+                _emit(
+                    stop_loopback_session(args.session, args.state),
+                    args.json,
+                )
+                return 0
     except (
         DiffError,
         DependencyError,
+        NetworkExecutionError,
         NetworkSessionError,
         RecordError,
         ReleaseAuditError,

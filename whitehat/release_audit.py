@@ -362,12 +362,18 @@ def _installed_smoke(wheel: Path, workspace: Path) -> dict[str, Any]:
         result = json.loads(completed.stdout.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ReleaseAuditError("installed doctor output is invalid") from exc
+    capabilities = result.get("capabilities", {})
     if (
         result.get("ok") is not True
-        or result.get("capabilities", {}).get("network") is not False
+        or capabilities.get("loopbackNetworkExecution") is not True
+        or capabilities.get("externalNetwork") is not False
     ):
         raise ReleaseAuditError("installed doctor boundary check failed")
-    return {"version": result["version"], "network": False}
+    return {
+        "version": result["version"],
+        "loopbackNetwork": True,
+        "externalNetwork": False,
+    }
 
 
 def audit_release(root_value: str | os.PathLike[str]) -> dict[str, Any]:

@@ -13,7 +13,8 @@ runtime identity, byte counts, exit status, cleanup, and elapsed time.
 | --- | --- | --- |
 | L0 | Local read-only and prepared offline analysis | Available without approval artifacts |
 | L1 | Local synthetic processes or containers | Planned; explicit invocation and bounded resources |
-| N1 | Network access to an authorized asset | Not implemented; requires a reviewed session design |
+| N0 | Owned IPv4 loopback observation | Implemented through exact session and local ledger |
+| N1 | External network access to an authorized asset | Not implemented; requires remaining transport gates |
 | H1 | Credentials, mutation, destructive work, money, contact, disclosure, submission | Not implemented; exact human authorization required |
 
 ## `doctor`
@@ -166,15 +167,40 @@ whitehat session validate DOCUMENT [--evaluation-time RFC3339]
 
 This local-only command validates `whitehat-network-session-v1`. It checks strict
 fields, duplicate keys, an eight-hour maximum, policy timing, approval timing,
-exact HTTPS targets, GET/HEAD methods, typed capability, budgets, fixed transport,
-false consequential effects, required stop conditions, and activity at the
-evaluation clock.
+exact HTTPS design targets or exact owned loopback, GET/HEAD methods, typed
+capability, budgets, fixed transport, false consequential effects, required stop
+conditions, and activity at the evaluation clock.
 
 `--evaluation-time` exists only for offline fixtures and historical inspection.
 A future engine must ignore it and use a trusted current clock. Successful output
-is `valid-design-contract` with legal authority, implemented network engine,
-network execution authorization, and execution performed all false. See
-`docs/network-session-boundary.md` and Decision 0002.
+is `valid-design-contract` with legal authority, network execution authorization,
+and execution performed false. Engine implementation is true only for the
+separately reviewed owned-loopback mode. See `docs/network-session-boundary.md`
+and Decisions 0002 and 0004.
+
+## `network observe-loopback`
+
+```text
+whitehat network observe-loopback SESSION --state SQLITE --path PATH
+  [--output FILE] [--json]
+whitehat network stop SESSION --state SQLITE [--json]
+```
+
+The only executable network profile accepts `owned-loopback` sessions and exact
+IPv4 `127.0.0.1` targets. It uses the real UTC clock, HTTP GET, a direct
+standard-library connection, no proxy, no redirect following, no request body,
+and no credentials. Exact path scope and every session budget are checked before
+or during the attempt.
+
+The SQLite ledger binds the session hash and atomically records request
+reservation, sequence, target, completion, response status/bytes, remaining
+budget, and monotonic stop state. A failed request consumes its reservation and
+is never automatically retried.
+
+Responses are not retained. Complete bounded bodies produce only a SHA-256;
+oversized bodies produce a partial-byte count and no body hash. HTTP 429 and 3xx
+responses stop the session. Diagnostics report network and loopback execution
+true while external network remains false. See Decision 0004.
 
 ## `release audit`
 

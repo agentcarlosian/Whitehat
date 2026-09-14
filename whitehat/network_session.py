@@ -156,17 +156,21 @@ def _validate_authority(value: Any) -> dict[str, Any]:
     return authority
 
 
-def _validate_target(value: Any, index: int) -> dict[str, Any]:
+def _validate_target(value: Any, index: int, mode: str) -> dict[str, Any]:
     label = f"targets[{index}]"
     target = _exact_keys(
         value,
         {"scheme", "host", "port", "pathPrefixes", "methods"},
         label,
     )
-    if target["scheme"] != "https":
-        raise NetworkSessionError(f"{label}.scheme must be https")
+    expected_scheme = "http" if mode == "owned-loopback" else "https"
+    if target["scheme"] != expected_scheme:
+        raise NetworkSessionError(f"{label}.scheme must be {expected_scheme}")
     host = target["host"]
-    if (
+    if mode == "owned-loopback":
+        if host != "127.0.0.1":
+            raise NetworkSessionError(f"{label}.host must be exact IPv4 loopback")
+    elif (
         not isinstance(host, str)
         or host != host.lower()
         or "*" in host
@@ -190,6 +194,7 @@ def _validate_target(value: Any, index: int) -> dict[str, Any]:
             or "\\" in prefix
             or "?" in prefix
             or "#" in prefix
+            or any(ord(character) > 127 for character in prefix)
             or any(segment == ".." for segment in prefix.split("/"))
         ):
             raise NetworkSessionError(f"{label} contains an invalid path prefix")
@@ -215,6 +220,7 @@ def _validate_budgets(value: Any) -> dict[str, Any]:
             "minDelayMs",
             "maxRequestBytes",
             "maxResponseBytes",
+            "requestTimeoutSeconds",
             "maxWallSeconds",
         },
         "budgets",
@@ -230,13 +236,20 @@ def _validate_budgets(value: Any) -> dict[str, Any]:
         "budgets.maxResponseBytes",
         64 * 1024 * 1024,
     )
+    _positive_integer(
+        budgets["requestTimeoutSeconds"],
+        "budgets.requestTimeoutSeconds",
+        60,
+    )
     _positive_integer(budgets["maxWallSeconds"], "budgets.maxWallSeconds", 8 * 60 * 60)
     if budgets["maxConcurrency"] > budgets["maxRequests"]:
         raise NetworkSessionError("maxConcurrency cannot exceed maxRequests")
+    if budgets["requestTimeoutSeconds"] > budgets["maxWallSeconds"]:
+        raise NetworkSessionError("requestTimeoutSeconds cannot exceed maxWallSeconds")
     return budgets
 
 
-def _validate_transport(value: Any) -> dict[str, Any]:
+def _validate_transport(value: Any, mode: str) -> dict[str, Any]:
     transport = _exact_keys(
         value,
         {
@@ -247,12 +260,22 @@ def _validate_transport(value: Any) -> dict[str, Any]:
         },
         "transport",
     )
-    if transport != {
-        "allowRedirects": False,
-        "allowProxyEnvironment": False,
-        "requireTlsVerification": True,
-        "dnsPolicy": "resolve-public-once-and-pin",
-    }:
+    expected = (
+        {
+            "allowRedirects": False,
+            "allowProxyEnvironment": False,
+            "requireTlsVerification": False,
+            "dnsPolicy": "loopback-address-only",
+        }
+        if mode == "owned-loopback"
+        else {
+            "allowRedirects": False,
+            "allowProxyEnvironment": False,
+            "requireTlsVerification": True,
+            "dnsPolicy": "resolve-public-once-and-pin",
+        }
+    )
+    if transport != expected:
         raise NetworkSessionError(
             "transport must use the fixed initial network boundary"
         )
@@ -299,7 +322,11 @@ def validate_network_session(
         or _SESSION_ID.fullmatch(session["sessionId"]) is None
     ):
         raise NetworkSessionError("sessionId is invalid")
-    if session["mode"] not in {"owned-synthetic", "human-reviewed-program"}:
+    if session["mode"] not in {
+        "owned-loopback",
+        "owned-synthetic",
+        "human-reviewed-program",
+    }:
         raise NetworkSessionError("mode is invalid")
 
     valid_from = _timestamp(session["validFrom"], "validFrom")
@@ -337,7 +364,7 @@ def validate_network_session(
     if not isinstance(targets, list) or not 1 <= len(targets) <= 16:
         raise NetworkSessionLimitError("targets must contain 1 to 16 exact targets")
     for index, target in enumerate(targets):
-        _validate_target(target, index)
+        _validate_target(target, index, session["mode"])
     target_identities = [
         (target["scheme"], target["host"], target["port"]) for target in targets
     ]
@@ -349,7 +376,7 @@ def validate_network_session(
         raise NetworkSessionLimitError(
             "maxWallSeconds cannot exceed the session duration"
         )
-    _validate_transport(session["transport"])
+    _validate_transport(session["transport"], session["mode"])
     _validate_effects(session["effects"])
 
     stop_conditions = session["stopConditions"]
@@ -395,7 +422,7 @@ def validate_network_session(
         },
         "claims": {
             "legalAuthorityEstablished": False,
-            "networkEngineImplemented": False,
+            "networkEngineImplemented": session["mode"] == "owned-loopback",
             "networkExecutionAuthorized": False,
             "networkExecutionPerformed": False,
         },
@@ -409,10 +436,7 @@ def validate_network_session(
     return result
 
 
-def load_and_validate_network_session(
-    path_value: str | Path,
-    evaluation_time: datetime | None = None,
-) -> dict[str, Any]:
+def load_network_session_document(path_value: str | Path) -> dict[str, Any]:
     path = Path(path_value)
     if path.is_symlink():
         raise NetworkSessionError("network-session path must not be a symbolic link")
@@ -451,7 +475,17 @@ def load_and_validate_network_session(
         ) from exc
     if not isinstance(document, dict):
         raise NetworkSessionError("network-session document must be a JSON object")
-    return validate_network_session(document, evaluation_time)
+    return document
+
+
+def load_and_validate_network_session(
+    path_value: str | Path,
+    evaluation_time: datetime | None = None,
+) -> dict[str, Any]:
+    return validate_network_session(
+        load_network_session_document(path_value),
+        evaluation_time,
+    )
 
 
 def parse_evaluation_time(value: str | None) -> datetime | None:

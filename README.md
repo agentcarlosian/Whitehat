@@ -23,10 +23,13 @@ This repository currently provides one small, dependency-free Python CLI:
   it never enables or performs network access.
 - `whitehat release audit` builds and inspects a tracked-file-only sdist and wheel
   while keeping publication authorization false.
+- `whitehat network observe-loopback` makes one budgeted content-free GET to
+  exact IPv4 loopback and records its attempt in a local SQLite ledger.
 
-Local read-only and offline analysis does not require an approval file. Network
-actions, credentials, target changes, external contact, and report submission are
-not implemented in this alpha.
+Local read-only and offline analysis does not require an approval file. The only
+network implementation is an owned-loopback GET profile bound to an exact local
+session and ledger. External network actions, credentials, target changes,
+external contact, and report submission are not implemented in this alpha.
 
 ## Quick start
 

@@ -1,26 +1,26 @@
 {
   "schemaVersion": "whitehat-network-session-v1",
-  "sessionId": "synthetic-session-001",
-  "mode": "owned-synthetic",
-  "validFrom": "2026-09-11T01:00:00Z",
-  "expiresAt": "2026-09-11T03:00:00Z",
+  "sessionId": "loopback-template-001",
+  "mode": "owned-loopback",
+  "validFrom": "2026-09-14T01:00:00Z",
+  "expiresAt": "2026-09-14T03:00:00Z",
   "authority": {
-    "policyUrl": "https://example.invalid/security",
-    "policyReviewedAt": "2026-09-11T00:30:00Z",
-    "policyExpiresAt": "2026-09-12T00:00:00Z",
+    "policyUrl": "https://localhost.invalid/owned-loopback-policy",
+    "policyReviewedAt": "2026-09-14T00:30:00Z",
+    "policyExpiresAt": "2026-09-15T00:00:00Z",
     "approverAssertion": "Carlos",
-    "approvedAt": "2026-09-11T00:45:00Z"
+    "approvedAt": "2026-09-14T00:45:00Z"
   },
   "capabilities": [
     "http.observe"
   ],
   "targets": [
     {
-      "scheme": "https",
-      "host": "api.example.invalid",
-      "port": 443,
+      "scheme": "http",
+      "host": "127.0.0.1",
+      "port": 8000,
       "pathPrefixes": [
-        "/health"
+        "/observe"
       ],
       "methods": [
         "GET"
@@ -28,9 +28,9 @@
     }
   ],
   "budgets": {
-    "maxRequests": 10,
+    "maxRequests": 2,
     "maxConcurrency": 1,
-    "minDelayMs": 500,
+    "minDelayMs": 0,
     "maxRequestBytes": 8192,
     "maxResponseBytes": 1048576,
     "requestTimeoutSeconds": 5,
@@ -39,8 +39,8 @@
   "transport": {
     "allowRedirects": false,
     "allowProxyEnvironment": false,
-    "requireTlsVerification": true,
-    "dnsPolicy": "resolve-public-once-and-pin"
+    "requireTlsVerification": false,
+    "dnsPolicy": "loopback-address-only"
   },
   "effects": {
     "credentials": false,

@@ -2,7 +2,7 @@
 
 Updated: 2026-09-11
 
-Status: publication audit implemented; clean-commit proof and loopback network slice next
+Status: technical publication audit and owned-loopback network proof complete locally
 
 Primary surface: `python -m whitehat`
 
@@ -72,18 +72,30 @@ a meaningful side-effect boundary.
 - [x] Build sdist and wheel from a disposable tracked-file-only export.
 - [x] Verify archive membership, package-source bytes, Apache license, and clean install.
 - [x] Keep publication and legal/originality claims false.
-- [ ] Run the full audit from the committed implementation and record CI evidence.
+- [x] Run the full audit from committed implementation `4798261`; zero secret
+  matches, canonical Apache-2.0, bounded sdist/wheel, and clean install passed.
+
+## Owned-loopback network execution
+
+- [x] Add a distinct `owned-loopback` session mode with exact IPv4 loopback.
+- [x] Add real-clock session/policy validation and exact GET path matching.
+- [x] Reserve each request atomically in a session-hash-bound SQLite ledger.
+- [x] Enforce request, concurrency, delay, timeout, response, wall-time, and stop budgets.
+- [x] Refuse redirects, proxies, credentials, request bodies, mutation, and external hosts.
+- [x] Return content-free response metadata and no hash for oversized bodies.
+- [x] Stop monotonically on user stop, HTTP 429, and unexpected redirects.
+- [x] Prove restart budget, pre-socket scope rejection, no retry, and offline independence.
 
 ## Next slices
 
-1. Commit and run the technical publication audit locally and in CI while keeping
-   the repository private.
-2. Implement the first owned-loopback network execution slice; external HTTPS
-   remains blocked until its remaining transport gates are proven.
+1. Commit the owned-loopback proof, rerun the technical release audit at the new
+   version, and verify normal plus release CI while keeping the repository private.
+2. Treat external HTTPS execution as a later explicit decision; remaining DNS,
+   TLS, address-pinning, identification, and live-policy gates are still open.
 
 ## Current verification
 
-- Windows Python 3.13.12: syntax check and 63 tests pass, including release
+- Windows Python 3.13.12: syntax check and 71 tests pass, including release
   inventory, license, secret-pattern, and archive-path policy tests plus local network
   contract timing, scope, budget, effect, stop, and duplicate-key rejection. Two
   symbolic-link tests are skipped because the current account cannot create them.
@@ -92,7 +104,8 @@ a meaningful side-effect boundary.
 - A clean temporary installation builds `0.6.0a1` with the optional Ruff extra;
   its synthetic runner, dirty/clean Ruff scans, and local-only session validator
   all pass their exact effect and claim checks.
-- Full `0.7.0a1` release audit evidence requires the implementation commit.
+- `0.7.0a1` technical audit passed locally at `4798261`; `0.8.0a1` must pass after
+  the loopback commit.
 - GitHub Actions passes validation and package installation on Ubuntu with Python
   3.11 and 3.13. Python 3.11 is not installed on the current Windows host.
 

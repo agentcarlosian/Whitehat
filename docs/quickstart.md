@@ -71,5 +71,17 @@ python -B -m whitehat release audit --json
 Success reports `technical-audit-passed` while keeping publication authorization
 and publication performed false.
 
+Owned-loopback execution requires a currently active copy of the checked-in
+loopback template, a local HTTP server on its exact port, and a new ignored state
+path:
+
+```powershell
+python -B -m whitehat network observe-loopback .\tmp\loopback-session.json --state .\tmp\loopback.sqlite3 --path /observe --json
+python -B -m whitehat network stop .\tmp\loopback-session.json --state .\tmp\loopback.sqlite3 --json
+```
+
+The checked-in template is historical and intentionally not a standing grant.
+External targets are unsupported.
+
 If Python cannot import `whitehat`, confirm that the command is running from the
 repository root. Use `python --version` to confirm Python 3.11 or newer.

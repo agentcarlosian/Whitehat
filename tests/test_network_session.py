@@ -61,6 +61,12 @@ class NetworkSessionTests(unittest.TestCase):
         with self.assertRaisesRegex(NetworkSessionError, "exact lowercase DNS"):
             validate_network_session(document, EVALUATION_TIME)
 
+    def test_rejects_non_ascii_path_prefix(self) -> None:
+        document = example_document()
+        document["targets"][0]["pathPrefixes"] = ["/café"]
+        with self.assertRaisesRegex(NetworkSessionError, "invalid path prefix"):
+            validate_network_session(document, EVALUATION_TIME)
+
     def test_rejects_mutating_method_and_effect(self) -> None:
         document = example_document()
         document["targets"][0]["methods"] = ["POST"]

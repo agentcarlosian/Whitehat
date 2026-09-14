@@ -27,7 +27,9 @@ class CliTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         result = json.loads(completed.stdout)
         self.assertTrue(result["ok"])
-        self.assertFalse(result["capabilities"]["network"])
+        self.assertTrue(result["capabilities"]["network"])
+        self.assertTrue(result["capabilities"]["loopbackNetworkExecution"])
+        self.assertFalse(result["capabilities"]["externalNetwork"])
 
     def test_diff_json(self) -> None:
         completed = self._run(

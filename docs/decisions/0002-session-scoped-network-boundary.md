@@ -2,7 +2,7 @@
 
 Date: 2026-09-11
 
-Status: accepted design; network execution not implemented
+Status: accepted design; owned-loopback proof implemented, external execution absent
 
 ## Decision
 
@@ -17,10 +17,10 @@ redirects or ambient proxies, normal TLS verification, resolve-public-once addre
 pinning, and false credential, mutation, third-party-data, contact, and submission
 effects. Session duration is capped at eight hours.
 
-Session validation remains separate from execution. The current CLI only checks
-the local design document and always returns false for legal authority,
-implemented network engine, network execution authorization, and execution
-performed.
+Session validation remains separate from execution. It always returns false for
+legal authority, network execution authorization, and execution performed. It
+reports an implemented engine only for the separately reviewed `owned-loopback`
+mode defined by Decision 0004.
 
 Offline analysis, local records, the synthetic runner, and local scanners never
 load or require a network session.

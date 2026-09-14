@@ -2,9 +2,10 @@
 
 ## Purpose
 
-This document defines the boundary a future network engine must satisfy. It does
-not implement network access and is not evidence that any target is authorized.
-The current operator command is local-only:
+This document defines the boundary an external network engine must satisfy. The
+owned-loopback proof in Decision 0004 implements only exact IPv4 loopback and is
+not evidence that any external target is authorized. Session inspection remains
+local-only:
 
 ```powershell
 python -B -m whitehat session validate .\examples\network-session.synthetic.json --evaluation-time 2026-09-11T01:30:00Z --json
@@ -12,6 +13,23 @@ python -B -m whitehat session validate .\examples\network-session.synthetic.json
 
 The checked-in example uses reserved `.invalid` hosts and an historical
 evaluation clock. It cannot produce network execution readiness.
+
+## Implemented owned-loopback proof
+
+`whitehat network observe-loopback` accepts only an active `owned-loopback`
+contract with exact host `127.0.0.1`, HTTP, `GET`, and a matching path prefix. It
+reserves each attempt in a local SQLite ledger before opening the socket, uses a
+direct standard-library connection, never follows a redirect, sends no body or
+credentials, reads at most the approved response limit plus one discriminator
+byte, and never retains response content.
+
+Request count, concurrency, delay, per-request timeout, response bytes, session
+wall time, expiry, policy coverage, stop state, and restart state are enforced.
+HTTP 429 and 3xx responses stop the session. Timeouts, connection failures, and
+partial reads consume their reservation and are not retried automatically.
+
+`whitehat network stop` applies the monotonic `user-stop` state. The loopback
+result can use optional local storage and review like other supported results.
 
 ## Boundary components
 
@@ -41,8 +59,8 @@ propose a capability plan but cannot create, approve, renew, or widen the sessio
 - the exact capability allowlist, initially only `http.observe`;
 - one to sixteen exact lowercase HTTPS origins, explicit ports, normalized path
   prefixes, and unique `GET`/`HEAD` methods;
-- maximum requests, concurrency, request/response bytes, wall time, and minimum
-  inter-request delay;
+- maximum requests, concurrency, request/response bytes, request timeout, wall
+  time, and minimum inter-request delay;
 - redirects disabled, proxy environment disabled, TLS verification required,
   and resolve-public-once address pinning;
 - false credentials, target mutation, third-party data, contact, and submission;
@@ -116,7 +134,7 @@ must not change their defaults or failure modes.
 
 ## Future implementation gate
 
-A network engine is not ready until tests prove real-clock enforcement, atomic
+An external network engine is not ready until tests prove real-clock enforcement, atomic
 reservation, restart behavior, user stop, exact origin/path/method matching,
 public-address filtering and pinning, TLS hostname verification, proxy removal,
 redirect refusal, request/response/time budgets, 429 stopping, no retry, bounded

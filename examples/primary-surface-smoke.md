@@ -57,3 +57,7 @@ The release audit is intentionally separate and requires a clean commit:
 python -m pip install ".[release]"
 python -B -m whitehat release audit --json
 ```
+
+Owned-loopback execution is covered by the automated temporary-server tests. The
+checked-in loopback session is an expired template and should not be treated as a
+standing runnable grant.

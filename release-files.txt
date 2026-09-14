@@ -11,6 +11,7 @@ whitehat/cli.py
 whitehat/dependencies.py
 whitehat/diagnostics.py
 whitehat/local_diff.py
+whitehat/network_engine.py
 whitehat/network_session.py
 whitehat/records.py
 whitehat/release_audit.py
