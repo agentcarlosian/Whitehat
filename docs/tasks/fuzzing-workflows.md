@@ -35,19 +35,21 @@ target activity, real credentials, submission, publication or automatic merge.
 - [x] Relational assertions and readback fixtures.
 - [x] Reduction, corpus and regression workflows.
 - [x] Stateful generation and verified reset.
-- [x] GraphQL and optional source adapter implementation; actual Linux engine check pending CI.
-- [ ] Complete CLI examples, checks, package audit and reviewable PR.
+- [x] GraphQL and optional source adapter with actual Linux engine proof.
+- [x] Complete CLI examples, checks, package audit and reviewable PR.
+
+Review: [PR #4](https://github.com/agentcarlosian/Whitehat/pull/4).
 
 ## Verification checkpoint
 
 - Owned CLI evaluation passes: six broken mutation/readback signals and two
   broken stateful signals; zero in both fixed twins; reset and corpus reproduction
   pass; 16 GraphQL variable cases generated without target traffic.
-- 17 focused tests pass on Windows with the one optional Linux engine test
+- 18 focused tests pass on Windows with the one optional Linux engine test
   skipped. Includes same-origin fixed-version corpus regression, query wire-type
   classification, pre-socket rejection, output collisions, noninterleaving ledger
   claims, input snapshots, missing readback and failed-reset behavior.
-- Final Windows/Python 3.13.12 validation passes 150 tests with two existing
+- Final Windows/Python 3.13.12 validation passes 151 tests with two existing
   symlink skips and the optional Linux Atheris skip. Ruff correctness, syntax,
   installed-package CLI, native research and Web/API regressions pass.
 - Native executables under this temporary checkout require elevated validation
@@ -56,7 +58,13 @@ target activity, real credentials, submission, publication or automatic merge.
 - Initial Linux CI reached the actual Atheris 3.1.0 worker and established its
   stop behavior: `SystemExit` from the fixed callback produces libFuzzer exit 77.
   The parent now accepts 0/77 only when the exact structured result also validates;
-  absent or malformed output still fails. Replacement Linux proof is pending.
+  absent or malformed output still fails.
 - The next Linux run established that Atheris also writes surrounding stdout.
   The worker now frames one result with a unique prefix; the parent requires
   exactly one valid framed result and ignores other bounded engine text.
+- PR run `35020617583` passed the actual Linux/Python 3.13 Atheris job: all
+  18 focused tests, including owned fixed/broken and HAR parser profiles. The
+  same run passed 151-test validation on Ubuntu 3.11/3.13, Windows 3.11/3.13,
+  and macOS 3.13, plus installed-package workflows and the release audit.
+  Ubuntu/Windows validation skipped only the separately executed Atheris test;
+  macOS also skipped its three documented native-adapter tests.
