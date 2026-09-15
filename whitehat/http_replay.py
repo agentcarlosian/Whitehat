@@ -450,7 +450,12 @@ def _send(
 
 
 def replay(
-    session_path: str, request_path: str, identity: str, state_path: str
+    session_path: str,
+    request_path: str,
+    identity: str,
+    state_path: str,
+    *,
+    _batch_owner: str | None = None,
 ) -> dict[str, Any]:
     session = validate_session(parse_json(read_bytes(Path(session_path), 256 * 1024)))
     request = prepared_request(parse_json(read_bytes(Path(request_path), 128 * 1024)))
@@ -481,6 +486,7 @@ def replay(
         session["origin"],
         parsed.path,
         datetime.now(timezone.utc),
+        batch_owner=_batch_owner,
     )
     status = size = None
     outcome, stop = "failed", "transport-failure"

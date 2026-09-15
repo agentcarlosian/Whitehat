@@ -1,0 +1,1 @@
+query ReadItem($id: ID!) { item(id: $id) { id owner } }

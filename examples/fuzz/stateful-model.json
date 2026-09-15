@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "whitehat-stateful-model-v1",
+  "projectId": "owned-fuzz",
+  "seed": 7,
+  "maxCases": 4,
+  "maxSteps": 3,
+  "initialState": "draft",
+  "states": [
+    "draft",
+    "approved",
+    "published"
+  ],
+  "actions": [
+    {
+      "id": "approve",
+      "from": [
+        "draft"
+      ],
+      "to": "approved",
+      "step": {
+        "id": "approve",
+        "request": {
+          "schemaVersion": "whitehat-prepared-request-v1",
+          "method": "POST",
+          "url": "https://owned.example.invalid/approve",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": null,
+          "objectId": "owned-item",
+          "operationId": "owned-operation"
+        },
+        "identityId": "alice",
+        "expect": {
+          "statuses": [
+            200
+          ],
+          "values": {},
+          "absent": []
+        }
+      },
+      "invalidStatuses": [
+        409
+      ]
+    },
+    {
+      "id": "publish",
+      "from": [
+        "approved"
+      ],
+      "to": "published",
+      "step": {
+        "id": "publish",
+        "request": {
+          "schemaVersion": "whitehat-prepared-request-v1",
+          "method": "POST",
+          "url": "https://owned.example.invalid/publish",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": null,
+          "objectId": "owned-item",
+          "operationId": "owned-operation"
+        },
+        "identityId": "alice",
+        "expect": {
+          "statuses": [
+            200
+          ],
+          "values": {},
+          "absent": []
+        }
+      },
+      "invalidStatuses": [
+        409
+      ]
+    }
+  ],
+  "setup": [
+    {
+      "id": "setup-reset",
+      "request": {
+        "schemaVersion": "whitehat-prepared-request-v1",
+        "method": "POST",
+        "url": "https://owned.example.invalid/reset",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": null,
+        "objectId": "owned-item",
+        "operationId": "owned-operation"
+      },
+      "identityId": "alice",
+      "expect": {
+        "statuses": [
+          200
+        ],
+        "values": {},
+        "absent": []
+      }
+    }
+  ],
+  "readback": [
+    {
+      "id": "after",
+      "request": {
+        "schemaVersion": "whitehat-prepared-request-v1",
+        "method": "GET",
+        "url": "https://owned.example.invalid/state",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": null,
+        "objectId": "owned-item",
+        "operationId": "owned-operation"
+      },
+      "identityId": "alice",
+      "expect": {
+        "statuses": [
+          200
+        ],
+        "values": {},
+        "absent": []
+      }
+    }
+  ],
+  "reset": [
+    {
+      "id": "cleanup",
+      "request": {
+        "schemaVersion": "whitehat-prepared-request-v1",
+        "method": "POST",
+        "url": "https://owned.example.invalid/reset",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": null,
+        "objectId": "owned-item",
+        "operationId": "owned-operation"
+      },
+      "identityId": "alice",
+      "expect": {
+        "statuses": [
+          200
+        ],
+        "values": {},
+        "absent": []
+      }
+    },
+    {
+      "id": "cleanup-check",
+      "request": {
+        "schemaVersion": "whitehat-prepared-request-v1",
+        "method": "GET",
+        "url": "https://owned.example.invalid/state",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": null,
+        "objectId": "owned-item",
+        "operationId": "owned-operation"
+      },
+      "identityId": "alice",
+      "expect": {
+        "statuses": [
+          200
+        ],
+        "values": {
+          "/owner": "alice",
+          "/quantity": 1,
+          "/phase": "draft"
+        },
+        "absent": []
+      }
+    }
+  ],
+  "assertions": []
+}

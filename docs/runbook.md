@@ -36,6 +36,14 @@ There is no persistent background service.
 
 ## Failure handling
 
+For mutation/stateful batches, relational assertions, reduction and corpus
+regression, GraphQL analysis and optional source fuzzing, see [fuzzing.md](fuzzing.md).
+`python -B scripts/evaluate_fuzz.py` verifies the complete CLI against disposable
+owned APIs. Add `--installed` after installation to check the installed command.
+If reset is incomplete or a fuzz ledger claim survives interruption, inspect the
+case, ledger and controlled state before recovery. Do not clear usage or issue
+automatic cleanup traffic outside the original session.
+
 For capture preparation, evidence packets, staged binding, candidate decisions
 and access/scenario coverage, use [the complete bounty workflow](bounty-workflow.md).
 `python -B scripts/evaluate_bounty.py` verifies this path with owned fixtures;

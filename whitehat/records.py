@@ -40,6 +40,13 @@ SUPPORTED_RESULT_SCHEMAS = frozenset(
         "whitehat-packet-check-v1",
         "whitehat-candidate-history-v1",
         "whitehat-candidate-decision-v1",
+        "whitehat-fuzz-preparation-v1",
+        "whitehat-fuzz-minimization-v1",
+        "whitehat-fuzz-corpus-status-v1",
+        "whitehat-fuzz-regression-v1",
+        "whitehat-graphql-inventory-v1",
+        "whitehat-graphql-operation-v1",
+        "whitehat-source-fuzz-result-v1",
     }
 )
 REVIEW_DECISIONS = frozenset({"accepted", "dismissed", "needs-work"})

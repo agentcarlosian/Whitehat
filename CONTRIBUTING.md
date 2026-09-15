@@ -10,15 +10,18 @@ Create a virtual environment with `python -m venv .venv`. Activate it with
 Then run:
 
 ```sh
-python -m pip install ".[scanner-ruff,release,api,api-test,test-tls]"
+python -m pip install ".[scanner-ruff,release,api,api-test,test-tls,fuzz,graphql]"
 python scripts/setup_tools.py --destination .whitehat/tools
 python -B scripts/validate.py
 python -B scripts/evaluate_research.py
 python -B scripts/evaluate_web.py
+python -B scripts/evaluate_fuzz.py
 ```
 
 Core runtime dependencies remain empty. Native engines are installed separately.
 Formatting and basic lint: `python -m ruff check whitehat tests scripts --select E4,E7,E9,F`.
+Linux x64/Python 3.12–3.14 contributors can separately install `[source-fuzz]`;
+CI performs the required actual Atheris run on Linux/Python 3.13.
 
 ## A useful pull request
 

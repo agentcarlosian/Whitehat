@@ -263,5 +263,10 @@ def toolkit_status() -> dict[str, Any]:
         "native": [{"tool": name, "version": spec["version"], "license": spec["license"],
                     "platforms": sorted(spec["platforms"])} for name, spec in TOOLS.items()],
         "imports": ["opengrep", "osv", "sarif", "zap", "nuclei", "betterleaks", "gitleaks"],
+        "pythonExtras": [
+            {"tool": "hypothesis", "version": "6.168.0", "extra": "fuzz", "platforms": ["core-python"]},
+            {"tool": "graphql-core", "version": "3.2.12", "extra": "graphql", "platforms": ["core-python"]},
+            {"tool": "atheris", "version": "3.1.0", "extra": "source-fuzz", "platforms": ["linux-x64-python3.12-3.14"]}],
+        "concreteRequestBatches": True,
         "setup": "python scripts/setup_tools.py --destination .whitehat/tools",
         "networkScanning": False}

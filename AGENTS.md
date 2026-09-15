@@ -26,6 +26,10 @@ independent researcher.
 - Generated Schemathesis testing is currently restricted to the owned disposable
   API fixture. External generated testing, automatic login, destructive operations,
   payments, contact, disclosure, and submission are not implemented.
+- Decision 0007 adds offline concrete mutation/stateful generation and reviewed
+  batch execution through the same exact-request ledger. Setup/readback/reset
+  requests consume its budget; cleanup never overrides a stopped session. The
+  optional Atheris adapter accepts fixed reviewed targets, never caller modules.
 - A valid network-session design document never enables execution. Offline
   commands must remain independent of network-session state. The older v1 network
   design schema cannot authorize the new replay capability.

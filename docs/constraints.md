@@ -52,6 +52,21 @@
 - Generated Schemathesis testing runs only on the owned mini-API. Its audit hook,
   nonce, connection cap and process deadline are not an OS sandbox. Reusable
   stateful scenarios outside that fixture contain only exact approved requests.
+- Concrete fuzz batches are generated before execution and contain at most 32
+  cases/100 total request steps, including setup/readback/reset. A batch claims
+  the existing ledger to prevent interleaving; interrupted claims require review.
+  Reset is checked against explicit expected evidence, not a guarantee that every
+  possible side effect was undone. Stopped sessions are never bypassed for cleanup.
+- OpenAPI mutation generation uses an explicit scalar-keyword projection; unsupported
+  keywords require review. Stateful models use literal prepared requests and
+  bounded action/state sets. Reduction selects the smallest verified candidate
+  in a finite sweep and does not claim a global minimum or vulnerability validity.
+- GraphQL SDL/introspection and operation parsing are bounded/offline. The first
+  HTTP profile supports POST JSON query/mutation documents and scalar/enum variables;
+  subscriptions, persisted-query-only inputs, batches and streams are unsupported.
+- Atheris 3.1.0 is an optional Linux x64/Python 3.12–3.14 adapter for reviewed fixed
+  profiles. It does not execute caller modules and is not an OS sandbox. Failure
+  input artifacts are explicit sensitive outputs. See [fuzzing](fuzzing.md).
 - HTTP evidence omits raw headers/bodies and query values. Explicit scalar
   selectors may retain sensitive values; review selectors and exports. Missing
   captured bodies never prove that a sensitive field was absent.

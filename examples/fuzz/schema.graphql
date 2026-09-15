@@ -1,0 +1,2 @@
+type Item { id: ID! owner: String! }
+type Query { item(id: ID!): Item }

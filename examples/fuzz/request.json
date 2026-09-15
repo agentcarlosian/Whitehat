@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "whitehat-prepared-request-v1",
+  "method": "PATCH",
+  "url": "https://owned.example.invalid/item",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"quantity\":1,\"owner\":\"bob\",\"noise\":\"owned irrelevant field\"}",
+  "objectId": "owned-item",
+  "operationId": "owned-operation"
+}

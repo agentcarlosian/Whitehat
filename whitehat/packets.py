@@ -207,6 +207,17 @@ def _load_packet(path: str) -> tuple[dict, dict, list[dict]]:
                     issues.append(
                         {"code": "unselected-assessment-exchange", "item": name}
                     )
+        if provenance.get("kind") == "relational-assessment":
+            for hash_value in provenance.get("evidenceResults", []):
+                if hash_value not in result_hashes:
+                    issues.append({"code": "missing-relational-evidence", "item": name})
+        if provenance.get("kind") == "fuzz-run":
+            if provenance["httpEvidence"]["resultSha256"] not in result_hashes:
+                issues.append({"code": "missing-fuzz-http-evidence", "item": name})
+            if not provenance["complete"]:
+                issues.append({"code": "incomplete-fuzz-run", "item": name})
+            if any(c["cleanup"] == "incomplete" for c in provenance["cases"]):
+                issues.append({"code": "incomplete-fuzz-reset", "item": name})
         if provenance.get("profile") == "explicit-scenario":
             if provenance.get("executedSteps") != provenance.get("plannedSteps"):
                 issues.append({"code": "incomplete-scenario", "item": name})
@@ -332,6 +343,39 @@ def _render_evidence(result: dict, selected: list[str]) -> list[str]:
                 ]
             )
         provenance = result["provenance"]
+        if provenance.get("kind") == "relational-assessment":
+            lines.append(_line("Relational plan SHA-256", provenance.get("planSha256")))
+            lines.append("Evidence ordering is operator asserted.")
+            for evaluation in provenance["evaluations"]:
+                lines.append(
+                    _line(
+                        "Assertion " + _markdown(evaluation["assertionId"]),
+                        evaluation["outcome"],
+                    )
+                )
+                lines.extend(
+                    _line("Linked exchange SHA-256", value)
+                    for value in evaluation["evidenceSha256"]
+                )
+        if provenance.get("kind") == "fuzz-run":
+            lines.extend(
+                [
+                    _line("Fuzz batch SHA-256", provenance["batchSha256"]),
+                    _line("Batch complete", provenance["complete"]),
+                    _line(
+                        "HTTP evidence SHA-256",
+                        provenance["httpEvidence"]["resultSha256"],
+                    ),
+                ]
+            )
+            for case in provenance["cases"]:
+                lines.extend(
+                    [
+                        _line("Case " + _markdown(case["caseId"]), case["outcome"]),
+                        _line("Reset", case["cleanup"]),
+                        _line("Failure signals", ", ".join(case["failureKeys"])),
+                    ]
+                )
         if provenance.get("kind") == "access-assessment":
             lines.extend(
                 [
