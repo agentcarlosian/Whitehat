@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 from typing import Any, Sequence
 
 from . import __version__
@@ -44,6 +45,13 @@ from .api_testing import test_owned_api
 from .preparation import prepare_capture, bind_request
 from .packets import initialize_packet, check_packet, export_packet
 from .candidates import DECISIONS, initialize_candidate, record_decision, candidate_history
+from .fuzz_generation import initialize_plan, generate_plan
+from .fuzz_execution import run_batch
+from .fuzz_stateful import generate_stateful
+from .fuzz_corpus import extract_http, reduce_case, minimize_batch, initialize_corpus, add_corpus, corpus_batch, regress_corpus
+from .fuzz_source import SOURCE_PROFILES, source_fuzz
+from .graphql_tools import graphql_inventory, inspect_operation, import_graphql_capture, graphql_mutation_plan
+from .relational import assess_relations
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -51,6 +59,18 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         print(
             json.dumps(value, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
         )
+        return
+    if value.get("schemaVersion", "").startswith(("whitehat-fuzz-", "whitehat-graphql-", "whitehat-source-fuzz-")):
+        print(value["schemaVersion"])
+        for key in ("projectId", "planSha256", "batchSha256", "cases", "plannedRequests", "fields", "entryKey", "duplicate", "entryCount", "caseSha256", "verifiedCandidates", "profile", "callbacks", "failureInputSha256"):
+            if key in value:
+                print(f"{key}: {value[key]}")
+        for item in value.get("entries", []):
+            print(f"{item['entryKey']}: {item['outcome']}")
+        for operation in value.get("operations", []):
+            print(f"{operation['kind']} {operation['field']}: {operation['type']}")
+        if "operation" in value:
+            print(f"{value['operation']['kind']} {value['operation']['name']} ({value['operation']['operationId']})")
         return
     if value.get("schemaVersion") == "whitehat-doctor-v1":
         enabled = [
@@ -66,6 +86,8 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         for tool in value["native"]:
             print(f"{tool['tool']} {tool['version']} ({', '.join(tool['platforms'])})")
         print("Report imports: " + ", ".join(value["imports"]))
+        for tool in value.get("pythonExtras", []):
+            print(f"Optional {tool['tool']} {tool['version']}: .[{tool['extra']}] ({', '.join(tool['platforms'])})")
         print("Explicit setup: " + value["setup"])
         return
     if value.get("schemaVersion") == "whitehat-research-result-v1":
@@ -251,6 +273,105 @@ def _parser() -> argparse.ArgumentParser:
 
     toolkit = commands.add_parser("tools", help="List reviewed tools, versions, platforms, and import formats.")
     toolkit.add_argument("--json", action="store_true")
+
+    fuzz = commands.add_parser("fuzz", help="Prepare and run concrete fuzz batches, assess readback, and retain reproducers.")
+    fuzz_commands = fuzz.add_subparsers(dest="fuzz_command", required=True)
+    fuzz_plan = fuzz_commands.add_parser("plan", help="Draft mutation slots from a prepared request and optional OpenAPI document.")
+    fuzz_plan.add_argument("request")
+    fuzz_plan.add_argument("--schema")
+    fuzz_plan.add_argument("--project", required=True)
+    fuzz_plan.add_argument("--identity", default="researcher")
+    fuzz_plan.add_argument("--seed", type=int, default=1)
+    fuzz_plan.add_argument("--output", required=True)
+    fuzz_plan.add_argument("--json", action="store_true")
+    for name, argument, help_text in (("generate", "plan", "Generate bounded concrete mutation cases."), ("stateful", "model", "Generate finite-state sequences with explicit reset.")):
+        command = fuzz_commands.add_parser(name, help=help_text)
+        command.add_argument(argument)
+        command.add_argument("--output-dir", required=True)
+        command.add_argument("--json", action="store_true")
+    fuzz_run = fuzz_commands.add_parser("run", help="Run an exact approved batch using the persistent session ledger.")
+    fuzz_run.add_argument("batch")
+    fuzz_run.add_argument("--session", required=True)
+    fuzz_run.add_argument("--state", required=True)
+    _add_output(fuzz_run)
+    fuzz_run.add_argument("--json", action="store_true")
+    for name, argument, help_text in (("assess", "plan", "Assess relational assertions against saved evidence."), ("evidence", "run", "Extract normalized HTTP evidence from a fuzz run.")):
+        command = fuzz_commands.add_parser(name, help=help_text)
+        command.add_argument(argument)
+        _add_output(command)
+        command.add_argument("--json", action="store_true")
+    reduction = fuzz_commands.add_parser("reduce", help="Prepare a finite reduction batch for a reproduced case.")
+    reduction.add_argument("case")
+    reduction.add_argument("--run", required=True)
+    reduction.add_argument("--failure-key")
+    reduction.add_argument("--output-dir", required=True)
+    reduction.add_argument("--json", action="store_true")
+    minimum = fuzz_commands.add_parser("minimize", help="Select the smallest verified same-failure candidate from a reduction run.")
+    minimum.add_argument("batch")
+    minimum.add_argument("--run", required=True)
+    minimum.add_argument("--output-dir", required=True)
+    minimum.add_argument("--json", action="store_true")
+    corpus = fuzz_commands.add_parser("corpus", help="Store reproduced inputs and prepare/check regression batches.")
+    corpus_commands = corpus.add_subparsers(dest="corpus_command", required=True)
+    corpus_init = corpus_commands.add_parser("init")
+    corpus_init.add_argument("directory")
+    corpus_init.add_argument("--project", required=True)
+    corpus_init.add_argument("--json", action="store_true")
+    corpus_add = corpus_commands.add_parser("add")
+    corpus_add.add_argument("directory")
+    corpus_add.add_argument("--case", required=True)
+    corpus_add.add_argument("--run", required=True)
+    corpus_add.add_argument("--failure-key")
+    corpus_add.add_argument("--json", action="store_true")
+    corpus_prepare = corpus_commands.add_parser("batch")
+    corpus_prepare.add_argument("directory")
+    corpus_prepare.add_argument("--entry", action="append", default=[])
+    corpus_prepare.add_argument("--output-dir", required=True)
+    corpus_prepare.add_argument("--json", action="store_true")
+    corpus_regress = corpus_commands.add_parser("regress")
+    corpus_regress.add_argument("directory")
+    corpus_regress.add_argument("--batch", required=True)
+    corpus_regress.add_argument("--run", required=True)
+    _add_output(corpus_regress)
+    corpus_regress.add_argument("--json", action="store_true")
+    source = fuzz_commands.add_parser("source", help="Run optional Atheris against a reviewed fixed source profile on Linux.")
+    source.add_argument("profile", choices=SOURCE_PROFILES)
+    source.add_argument("--corpus")
+    source.add_argument("--runs", type=int, default=1000)
+    source.add_argument("--seed", type=int, default=1)
+    source.add_argument("--output-dir", required=True)
+    source.add_argument("--json", action="store_true")
+
+    graphql = commands.add_parser("graphql", help="Inspect GraphQL schemas/documents and prepare operation-aware research.")
+    graphql_commands = graphql.add_subparsers(dest="graphql_command", required=True)
+    graphql_inventory_cmd = graphql_commands.add_parser("inventory")
+    graphql_inventory_cmd.add_argument("schema")
+    graphql_inventory_cmd.add_argument("--project", required=True)
+    _add_output(graphql_inventory_cmd)
+    graphql_inventory_cmd.add_argument("--json", action="store_true")
+    graphql_inspect = graphql_commands.add_parser("inspect")
+    graphql_inspect.add_argument("document")
+    graphql_inspect.add_argument("--schema", required=True)
+    graphql_inspect.add_argument("--project", required=True)
+    graphql_inspect.add_argument("--operation")
+    _add_output(graphql_inspect)
+    graphql_inspect.add_argument("--json", action="store_true")
+    graphql_import = graphql_commands.add_parser("import")
+    graphql_import.add_argument("capture")
+    graphql_import.add_argument("--schema", required=True)
+    graphql_import.add_argument("--project", required=True)
+    graphql_import.add_argument("--identity", default="unlabeled")
+    graphql_import.add_argument("--object", default="unlabeled")
+    graphql_import.add_argument("--select", action="append", default=[])
+    _add_output(graphql_import)
+    graphql_import.add_argument("--json", action="store_true")
+    graphql_plan = graphql_commands.add_parser("plan")
+    graphql_plan.add_argument("request")
+    graphql_plan.add_argument("--schema", required=True)
+    graphql_plan.add_argument("--project", required=True)
+    graphql_plan.add_argument("--identity", default="researcher")
+    graphql_plan.add_argument("--output", required=True)
+    graphql_plan.add_argument("--json", action="store_true")
 
     report_import = commands.add_parser("import", help="Normalize an existing security report without running its tool.")
     report_import.add_argument("report")
@@ -590,6 +711,49 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         if args.command == "tools":
             _emit(toolkit_status(), args.json)
+            return 0
+        if args.command == "fuzz":
+            command = args.fuzz_command
+            if command == "plan":
+                _emit(initialize_plan(args.request, args.output, args.project, args.identity, args.seed, args.schema), args.json)
+            elif command == "generate":
+                _emit(generate_plan(args.plan, args.output_dir), args.json)
+            elif command == "stateful":
+                _emit(generate_stateful(args.model, args.output_dir), args.json)
+            elif command == "run":
+                if args.output:
+                    destination = Path(args.output)
+                    if destination.exists() or destination.is_symlink() or not destination.parent.resolve(strict=True).is_dir():
+                        raise RecordError("choose a new output file in an existing directory before executing a fuzz batch")
+                _emit_analysis(run_batch(args.batch, args.session, args.state), args)
+            elif command == "assess":
+                _emit_analysis(assess_relations(args.plan), args)
+            elif command == "evidence":
+                _emit_analysis(extract_http(args.run), args)
+            elif command == "reduce":
+                _emit(reduce_case(args.case, args.run, args.output_dir, args.failure_key), args.json)
+            elif command == "minimize":
+                _emit(minimize_batch(args.batch, args.run, args.output_dir), args.json)
+            elif command == "source":
+                _emit(source_fuzz(args.profile, args.output_dir, runs=args.runs, seed=args.seed, corpus_path=args.corpus), args.json)
+            elif args.corpus_command == "init":
+                _emit(initialize_corpus(args.directory, args.project), args.json)
+            elif args.corpus_command == "add":
+                _emit(add_corpus(args.directory, args.case, args.run, args.failure_key), args.json)
+            elif args.corpus_command == "batch":
+                _emit(corpus_batch(args.directory, args.output_dir, args.entry), args.json)
+            else:
+                _emit_analysis(regress_corpus(args.directory, args.batch, args.run), args)
+            return 0
+        if args.command == "graphql":
+            if args.graphql_command == "inventory":
+                _emit_analysis(graphql_inventory(args.schema, args.project), args)
+            elif args.graphql_command == "inspect":
+                _emit_analysis(inspect_operation(args.schema, args.document, args.project, args.operation), args)
+            elif args.graphql_command == "import":
+                _emit_analysis(import_graphql_capture(args.schema, args.capture, args.project, args.select, args.identity, args.object), args)
+            else:
+                _emit(graphql_mutation_plan(args.schema, args.request, args.output, args.project, args.identity), args.json)
             return 0
         if args.command == "init":
             _emit(initialize_workspace(args.directory, args.title), args.json)

@@ -2,9 +2,9 @@
 
 ## Current boundary
 
-Web/API `0.10.0a1` is merged at `c04fb29`; post-merge run `34836887970`
-passed all platform jobs and the release audit. The `0.11.0a1` capture-to-report
-work extends that baseline; its final audit is recorded in the task and PR.
+Capture-to-report `0.11.0a1` is merged at `73f4dee`; post-merge run `34877032522`
+passed all platform jobs and the release audit. The `0.12.0a1` fuzzing work
+extends that baseline; its final audit is recorded in the task and PR.
 
 The GitHub repository remains private. The current work implements a technical
 audit; it does not change visibility, create a tag, upload a package, or announce

@@ -54,6 +54,29 @@ def evidence_result(path: Path) -> dict:
     if schema == "whitehat-research-result-v1":
         result = checked_research_result(str(path))
         provenance = result["provenance"]
+        if provenance.get("kind") == "fuzz-run":
+            from .fuzz_corpus import load_run
+
+            return load_run(str(path))
+        if provenance.get("kind") == "relational-assessment":
+            evaluations = provenance.get("evaluations")
+            if not isinstance(evaluations, list) or len(evaluations) > 32:
+                raise ReportError("invalid relational assessment")
+            for evaluation in evaluations:
+                fields(
+                    evaluation,
+                    {"assertionId", "relation", "outcome", "evidenceSha256"},
+                    "relational evaluation",
+                )
+                label(evaluation["assertionId"], "assertion")
+                if evaluation["outcome"] not in (
+                    "consistent",
+                    "mismatch",
+                    "inconclusive",
+                ) or not isinstance(evaluation["evidenceSha256"], list):
+                    raise ReportError("invalid relational outcome/evidence")
+                for value in evaluation["evidenceSha256"]:
+                    sha256(value)
         if provenance.get("kind") == "access-assessment":
             label(provenance.get("projectId"), "project")
             sha256(provenance.get("matrixSha256"))

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "whitehat-prepared-request-v1",
+  "method": "POST",
+  "url": "https://owned.example.invalid/graphql",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"query\":\"query ReadItem($id: ID!) { item(id: $id) { id owner } }\\n\",\"variables\":{\"id\":\"owned-item\"}}",
+  "objectId": "owned-item",
+  "operationId": "owned-operation"
+}

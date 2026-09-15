@@ -4,6 +4,9 @@ Requested 2026-09-14: implement research priorities 1, 2, 3, and 5.
 Owner: Whitehat. Branch: `codex/bounty-workflow-adoption`. Merge target: `main`.
 Base: `c04fb29653581a78febad810990fb0d19aeccf97` (PR #2 merged).
 
+Completed: PR #3 merged at `73f4dee82cdfb86eee76660f5cecf3572901a8bf`.
+Post-merge run `34877032522` passed all five platform jobs and the release audit.
+
 ## Acceptance and sequence
 
 1. Capture compatibility and preparation: preserve failed/missing HAR exchanges

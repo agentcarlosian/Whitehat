@@ -269,3 +269,33 @@ receipts against supplied plans and does not execute them.
 
 All commands in this specification exit `0` on success. Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.
+
+## Fuzzing and GraphQL
+
+```text
+whitehat fuzz plan REQUEST --project ID --identity ID [--schema OPENAPI] [--seed N] --output PLAN
+whitehat fuzz generate PLAN --output-dir NEW_DIRECTORY
+whitehat fuzz stateful MODEL --output-dir NEW_DIRECTORY
+whitehat fuzz run BATCH --session SESSION --state LEDGER [--output RESULT]
+whitehat fuzz assess RELATIONAL_PLAN [--output RESULT]
+whitehat fuzz evidence RUN [--output HTTP_RESULT]
+whitehat fuzz reduce CASE --run RUN [--failure-key KEY] --output-dir NEW_DIRECTORY
+whitehat fuzz minimize BATCH --run RUN --output-dir NEW_DIRECTORY
+whitehat fuzz corpus init NEW_DIRECTORY --project ID
+whitehat fuzz corpus add DIRECTORY --case CASE --run RUN [--failure-key KEY]
+whitehat fuzz corpus batch DIRECTORY [--entry KEY] --output-dir NEW_DIRECTORY
+whitehat fuzz corpus regress DIRECTORY --batch BATCH --run RUN [--output RESULT]
+whitehat fuzz source PROFILE [--corpus DIRECTORY] [--runs N] [--seed N] --output-dir NEW_DIRECTORY
+whitehat graphql inventory SCHEMA --project ID [--output RESULT]
+whitehat graphql inspect DOCUMENT --schema SCHEMA --project ID [--operation NAME] [--output RESULT]
+whitehat graphql import CAPTURE --schema SCHEMA --project ID [--identity ID] [--object ID] [--select POINTER] [--output RESULT]
+whitehat graphql plan REQUEST --schema SCHEMA --project ID [--identity ID] --output PLAN
+```
+
+All support `--json`. The full contracts, limits, response interpretations and
+owned examples are in [fuzzing.md](fuzzing.md) and Decision 0007. `fuzz run` is
+explicit network execution under the existing exact-request session. Generation,
+assessment, reduction selection, corpus operations and GraphQL commands do not
+send requests. `fuzz source` starts one reviewed fixed worker. A successful
+command exit reports a completed operation, not absence of mismatches; inspect
+the research result, case outcomes, completeness, cleanup and regression fields.

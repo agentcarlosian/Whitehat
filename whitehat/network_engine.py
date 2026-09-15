@@ -162,10 +162,22 @@ def _reserve_request(
     target: str,
     path: str,
     now: datetime,
+    *,
+    batch_owner: str | None = None,
 ) -> Reservation:
     connection = _connect(state)
     try:
         connection.execute("BEGIN IMMEDIATE")
+        if connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='fuzz_execution'"
+        ).fetchone():
+            claim = connection.execute(
+                "SELECT owner, active FROM fuzz_execution WHERE id=1"
+            ).fetchone()
+            if claim and claim["active"] and claim["owner"] != batch_owner:
+                raise NetworkExecutionError(
+                    "a fuzz batch owns this ledger; independent replay cannot interleave"
+                )
         row = _ensure_state(connection, session_sha256, session)
         budgets = session["budgets"]
         if row["stopped"]:

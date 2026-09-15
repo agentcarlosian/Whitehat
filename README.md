@@ -15,11 +15,19 @@ requests, and compares API contracts. Start with the
 For the complete capture-to-report workflow, use the
 [bounty packet walkthrough](docs/bounty-workflow.md): prepare a captured request,
 bind a created object ID, assemble selected evidence, and track candidate retests.
+The [fuzzing walkthrough](docs/fuzzing.md) adds concrete mutation batches,
+relational readback checks, stateful sequences, reduction/corpus regression,
+GraphQL operation awareness and optional reviewed source-fuzzing profiles.
 
 ## What you can do
 
 | Task | Implemented support |
 | --- | --- |
+| Fuzz selected API inputs | Boundary/Hypothesis cases from prepared captures or scalar OpenAPI fields; exact reviewed batches |
+| Check state and property boundaries | Relational readback assertions and finite-state sequences with explicit verified reset |
+| Reproduce and regress failures | Finite reduction sweeps, smallest verified candidate, deduplicated HTTP case corpora |
+| Investigate GraphQL | Offline SDL/introspection inventory, operation-aware captures, scalar/enum variable plans |
+| Fuzz reviewed source parsers | Optional Atheris 3.1.0 fixed profiles on Linux x64/Python 3.12–3.14 |
 | Prepare research requests | Selected HAR entry to concrete request and unapproved session draft; staged ID binding |
 | Assemble evidence packets | Hash-pinned selected exchanges, comparisons, controls and Markdown reproduction steps |
 | Track candidate retests | Per-candidate decisions, explicit duplicate relationships, comparison suitability and history |

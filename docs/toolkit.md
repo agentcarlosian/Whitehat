@@ -1,6 +1,6 @@
 # Toolkit compatibility and maintenance
 
-Reviewed 2026-09-14. Run `whitehat tools --json` for the shipped registry.
+Reviewed 2026-09-15. Run `whitehat tools --json` for the shipped registry.
 
 | Integration | Contract | Execution | Current compatibility evidence |
 | --- | --- | --- | --- |
@@ -13,6 +13,9 @@ Reviewed 2026-09-14. Run `whitehat tools --json` for the shipped registry.
 | Betterleaks/Gitleaks | JSON arrays; null is a clean result | Import only | Betterleaks native output plus owned cross-compatible report |
 | oasdiff | 1.32.0; native release/member hashes | Prepared schema diff | Owned structural and inherited-security changes |
 | Schemathesis | 4.27.1; optional Python extra | Owned mini-API only | Generated stateful run plus explicit lifecycle twins |
+| Hypothesis | 6.168.0; optional fuzz extra | Bounded offline scalar and finite-state generation | Fixed seeds, owned API twins, concrete batch execution and reset checks |
+| graphql-core | 3.2.12; optional graphql extra | Offline SDL/introspection/document parsing | Distinct operations/fragments, variable plans, negative/partial-response fixtures |
+| Atheris | 3.1.0; optional source-fuzz extra | Reviewed fixed parser/owned profiles, Linux x64/Python 3.12–3.14 | Actual engine test is required in Linux/Python 3.13 CI; no Windows/macOS execution claim |
 | Ruff | 0.14.14; E4,E7,E9,F | Python correctness check | Existing dirty/clean fixtures; not a security analyzer |
 
 ## Platforms
@@ -22,6 +25,8 @@ macOS/Python 3.13 for imports/core checks. Native research tools are pinned for
 Windows/Linux x64. macOS and ARM native execution are not yet supported by this
 adapter release. CI configuration is not itself evidence that a run passed;
 consult the linked run for a particular commit.
+The Atheris profile is a separate optional Python/native integration with the
+platform constraints above; it is not installed by `setup_tools.py`.
 
 ## Import behavior
 

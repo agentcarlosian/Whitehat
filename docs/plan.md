@@ -1,12 +1,12 @@
 # Whitehat development plan
 
-Updated: 2026-09-14
+Updated: 2026-09-15
 
-Status: toolkit PR #1 and Web/API PR #2 are merged. Web/API main is `c04fb29`,
+Status: PRs #1–#3 are merged. Bounty workflow adoption main is `73f4dee`,
 with post-merge Windows, Ubuntu, macOS and release checks passed.
-Bounty workflow adoption priorities 1, 2, 3 and 5 are active.
+Fuzzing stages 1–5 are active under the owner's 2026-09-15 request.
 
-Current acceptance criteria: [bounty workflow adoption](tasks/bounty-workflow-adoption.md).
+Current acceptance criteria: [fuzzing workflows](tasks/fuzzing-workflows.md).
 The foundation record below describes completed work and does not select new work.
 
 Primary surface: `python -m whitehat`
@@ -93,9 +93,9 @@ a meaningful side-effect boundary.
 
 ## Next slices
 
-Follow the selected bounty workflow adoption task linked above. Exact-request
-HTTPS replay is implemented under Decision 0005; these new artifacts do not
-widen its execution contract.
+Follow the selected fuzzing task linked above. Decision 0007 preserves exact
+approved HTTP request hashes while adding generation, batching and research
+artifacts; GraphQL analysis is offline and source fuzzing uses reviewed targets.
 
 ## Alpha-foundation verification (historical)
 

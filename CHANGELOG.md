@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.12.0a1 — reproducible fuzz workflows
+
+- Generate concrete boundary/Hypothesis mutation batches from prepared requests
+  and explicit scalar OpenAPI projections; retain seeds, cases and input hashes.
+- Run batches through the existing exact-request ledger, including setup/readback/
+  reset, with preflighted budgets, copied inputs and transactional batch ownership.
+- Add typed relational assertions and owned property/state-machine twins.
+- Add finite reduction sweeps, verified reproducer selection, corpus deduplication
+  and conservative regression outcomes.
+- Generate finite-state sequences with explicit invalid-transition expectations
+  and a checked authoritative reset; no runtime destination/ID substitutions.
+- Add optional graphql-core 3.2.12 inventory, operation-aware captures and scalar/
+  enum variable mutation planning with GraphQL error checks.
+- Add optional Atheris 3.1.0 execution against reviewed fixed parser/owned targets,
+  bounded reproducer artifacts and actual Linux engine validation.
+- Extend packet rendering, installed-CLI evaluations, platform CI and release inventory.
+
+No mandatory runtime dependencies were added. Raw-framing fuzzing, arbitrary
+source modules, live adaptive generation and automatic submission remain outside
+these execution profiles. This is an alpha checkpoint, not a published package.
+
 ## 0.11.0a1 — capture-to-report adoption
 
 - Preserve incomplete HAR entries and null-body capture state with explicit diagnostics.
