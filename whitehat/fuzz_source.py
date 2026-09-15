@@ -16,6 +16,14 @@ from .runner import ProcessLimits, execute_fixed_profile
 
 ATHERIS_VERSION = "3.1.0"
 SOURCE_PROFILES = ("capture-parser", "request-parser", "owned-fixed", "owned-broken")
+_RESULT_PREFIX = b"WHITEHAT_RESULT="
+
+
+def _worker_result(raw: bytes) -> dict:
+    lines = [line[len(_RESULT_PREFIX):] for line in raw.splitlines() if line.startswith(_RESULT_PREFIX)]
+    if len(lines) != 1:
+        raise ReportError("source fuzzer must return exactly one framed result")
+    return parse_json(lines[0])
 
 
 def source_fuzz(
@@ -85,7 +93,7 @@ def source_fuzz(
         # Accept it only when the bounded structured stdout below validates.
         accepted_exit_codes=frozenset({0, 77}),
     )
-    value = parse_json(execution.stdout)
+    value = _worker_result(execution.stdout)
     if (
         not isinstance(value, dict)
         or value.get("schemaVersion") != "whitehat-atheris-worker-v1"

@@ -57,3 +57,6 @@ target activity, real credentials, submission, publication or automatic merge.
   stop behavior: `SystemExit` from the fixed callback produces libFuzzer exit 77.
   The parent now accepts 0/77 only when the exact structured result also validates;
   absent or malformed output still fails. Replacement Linux proof is pending.
+- The next Linux run established that Atheris also writes surrounding stdout.
+  The worker now frames one result with a unique prefix; the parent requires
+  exactly one valid framed result and ignores other bounded engine text.

@@ -239,6 +239,8 @@ The fixed worker stops after the requested callback count with `SystemExit`;
 Atheris/libFuzzer reports exit 77 for that stop. The parent accepts only exits 0
 or 77 and still requires a complete bounded worker result with the exact profile
 and tool version. An engine exit without that result remains an adapter failure.
+Whitehat parses exactly one uniquely prefixed JSON result line; other bounded
+Atheris/libFuzzer stdout cannot be interpreted as normalized evidence.
 
 Failures produce `source-case.json` containing the exact input as `dataBase64`
 and its digest, plus normalized `result.json`. To reproduce, decode that input

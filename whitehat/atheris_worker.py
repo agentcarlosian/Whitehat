@@ -57,7 +57,8 @@ def main() -> int:
         if not emitted:
             emitted = True
             print(
-                json.dumps(
+                "WHITEHAT_RESULT="
+                + json.dumps(
                     {
                         "schemaVersion": "whitehat-atheris-worker-v1",
                         "toolVersion": "3.1.0",

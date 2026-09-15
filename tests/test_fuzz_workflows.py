@@ -652,6 +652,15 @@ class FuzzTests(unittest.TestCase):
         self.assertEqual(duplicate.returncode, 3)
         self.assertFalse(json.loads(duplicate.stdout)["ok"])
 
+    def test_source_worker_result_framing_rejects_missing_or_duplicate_records(self):
+        from whitehat.fuzz_source import _worker_result
+        expected = {"schemaVersion": "owned-worker"}
+        framed = b"libFuzzer output\nWHITEHAT_RESULT=" + canonical(expected) + b"\nmore tool output\n"
+        self.assertEqual(_worker_result(framed), expected)
+        for raw in (b"tool output only", framed + b"WHITEHAT_RESULT={}\n"):
+            with self.assertRaises(ReportError):
+                _worker_result(raw)
+
     def test_graphql_rejects_cycles_subscriptions_and_ambiguous_operations(self):
         schema = self.root / "schema.graphql"
         schema.write_text(
