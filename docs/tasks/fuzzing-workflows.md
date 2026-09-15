@@ -53,3 +53,7 @@ target activity, real credentials, submission, publication or automatic merge.
 - Native executables under this temporary checkout require elevated validation
   access on this host; the sandbox run failed to stat them. The elevated complete
   run passed without changing test conditions or tool identities.
+- Initial Linux CI reached the actual Atheris 3.1.0 worker and established its
+  stop behavior: `SystemExit` from the fixed callback produces libFuzzer exit 77.
+  The parent now accepts 0/77 only when the exact structured result also validates;
+  absent or malformed output still fails. Replacement Linux proof is pending.

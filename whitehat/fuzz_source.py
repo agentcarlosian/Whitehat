@@ -81,6 +81,9 @@ def source_fuzz(
             max_stdout_bytes=65536,
             max_stderr_bytes=128 * 1024,
         ),
+        # Atheris/libFuzzer exits 77 when SystemExit stops the fixed callback.
+        # Accept it only when the bounded structured stdout below validates.
+        accepted_exit_codes=frozenset({0, 77}),
     )
     value = parse_json(execution.stdout)
     if (

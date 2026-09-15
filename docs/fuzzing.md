@@ -235,6 +235,10 @@ execution is bounded by runs, 8 KiB inputs, a 15-second engine time setting and
 The worker refuses Python socket/process APIs. This is not an OS sandbox for
 hostile code. The distribution version/RECORD identity, target-source hashes,
 seed, callback count and process receipt are retained.
+The fixed worker stops after the requested callback count with `SystemExit`;
+Atheris/libFuzzer reports exit 77 for that stop. The parent accepts only exits 0
+or 77 and still requires a complete bounded worker result with the exact profile
+and tool version. An engine exit without that result remains an adapter failure.
 
 Failures produce `source-case.json` containing the exact input as `dataBase64`
 and its digest, plus normalized `result.json`. To reproduce, decode that input
