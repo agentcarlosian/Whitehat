@@ -2,35 +2,34 @@
 
 Updated: 2026-09-15
 
+## Release target
+
+- Version: `0.1.0`.
+- Git tag: `v0.1.0`.
+- Channel: public GitHub release from `agentcarlosian/Whitehat`.
+- Distribution: GitHub-generated source archives only.
+- Release notes: [Whitehat 0.1.0](release-notes-0.1.0.md).
+- PyPI, TestPyPI, wheels, sdists, package uploads, and trusted publishers: out of
+  scope for this release.
+
+The `whitehat` name on PyPI belongs to an unrelated project, currently listed as
+version `1.2.3`. Whitehat documentation must never direct users to
+`pip install whitehat`. The CLI and local package metadata may continue to use
+the Whitehat name for installation from this repository's exact source tag.
+
 ## Current checkpoint
 
-Whitehat `0.12.0a1` remains private. Public-release preparation and the official
-Actions v7 updates are merged through private `main` commit
-`ac6ef0ae64ad35cd1722aa44dfa0a817a82fbcd1`. The coordinated reviewed-toolchain
-candidate `c257b1eb4ca2b40713d21406619c97ef34af60ee` updates Ruff to `0.16.7`,
-PyPA build to `1.6.1`, and setuptools to `84.0.0` while preserving their exact
-runtime identity checks.
+Private `main` is `d70805c45877be6eec8330141644057ba6baf89c`, including the
+reviewed Ruff `0.16.7`, PyPA build `1.6.1`, setuptools `84.0.0`, and official
+Actions v7 updates. No Git tags or GitHub releases exist. The GitHub repository
+remains private.
 
-A fresh local audit at the toolchain candidate passed:
+The release branch changes the internal development version `0.12.0a1` to the
+first public version `0.1.0`. The higher alpha numbers in the changelog were
+private engineering checkpoints and were never published as a public upgrade
+sequence.
 
-- 154 tracked files scanned;
-- 45 literal release-source files;
-- zero high-confidence secret-pattern matches;
-- canonical Apache-2.0 license SHA-256
-  `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
-- 53-file `whitehat-0.12.0a1.tar.gz` source distribution;
-- 44-file `whitehat-0.12.0a1-py3-none-any.whl` wheel;
-- clean installed diagnostics for version `0.12.0a1`;
-- actual Ruff `0.16.7` dirty/clean fixtures and native research evaluation;
-- release-tool identity output for build `1.6.1` and setuptools `84.0.0`.
-
-The evidence-only documentation commit and eventual merge commit must pass the
-same audit and GitHub Actions matrix before a visibility decision.
-
-The repository remains private. No tag, GitHub release, package upload,
-announcement, or visibility change is part of the technical audit.
-
-## Audit command and coverage
+## Technical audit
 
 Install the pinned audit tools and run from a clean committed checkout:
 
@@ -43,65 +42,70 @@ The audit requires clean Git state, rejects tracked links and private/generated
 roots, scans tracked and packaged text for reviewed secret patterns, verifies the
 Apache license, builds from the literal `release-files.txt` inventory, inspects
 archive membership and source bytes, and installs the wheel without an index or
-dependencies. Its output records exact identities and keeps publication, legal
-clearance, and originality claims false.
+dependencies. Generated packages are audit inputs and are deleted after the
+check; they are not release artifacts.
 
-## Release-day owner checklist
+The audit records exact identities while keeping publication, legal clearance,
+and originality claims false. Passing it is required but does not itself make the
+repository or a release public.
 
-Complete these actions against one exact audited commit. A failed or changed
-commit returns the process to the audit step.
+## Release sequence
 
-### Before changing visibility
+Complete these steps against one exact commit. Any source change returns the
+process to validation and the clean audit.
 
-- [ ] Merge the public-release-prep pull request and verify every required job on
-  the resulting `main` commit.
-- [ ] Run `python -B -m whitehat release audit --json` from that clean commit and
-  retain its content-free summary.
-- [ ] Review the public diff and `git ls-files` inventory; confirm `.whitehat/`,
-  private evidence, credentials, personal data, local databases, and generated
-  artifacts are absent from all commits.
-- [ ] Confirm README links, issue forms, the security policy, conduct guidance,
-  provenance, third-party notices, and package metadata render correctly.
-- [ ] Decide whether the alpha should be repository-only or also receive a
-  GitHub prerelease. Do not create a tag until that decision is explicit.
+### Prepare and merge
 
-### Visibility action
+- [ ] Merge the `0.1.0` release-preparation PR after every matrix and release job
+  passes.
+- [ ] Verify the resulting `main` commit passes Ubuntu, Windows and macOS
+  validation, source-fuzz, installed-package checks, and release-audit.
+- [ ] Run the local clean-commit release audit and retain its content-free
+  summary.
+- [ ] Review `git ls-files` and the complete public diff. Confirm `.whitehat/`,
+  credentials, target evidence, personal data, databases, caches, and generated
+  artifacts are absent from every commit.
+- [ ] Confirm README, security, conduct, contribution, provenance, third-party,
+  issue-template, changelog, and release-note links render correctly.
+
+### Prepare GitHub presentation
+
+- [ ] Apply the description and evidence-backed topics in
+  [GitHub presentation](github-about.md).
+- [ ] Keep Issues enabled and Discussions disabled. Disable Wiki and Projects
+  unless they have an active workflow. Enable automatic branch deletion.
+- [ ] Confirm no release or package documentation suggests
+  `pip install whitehat`.
+
+### Publish the repository
 
 - [ ] Change only `agentcarlosian/Whitehat` from private to public.
-- [ ] Confirm the public repository still points to the audited `main` commit and
-  retains issues, Actions history, Apache-2.0 detection, description, and topics.
-
-### Immediately after visibility
-
+- [ ] Confirm public `main` is the exact audited commit and Apache-2.0, Actions,
+  issues, description, and topics remain visible.
 - [ ] Create a `main` ruleset that blocks deletion and force pushes and requires
-  the `release-audit` status check. Configure an owner recovery/bypass path that
-  does not let ordinary contributors bypass checks.
-- [ ] Enable private vulnerability reporting and verify the **Report a
-  vulnerability** path from `SECURITY.md`.
-- [ ] Enable the dependency graph, Dependabot alerts and security updates, secret
-  scanning, and push protection where GitHub makes them available.
-- [ ] Enable automatic deletion of merged branches. Disable the Wiki and Projects
-  surfaces unless the project will actively use them; keep Discussions off until
-  there is capacity to moderate it.
-- [ ] Clone the public URL into a new directory, install without repository-local
-  state, and run `whitehat doctor --json` plus the one-minute synthetic review.
-- [ ] Recheck the badge, documentation links, issue routing, and public archive
-  contents while signed out.
+  the `release-audit` status check, with a narrow owner recovery path.
+- [ ] Enable private vulnerability reporting, dependency graph, Dependabot
+  alerts and security updates, secret scanning, and push protection where GitHub
+  makes them available.
 
-## Separate package-publication gate
+### Publish `v0.1.0`
 
-There is no PyPI release. If package-index publication is selected later, use
-PyPI Trusted Publishing from a dedicated GitHub Actions workflow and protected
-GitHub environment with manual approval. Build distributions in a separate job,
-grant `id-token: write` only to the publishing job, and do not store a long-lived
-PyPI token. TestPyPI and PyPI remain separate owner decisions.
+- [ ] Create and push annotated tag `v0.1.0` at the exact audited `main` commit.
+- [ ] Create a non-draft, non-prerelease GitHub release titled `Whitehat 0.1.0`
+  using `docs/release-notes-0.1.0.md` verbatim.
+- [ ] Attach no package files. Use only GitHub's generated source archives.
+- [ ] Verify the release tag, source archives, README badge, documentation links,
+  issue routing, and security-reporting path while signed out.
+- [ ] Clone `v0.1.0` into a new directory, install from source, and run
+  `python -m whitehat doctor --json` plus the one-minute synthetic review.
 
 ## What remains unproven
 
 The audit cannot prove copyright ownership, originality, trademark clearance,
 absence of every possible secret, safety of future dependencies, support quality,
-or that publication is advisable. It also does not authorize target testing,
-third-party data handling, hosted execution, disclosures, or report submission.
+or that publication is advisable. It does not authorize target testing,
+third-party data handling, hosted execution, disclosures, contact, or report
+submission.
 
-The exact preparation acceptance criteria are in
+The active task and closure conditions are in
 [public release preparation](tasks/public-release-prep.md).

@@ -2,10 +2,10 @@
 
 Updated: 2026-09-15
 
-Status: PRs #1–#4 are merged. Fuzzing workflow main is `eacad9f`, with
-post-merge Windows, Ubuntu, macOS, source-fuzz, installed-package, and release
-checks passed. Public-release preparation is active; repository visibility,
-tags, package publication, and announcements remain separate owner decisions.
+Status: PRs #1–#7 and #9 are merged; broken grouped dependency PR #8 was closed.
+Private `main` is `d70805c` with reviewed Ruff `0.16.7`, build `1.6.1`,
+setuptools `84.0.0`, Actions v7, and complete CI/release-audit evidence. The
+source-only GitHub `0.1.0` release is active; PyPI is excluded.
 
 Current acceptance criteria: [public release preparation](tasks/public-release-prep.md).
 The foundation record below describes completed work and does not select new work.

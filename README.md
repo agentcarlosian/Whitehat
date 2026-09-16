@@ -45,7 +45,8 @@ GraphQL operation awareness and optional reviewed source-fuzzing profiles.
 
 The native analyzers support Windows and Linux x64. Report imports and the core
 Python CLI do not require native analyzers. See the [compatibility table](docs/toolkit.md).
-This is an alpha: pattern matches and advisory matches are leads for human investigation.
+Version `0.1.0` is the first public source release. Pattern matches and advisory
+matches remain leads for human investigation.
 
 ## Install
 
@@ -58,9 +59,10 @@ whitehat tools
 ```
 
 Use a virtual environment for development; see [contributing](CONTRIBUTING.md).
-There is no published PyPI release. Install from a reviewed source checkout and
-verify the exact commit you intend to use. Repository visibility, tags, GitHub
-releases, and package-index publication are separate maintainer actions; see the
+Whitehat is distributed from this GitHub repository only. The `whitehat` name on
+PyPI belongs to an unrelated project: **do not use `pip install whitehat` to
+install this toolkit**. For release `0.1.0`, clone the repository, check out the
+exact `v0.1.0` tag, and install from that source checkout. See the
 [release-readiness record](docs/release-readiness.md).
 
 ## Try a complete review in one minute
