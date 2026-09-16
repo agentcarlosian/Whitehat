@@ -20,7 +20,7 @@ announcements outside this task.
 - [x] Add conduct guidance, a pull-request template, issue routing, and monthly
   Dependabot version updates.
 - [x] Pin every external GitHub Action reference to a verified full commit SHA.
-- [ ] Validate the changed branch locally and in GitHub Actions.
+- [x] Validate the changed branch locally and in GitHub Actions.
 - [ ] Merge the preparation branch and rerun the release audit at the exact
   resulting `main` commit.
 - [ ] Apply and verify the owner-controlled GitHub settings in the release-day
@@ -43,6 +43,8 @@ environment and no stored upload token.
   release inputs, zero secret matches, a 53-file sdist, and a 44-file wheel.
 - Preparation branch validation: Python 3.13.12, 70 syntax files, 151 tests,
   three expected skips, and the complete golden path passed.
+- Preparation PR run `35041540753`: all five OS/Python validation cells,
+  source-fuzz, and release-audit passed at `413e9c5`.
 - GitHub snapshot: private; issues enabled; Discussions disabled; `main` has no
   branch protection; automatic branch deletion is disabled.
 
