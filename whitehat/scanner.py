@@ -71,7 +71,7 @@ class ScannerLimits:
         )
 
 
-RUFF_VERSION = "0.14.14"
+RUFF_VERSION = "0.16.7"
 _SOURCE_SUFFIXES = frozenset({".py", ".pyi"})
 _EXCLUDED_DIRECTORIES = frozenset({".git", ".venv", "__pycache__", "venv"})
 

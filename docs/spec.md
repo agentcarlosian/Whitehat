@@ -163,7 +163,7 @@ whitehat scan ruff SOURCE [--max-entries N] [--max-source-files N]
   [--workspace-root DIR] [--output FILE] [--json]
 ```
 
-The first reviewed scanner adapter requires Ruff exactly `0.14.14`. Whitehat
+The first reviewed scanner adapter requires Ruff exactly `0.16.7`. Whitehat
 discovers it by the fixed name `ruff`; the caller cannot provide an executable or
 arguments. A bounded version check and scan both run through the local process
 runner. The executable identity must stay unchanged between them.

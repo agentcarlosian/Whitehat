@@ -24,7 +24,7 @@
   not claimed; the fixed child installs an audit hook denying process and socket
   APIs, and no arbitrary-child profile exists.
 - Opengrep core `1.30.0` and Betterleaks `1.8.1` are optional research tools;
-  Ruff `0.14.14` remains a correctness adapter. Tool setup downloads literal pinned
+  Ruff `0.16.7` remains a correctness adapter. Tool setup downloads literal pinned
   assets only when explicitly invoked. Native engines and their companions are
   hash checked; this is not independent provenance or OS network isolation.
 - Opengrep supports `.py` and `.js` with five authored syntactic sink rules;

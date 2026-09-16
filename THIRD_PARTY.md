@@ -15,9 +15,9 @@ or wheel. Whitehat-authored rules and examples are Apache-2.0.
 | Atheris | 3.1.0 | Optional reviewed source fuzzing on Linux x64 | Apache-2.0, https://github.com/google/atheris |
 | PyYAML | 6.0.3 | Optional OpenAPI YAML parsing | MIT, https://github.com/yaml/pyyaml |
 | trustme | 1.2.1 | Test-only ephemeral TLS certificates | MIT, https://github.com/python-trio/trustme |
-| Ruff | 0.14.14 | Correctness adapter and development checks | MIT, https://github.com/astral-sh/ruff |
-| PyPA build | 1.4.2 | Release audit | MIT, https://github.com/pypa/build |
-| setuptools | 80.10.2 | Release audit backend | MIT, https://github.com/pypa/setuptools |
+| Ruff | 0.16.7 | Correctness adapter and development checks | MIT, https://github.com/astral-sh/ruff |
+| PyPA build | 1.6.1 | Release audit | MIT, https://github.com/pypa/build |
+| setuptools | 84.0.0 | Release audit backend | MIT, https://github.com/pypa/setuptools |
 
 The Opengrep adapter uses newly authored rules in `whitehat/security_rules.py`.
 It does not download or bundle Semgrep's separately licensed community rules.

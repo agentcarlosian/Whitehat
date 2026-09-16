@@ -4,7 +4,7 @@ Research adapters and report-format support are documented in
 [toolkit compatibility](toolkit.md). This page preserves the Ruff correctness
 profile; Ruff is not the security-analysis workflow shown in the quickstart.
 
-Updated: 2026-09-11
+Updated: 2026-09-15
 
 ## Adapter policy
 
@@ -15,7 +15,7 @@ scanner observation is not a vulnerability finding.
 
 ## Ruff adapter version 1
 
-- Tool: Ruff `0.14.14`
+- Tool: Ruff `0.16.7`
 - Upstream: `https://github.com/astral-sh/ruff`
 - Linter documentation: `https://docs.astral.sh/ruff/linter/`
 - Configuration documentation: `https://docs.astral.sh/ruff/configuration/`
@@ -24,9 +24,9 @@ scanner observation is not a vulnerability finding.
 - Whitehat installation extra: `python -m pip install ".[scanner-ruff]"`
 
 The adapter loads the Ruff distribution installed beside Whitehat's current
-Python interpreter, requires version `0.14.14`, and hashes its installed
+Python interpreter, requires version `0.16.7`, and hashes its installed
 `RECORD`. It then runs a separate bounded `python -I -m ruff --version` check and
-requires the exact text `ruff 0.14.14`. The Python executable SHA-256 from that
+requires the exact text `ruff 0.16.7`. The Python executable SHA-256 from that
 check must match the scan process.
 
 The scan command is fixed by Whitehat:

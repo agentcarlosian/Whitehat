@@ -4,13 +4,14 @@ Updated: 2026-09-15
 
 ## Current checkpoint
 
-Whitehat `0.12.0a1` is merged on private `main` at
-`eacad9fd2925e9eb17e90d193e07310404580ae6`. GitHub Actions run
-[`35024649241`](https://github.com/agentcarlosian/Whitehat/actions/runs/35024649241)
-passed the Ubuntu, Windows and macOS validation matrix, installed-package smoke
-tests, the Linux Atheris job, and the release audit.
+Whitehat `0.12.0a1` remains private. Public-release preparation and the official
+Actions v7 updates are merged through private `main` commit
+`ac6ef0ae64ad35cd1722aa44dfa0a817a82fbcd1`. The coordinated reviewed-toolchain
+candidate `c257b1eb4ca2b40713d21406619c97ef34af60ee` updates Ruff to `0.16.7`,
+PyPA build to `1.6.1`, and setuptools to `84.0.0` while preserving their exact
+runtime identity checks.
 
-A fresh local audit at the same commit also passed:
+A fresh local audit at the toolchain candidate passed:
 
 - 154 tracked files scanned;
 - 45 literal release-source files;
@@ -19,10 +20,12 @@ A fresh local audit at the same commit also passed:
   `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
 - 53-file `whitehat-0.12.0a1.tar.gz` source distribution;
 - 44-file `whitehat-0.12.0a1-py3-none-any.whl` wheel;
-- clean installed diagnostics for version `0.12.0a1`.
+- clean installed diagnostics for version `0.12.0a1`;
+- actual Ruff `0.16.7` dirty/clean fixtures and native research evaluation;
+- release-tool identity output for build `1.6.1` and setuptools `84.0.0`.
 
-Those results describe the exact merged commit before public-release-prep edits.
-The preparation branch and its eventual merge commit must pass the same checks.
+The evidence-only documentation commit and eventual merge commit must pass the
+same audit and GitHub Actions matrix before a visibility decision.
 
 The repository remains private. No tag, GitHub release, package upload,
 announcement, or visibility change is part of the technical audit.

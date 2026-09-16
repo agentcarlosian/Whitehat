@@ -10,10 +10,10 @@ operator tools are installed separately and are not vendored:
 
 - Opengrep core `1.30.0` for the reviewed Python/JavaScript research adapter.
 - Betterleaks `1.8.1` for redacted potential-secret detection without live validation.
-- Ruff `0.14.14` for the correctness adapter and development checks.
+- Ruff `0.16.7` for the correctness adapter and development checks.
 - Hypothesis `6.168.0` and graphql-core `3.2.12` for optional fuzz generation and
   offline GraphQL understanding; Atheris `3.1.0` for reviewed fixed source profiles.
-- PyPA build `1.4.2` and setuptools `80.10.2` for release-audit builds.
+- PyPA build `1.6.1` and setuptools `84.0.0` for release-audit builds.
 
 The security-review rules, report parsers, templates, and teaching fixtures were
 newly authored for Whitehat. Upstream formats and native target serialization
