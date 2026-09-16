@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.0 — first public source release
+
+- Provide one Python CLI for bounded source review, scanner/report triage,
+  HTTP/API evidence, explicit access matrices, candidate tracking, and portable
+  research packets.
+- Add exact-session HTTP replay with controlled identities, request hashes,
+  persistent budgets, no retries, normalized evidence, and explicit false
+  authorization, validity, impact, severity, and submission claims.
+- Add concrete API/GraphQL mutation batches, relational readback, finite-state
+  sequences, reduction, corpus regression, owned Schemathesis fixtures, and
+  reviewed fixed-target Atheris profiles.
+- Integrate reviewed Opengrep, Betterleaks, Ruff, oasdiff, OSV, SARIF, ZAP,
+  Nuclei, Gitleaks, OpenAPI, GraphQL, and Atheris workflows without bundling
+  external tools or treating their output as proof.
+- Ship Apache-2.0 source, provenance and third-party records, contribution and
+  security guidance, synthetic fixtures, a five-platform CI matrix, immutable
+  Action pins, and a tracked-source release audit.
+
+This is a source-only GitHub release. No PyPI package, wheel, or source
+distribution is published. The `whitehat` project on PyPI is unrelated.
+
+### Private development checkpoints
+
+The versions below were internal clean-room development checkpoints. They were
+never published as Whitehat releases and do not define a public upgrade sequence.
+
 ## 0.12.0a1 — reproducible fuzz workflows
 
 - Generate concrete boundary/Hypothesis mutation batches from prepared requests
