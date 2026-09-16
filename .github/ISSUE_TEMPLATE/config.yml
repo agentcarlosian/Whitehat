@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue in Whitehat
+    url: https://github.com/agentcarlosian/Whitehat/security/policy
+    about: Read the security policy before sharing vulnerability details.
+  - name: Research-scope question
+    url: https://github.com/agentcarlosian/Whitehat/blob/main/docs/constraints.md
+    about: Review the implemented capability and authorization boundaries.
