@@ -29,6 +29,12 @@ first public version `0.1.0`. The higher alpha numbers in the changelog were
 private engineering checkpoints and were never published as a public upgrade
 sequence.
 
+Release implementation commit `5ca88cbd6a2f8621d9ef4192f44c51a71aeea685`
+passed the complete local validation and technical audit with 160 tracked files,
+45 release inputs, zero secret matches, a 53-file audit sdist, a 44-file audit
+wheel, and clean installed version `0.1.0`. The final evidence-only commit and
+eventual merge commit must repeat the audit.
+
 ## Technical audit
 
 Install the pinned audit tools and run from a clean committed checkout:

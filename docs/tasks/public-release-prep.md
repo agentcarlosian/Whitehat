@@ -54,6 +54,10 @@ history review, and the final owner publication decision.
 - Added topic candidates have active GitHub indexes and direct implemented
   mappings: `api-security`, `api-testing`, `fuzzing`, `openapi`, `graphql`,
   `sarif`, and `secret-scanning`.
+- Release implementation commit `5ca88cb` passed 151 tests, 70 syntax checks,
+  version/link/lint checks, and the complete golden path.
+- Its clean `0.1.0` audit passed with 160 tracked files, 45 release inputs, zero
+  secret matches, verified Apache-2.0, and clean installed version `0.1.0`.
 
 ## Closure condition
 
