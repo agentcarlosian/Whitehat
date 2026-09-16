@@ -2,6 +2,7 @@
 
 Whitehat serves independent security researchers. Contributions should make a
 specific investigation easier to perform, understand, or reproduce.
+Participation in the project is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Development setup
 

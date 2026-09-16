@@ -2,11 +2,12 @@
 
 Updated: 2026-09-15
 
-Status: PRs #1–#3 are merged. Bounty workflow adoption main is `73f4dee`,
-with post-merge Windows, Ubuntu, macOS and release checks passed.
-Fuzzing stages 1–5 are active under the owner's 2026-09-15 request.
+Status: PRs #1–#4 are merged. Fuzzing workflow main is `eacad9f`, with
+post-merge Windows, Ubuntu, macOS, source-fuzz, installed-package, and release
+checks passed. Public-release preparation is active; repository visibility,
+tags, package publication, and announcements remain separate owner decisions.
 
-Current acceptance criteria: [fuzzing workflows](tasks/fuzzing-workflows.md).
+Current acceptance criteria: [public release preparation](tasks/public-release-prep.md).
 The foundation record below describes completed work and does not select new work.
 
 Primary surface: `python -m whitehat`
@@ -93,9 +94,9 @@ a meaningful side-effect boundary.
 
 ## Next slices
 
-Follow the selected fuzzing task linked above. Decision 0007 preserves exact
-approved HTTP request hashes while adding generation, batching and research
-artifacts; GraphQL analysis is offline and source fuzzing uses reviewed targets.
+Complete the selected public-release preparation task linked above. Decision 0007
+and the fuzzing task are completed product records; they do not authorize new
+target traffic or select the next product feature.
 
 ## Alpha-foundation verification (historical)
 

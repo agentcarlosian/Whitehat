@@ -58,8 +58,10 @@ whitehat tools
 ```
 
 Use a virtual environment for development; see [contributing](CONTRIBUTING.md).
-There is no published PyPI release advertised here. The repository is currently
-private; public visibility is a separate owner decision.
+There is no published PyPI release. Install from a reviewed source checkout and
+verify the exact commit you intend to use. Repository visibility, tags, GitHub
+releases, and package-index publication are separate maintainer actions; see the
+[release-readiness record](docs/release-readiness.md).
 
 ## Try a complete review in one minute
 
@@ -107,9 +109,9 @@ execution. [Replay contract](docs/http-replay.md) · [Capabilities and limits](d
 ## Contribute
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md), the [adapter guide](docs/adapter-guide.md),
-and [starter tasks](docs/starter-tasks.md). Add useful fixtures and rejecting
-controls alongside a tool or rule. Report bugs in Whitehat itself according to
-[SECURITY.md](SECURITY.md).
+the [code of conduct](CODE_OF_CONDUCT.md), and [starter tasks](docs/starter-tasks.md).
+Add useful fixtures and rejecting controls alongside a tool or rule. Report bugs
+in Whitehat itself according to [SECURITY.md](SECURITY.md).
 
 [Roadmap](docs/plan.md) · [Command reference](docs/runbook.md) ·
 [Changelog](CHANGELOG.md) · [Third-party tools](THIRD_PARTY.md)

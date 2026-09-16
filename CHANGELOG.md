@@ -16,6 +16,10 @@
 - Add optional Atheris 3.1.0 execution against reviewed fixed parser/owned targets,
   bounded reproducer artifacts and actual Linux engine validation.
 - Extend packet rendering, installed-CLI evaluations, platform CI and release inventory.
+- Pin GitHub Actions to verified immutable commits and add automated dependency
+  update configuration for Python metadata and Actions.
+- Add public contribution routing, conduct guidance, release-day gates, and
+  refreshed package/About metadata.
 
 No mandatory runtime dependencies were added. Raw-framing fuzzing, arbitrary
 source modules, live adaptive generation and automatic submission remain outside

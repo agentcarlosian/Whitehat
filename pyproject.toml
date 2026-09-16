@@ -10,10 +10,12 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [{name = "Carlosian"}]
+keywords = ["security-research", "bug-bounty", "api-security", "static-analysis", "fuzzing"]
 dependencies = []
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -35,6 +37,7 @@ Repository = "https://github.com/agentcarlosian/Whitehat"
 Documentation = "https://github.com/agentcarlosian/Whitehat/blob/main/docs/quickstart.md"
 Issues = "https://github.com/agentcarlosian/Whitehat/issues"
 Changelog = "https://github.com/agentcarlosian/Whitehat/blob/main/CHANGELOG.md"
+Security = "https://github.com/agentcarlosian/Whitehat/security/policy"
 
 [project.scripts]
 whitehat = "whitehat.cli:main"
