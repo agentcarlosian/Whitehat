@@ -16,8 +16,8 @@
 - Add optional Atheris 3.1.0 execution against reviewed fixed parser/owned targets,
   bounded reproducer artifacts and actual Linux engine validation.
 - Extend packet rendering, installed-CLI evaluations, platform CI and release inventory.
-- Pin GitHub Actions to verified immutable commits and add automated dependency
-  update configuration for Python metadata and Actions.
+- Pin GitHub Actions to verified immutable commits, remove duplicate feature-branch
+  push runs, and add automated dependency updates for Python metadata and Actions.
 - Add public contribution routing, conduct guidance, release-day gates, and
   refreshed package/About metadata.
 
