@@ -21,7 +21,7 @@ Publish the first public Whitehat source release as GitHub tag and release
 - [x] Update package/CLI version metadata, cumulative changelog, README, release
   notes, roadmap, GitHub presentation, and release runbook.
 - [x] Validate the release branch locally.
-- [ ] Validate the release branch in GitHub Actions.
+- [x] Validate the release branch in GitHub Actions.
 - [ ] Merge the release branch and rerun the audit at the exact resulting `main`
   commit.
 - [ ] Apply the reviewed GitHub description/topics and public-repository security
@@ -58,6 +58,8 @@ history review, and the final owner publication decision.
   version/link/lint checks, and the complete golden path.
 - Its clean `0.1.0` audit passed with 160 tracked files, 45 release inputs, zero
   secret matches, verified Apache-2.0, and clean installed version `0.1.0`.
+- PR #10 run `35048527174` passed all five platform cells, source-fuzz, installed
+  package checks, and the release audit at `d0c8149`.
 
 ## Closure condition
 
