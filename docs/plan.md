@@ -53,7 +53,7 @@ a meaningful side-effect boundary.
 
 ## Completed first scanner adapter
 
-- [x] Add Ruff `0.14.14` as one optional, pinned scanner dependency.
+- [x] Add Ruff `0.16.7` as one optional, pinned scanner dependency.
 - [x] Run version and scan processes through the fixed local runner.
 - [x] Copy only bounded Python source into a disposable workspace.
 - [x] Fix Ruff configuration, rules, target version, and no-fix behavior.

@@ -16,7 +16,7 @@ Reviewed 2026-09-15. Run `whitehat tools --json` for the shipped registry.
 | Hypothesis | 6.168.0; optional fuzz extra | Bounded offline scalar and finite-state generation | Fixed seeds, owned API twins, concrete batch execution and reset checks |
 | graphql-core | 3.2.12; optional graphql extra | Offline SDL/introspection/document parsing | Distinct operations/fragments, variable plans, negative/partial-response fixtures |
 | Atheris | 3.1.0; optional source-fuzz extra | Reviewed fixed parser/owned profiles, Linux x64/Python 3.12–3.14 | Actual engine test is required in Linux/Python 3.13 CI; no Windows/macOS execution claim |
-| Ruff | 0.14.14; E4,E7,E9,F | Python correctness check | Existing dirty/clean fixtures; not a security analyzer |
+| Ruff | 0.16.7; E4,E7,E9,F | Python correctness check | Existing dirty/clean fixtures; not a security analyzer |
 
 ## Platforms
 
