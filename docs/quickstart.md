@@ -1,6 +1,7 @@
 # Source-review walkthrough
 
-Start from a checkout with Python 3.11+. All commands below work in PowerShell
+Start from a checkout with Python 3.11+ and an activated virtual environment;
+see [installation](../README.md#install). All commands below work in PowerShell
 and POSIX shells. If `python` is named `python3` on your system, substitute it.
 Use a fresh output directory each time; Whitehat does not overwrite results.
 
@@ -66,11 +67,11 @@ lexical prefix. The importer does not open that source directory.
 
 ## Developer verification
 
-Install development dependencies before running validation:
+For the current development setup and platform-specific checks, follow
+[Contributing](../CONTRIBUTING.md#development-setup). On Windows or Linux x64,
+the source-review integration check is:
 
 ```sh
-python -m pip install ".[scanner-ruff,release]"
-python -B scripts/validate.py
 python -B scripts/evaluate_research.py
 ```
 

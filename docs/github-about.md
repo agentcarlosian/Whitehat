@@ -1,40 +1,42 @@
 # GitHub presentation
 
-Description:
+## Public repository description
 
 Security research toolkit for code review, API evidence, reproducible fuzzing, scanner triage, and bounty workflows.
 
-Topics: security-research, bug-bounty, security-tools, api-security, api-testing,
-fuzzing, openapi, graphql, sarif, secret-scanning, static-analysis, python, cli.
+## Topics and implemented surfaces
 
-The added topics map to implemented surfaces and established GitHub ecosystems:
+| Topics | Whitehat surface |
+| --- | --- |
+| `security-research`, `bug-bounty`, `security-tools` | Authorized research, evidence review, and reproducible packets |
+| `api-security`, `api-testing` | HTTP evidence, access matrices, reviewed replay, and owned API fixtures |
+| `fuzzing` | Concrete mutation, stateful checks, reduction, corpora, and fixed Atheris profiles |
+| `openapi` | Offline inventory, coverage, and oasdiff comparison |
+| `graphql` | Offline schemas/documents and operation-aware mutation planning |
+| `sarif` | Bounded SARIF 2.1.0 report import |
+| `secret-scanning` | Betterleaks execution and Betterleaks/Gitleaks import |
+| `static-analysis` | Reviewed source patterns and source/dependency comparison |
+| `python`, `cli` | Implementation language and primary command-line surface |
 
-| Topic | Whitehat surface | GitHub repositories indexed on 2026-09-15 |
-| --- | --- | ---: |
-| `api-security` | HTTP evidence, access matrices, reviewed replay | 970 |
-| `api-testing` | Owned Schemathesis lifecycle and request scenarios | 3,574 |
-| `fuzzing` | Mutation, stateful, reduction, corpus and Atheris workflows | 1,898 |
-| `openapi` | Offline inventory, coverage and oasdiff comparison | 14,451 |
-| `graphql` | Offline schema/document and operation-aware mutation planning | 33,189 |
-| `sarif` | Bounded SARIF 2.1.0 import | 1,242 |
-| `secret-scanning` | Betterleaks execution and Betterleaks/Gitleaks import | 498 |
+Keep descriptions tied to implemented behavior. Public source availability does
+not establish adoption, general detection accuracy, or confirmed vulnerabilities.
 
-[Schemathesis](https://github.com/schemathesis/schemathesis) uses `api-testing`,
-`fuzzing`, `openapi`, and `graphql`;
-[Semgrep](https://github.com/semgrep/semgrep) uses `static-analysis`; and
-[Gitleaks](https://github.com/gitleaks/gitleaks) uses `security-tools`. The
-remaining existing topics describe Whitehat's audience, implementation language,
-and primary CLI surface.
+## Maintainer settings checklist
 
-Initial public settings:
+Review these settings when maintaining the public repository; this document is
+not an attestation that every setting is enabled.
 
-- Keep Issues enabled and Discussions disabled.
-- Disable Wiki and Projects unless they have an active owner and workflow.
+- Keep Issues enabled and Discussions disabled unless an active discussion
+  workflow is selected.
+- Keep Wiki and Projects disabled unless they have an active owner and workflow.
 - Enable automatic deletion of merged branches.
-- Protect `main` with a ruleset that blocks force pushes and deletion and requires
-  the `release-audit` status check, with a narrow owner recovery path.
-- Enable private vulnerability reporting and available dependency, secret, and
-  push-protection features immediately after visibility changes.
+- Protect `main` against force pushes and deletion and require the
+  `release-audit` status check, with a narrow owner recovery path.
+- Review private vulnerability reporting and available dependency, secret, and
+  push-protection features.
+- Keep the release link and source-install guidance consistent with the
+  [published release record](release-readiness.md).
 
-Do not advertise hosted services, autonomous exploitation, credential validation,
-package-index availability, or public availability before those statements are true.
+Hosted services, autonomous exploitation, live credential validation, and
+package-index distribution are not current Whitehat capabilities. Do not
+advertise them as available.

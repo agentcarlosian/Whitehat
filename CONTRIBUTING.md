@@ -6,21 +6,34 @@ Participation in the project is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT
 
 ## Development setup
 
-Create a virtual environment with `python -m venv .venv`. Activate it with
-`.venv/Scripts/Activate.ps1` in PowerShell or `source .venv/bin/activate` in Bash.
-Then run:
+Work from a checkout of `main` and create a branch for your change. Create a
+virtual environment with `python -m venv .venv`. Activate it with
+`.\.venv\Scripts\Activate.ps1` in PowerShell or `. .venv/bin/activate` in a POSIX
+shell. Use `python3` if that is your system's Python command.
+
+Install the pinned development extras and run the portable checks:
 
 ```sh
 python -m pip install ".[scanner-ruff,release,api,api-test,test-tls,fuzz,graphql]"
-python scripts/setup_tools.py --destination .whitehat/tools
 python -B scripts/validate.py
-python -B scripts/evaluate_research.py
-python -B scripts/evaluate_web.py
+python -B scripts/evaluate_bounty.py
 python -B scripts/evaluate_fuzz.py
 ```
 
-Core runtime dependencies remain empty. Native engines are installed separately.
-Formatting and basic lint: `python -m ruff check whitehat tests scripts --select E4,E7,E9,F`.
+Core runtime dependencies remain empty. On Windows or Linux x64, also install the
+reviewed native engines and run their integration checks:
+
+```sh
+python scripts/setup_tools.py --destination .whitehat/tools
+python -B scripts/evaluate_research.py
+python -B scripts/evaluate_web.py
+```
+
+Native setup downloads pinned upstream assets. It is not supported on macOS or
+ARM; do not use those platforms to claim native-engine validation. Consult the
+[compatibility table](docs/toolkit.md) and report any skipped checks.
+
+Basic lint: `python -I -m ruff check whitehat tests scripts --select E4,E7,E9,F`.
 Linux x64/Python 3.12–3.14 contributors can separately install `[source-fuzz]`;
 CI performs the required actual Atheris run on Linux/Python 3.13.
 
@@ -47,5 +60,7 @@ From a clean commit with the release extra installed:
 python -B -m whitehat release audit --json
 ```
 
-CI validates supported platforms and an installed package. Publishing a tag,
-package, or public repository is a separate maintainer decision.
+CI validates supported platforms and an installed package. See the
+[release record and checklist](docs/release-readiness.md) before preparing a new
+release. Publishing a tag or release is a separate maintainer decision; the
+current distribution channel is GitHub source only.

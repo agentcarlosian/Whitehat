@@ -85,9 +85,10 @@
 - The release audit is a bounded technical check, not legal advice or an
   originality, trademark, maintenance, publication, or distribution decision.
 - Secret scanning uses explicit high-confidence patterns and cannot prove that a
-  tree contains no sensitive data. Human review remains required before public
-  visibility.
+  tree contains no sensitive data. Human review remains required before sharing
+  new code, fixtures, or research artifacts.
 - Browser control, arbitrary commands, automatic account actions, destructive
   operations, payments, contact, disclosure, and submission are not provided.
-- The project is licensed under Apache-2.0. Publication remains blocked until the
-  exact tree completes its release review.
+- The project is licensed under Apache-2.0 and `0.1.0` is public as GitHub source.
+  New releases require review of their exact commits. Package-index publication
+  is not configured; see the [release record](release-readiness.md).

@@ -32,4 +32,4 @@ private reports.
 For a project-specific conduct concern, open a content-free issue asking for a
 private maintainer channel. Do not place personal details or evidence in that
 issue. Use GitHub's abuse-reporting tools for threats, doxxing, or platform-wide
-abuse. No response-time commitment is promised during the alpha.
+abuse. No response-time commitment is promised.
