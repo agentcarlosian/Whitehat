@@ -1,4 +1,4 @@
-# Whitehat alpha specification
+# Whitehat specification
 
 ## Product surface
 
@@ -163,10 +163,12 @@ whitehat scan ruff SOURCE [--max-entries N] [--max-source-files N]
   [--workspace-root DIR] [--output FILE] [--json]
 ```
 
-The first reviewed scanner adapter requires Ruff exactly `0.16.7`. Whitehat
-discovers it by the fixed name `ruff`; the caller cannot provide an executable or
-arguments. A bounded version check and scan both run through the local process
-runner. The executable identity must stay unchanged between them.
+The Ruff adapter requires exactly `0.16.7` in the current Python environment.
+Whitehat checks the installed distribution version and records its `RECORD`
+metadata hash, then invokes the current Python interpreter with `-I -m ruff`. It does not select a
+`ruff` executable from `PATH`, and callers cannot supply an executable or
+arguments. The bounded version check and scan use the local process runner; the
+Python executable identity must stay unchanged between them.
 
 The adapter copies only bounded `.py` and `.pyi` regular files into a disposable
 workspace and runs fixed isolated, no-cache, no-fix, no-preview rules `E4`, `E7`,

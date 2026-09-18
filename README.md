@@ -8,16 +8,21 @@ Whitehat connects focused analysis with the work that follows: compare results,
 record a hypothesis and negative control, and export a readable research review.
 It is built for independent researchers working on explicitly authorized targets.
 
-For web/API work, Whitehat now imports and compares HTTP captures across labeled
-identities, assesses explicit access expectations, replays approved HTTP(S)
-requests, and compares API contracts. Start with the
-[web/API walkthrough](docs/web-api-quickstart.md).
-For the complete capture-to-report workflow, use the
-[bounty packet walkthrough](docs/bounty-workflow.md): prepare a captured request,
-bind a created object ID, assemble selected evidence, and track candidate retests.
-The [fuzzing walkthrough](docs/fuzzing.md) adds concrete mutation batches,
-relational readback checks, stateful sequences, reduction/corpus regression,
-GraphQL operation awareness and optional reviewed source-fuzzing profiles.
+The first public release is
+[Whitehat 0.1.0](https://github.com/agentcarlosian/Whitehat/releases/tag/v0.1.0),
+distributed as source on GitHub. It is an early release; the
+[research methodology](docs/research-method.md) explains what the owned fixture
+evaluations establish and what still requires human investigation.
+
+## Choose a workflow
+
+| Start here | What you will do |
+| --- | --- |
+| [One-minute review](#try-a-complete-review-in-one-minute) | Import a synthetic advisory and export a review without native tools or target access |
+| [Source review](docs/quickstart.md) | Compare vulnerable, fixed, and negative-control source fixtures |
+| [Web/API evidence](docs/web-api-quickstart.md) | Compare captures across identities and assess explicit access expectations |
+| [Bounty packet](docs/bounty-workflow.md) | Prepare requests, bind an object ID, assemble evidence, and track retests |
+| [Reproducible fuzzing](docs/fuzzing.md) | Use concrete mutation batches, stateful checks, reduction, and regression corpora |
 
 ## What you can do
 
@@ -50,25 +55,46 @@ matches remain leads for human investigation.
 
 ## Install
 
-Requires Python 3.11 or newer. From a checkout:
+Requires Git and Python 3.11 or newer. If your system names Python `python3`,
+substitute it in these commands. Start from the published source tag:
+
+```sh
+git clone --branch v0.1.0 https://github.com/agentcarlosian/Whitehat.git
+cd Whitehat
+python -m venv .venv
+```
+
+Activate the virtual environment in your shell:
+
+```powershell
+# PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```sh
+# Bash or another POSIX shell
+. .venv/bin/activate
+```
+
+Then install and inspect the CLI:
 
 ```sh
 python -m pip install .
-whitehat doctor
-whitehat tools
+python -m whitehat doctor
+python -m whitehat tools
 ```
 
-Use a virtual environment for development; see [contributing](CONTRIBUTING.md).
+For development on `main`, use the [contributor setup](CONTRIBUTING.md).
 Whitehat is distributed from this GitHub repository only. The `whitehat` name on
 PyPI belongs to an unrelated project: **do not use `pip install whitehat` to
-install this toolkit**. For release `0.1.0`, clone the repository, check out the
-exact `v0.1.0` tag, and install from that source checkout. See the
-[release-readiness record](docs/release-readiness.md).
+install this toolkit**. See the [release record](docs/release-readiness.md) for
+the exact commit and completed release checks.
 
 ## Try a complete review in one minute
 
 These commands work in PowerShell and POSIX shells from the repository root.
-They use an owned synthetic report; no scanner installation is needed.
+They use an owned synthetic report; no scanner installation is needed. Choose a
+new workspace name if `.whitehat-demo` already exists; outputs are never overwritten.
 
 ```sh
 python -m whitehat init .whitehat-demo --title "Owned dependency review"
@@ -78,10 +104,13 @@ python -m whitehat report .whitehat-demo/results/advisories.json --case .whiteha
 ```
 
 The result contains one synthetic advisory for `whitehat-owned-demo` at `1.0.0`,
-a reported fix at `1.0.1`, and unverified reachability. Edit `case.json` to record
-what you investigated. Open `exports/review.md` to see the research packet.
+a reported fix at `1.0.1`, and unverified reachability. Edit
+`.whitehat-demo/case.json` to record what you investigated. Open
+`.whitehat-demo/exports/review.md` to see the research packet.
 
-For security analysis, explicitly install the reviewed native tools:
+For native source analysis on Windows or Linux x64, explicitly install the
+reviewed tools. On macOS or ARM, use the report-import workflow above; see the
+[platform limits](docs/toolkit.md#platforms).
 
 ```sh
 python scripts/setup_tools.py --destination .whitehat/tools

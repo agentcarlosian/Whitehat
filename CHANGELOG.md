@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Align release, roadmap, security, and operator documentation with the public
+  `v0.1.0` source release and link its completed validation evidence.
+- Add complete source-install and virtual-environment instructions, clarify
+  native-tool platform limits, and update contributor checks and Ruff guidance.
+
 ## 0.1.0 — first public source release
 
 - Provide one Python CLI for bounded source review, scanner/report triage,

@@ -1,39 +1,51 @@
-# Release readiness
+# Release status and checklist
 
-Updated: 2026-09-15
+Updated: 2026-09-17
 
-## Release target
+## Published release
 
-- Version: `0.1.0`.
-- Git tag: `v0.1.0`.
-- Channel: public GitHub release from `agentcarlosian/Whitehat`.
-- Distribution: GitHub-generated source archives only.
+[Whitehat 0.1.0](https://github.com/agentcarlosian/Whitehat/releases/tag/v0.1.0)
+is the first public source release. It was published on 2026-09-16 UTC.
+
+- Repository: public, Apache-2.0.
+- Annotated tag: `v0.1.0`.
+- Release commit: `b516e80540217c8c290a04b6d79b70fd9b811c96`.
+- Release state: published, not a draft or prerelease.
+- Distribution: GitHub-generated source archives; no uploaded package assets.
 - Release notes: [Whitehat 0.1.0](release-notes-0.1.0.md).
-- PyPI, TestPyPI, wheels, sdists, package uploads, and trusted publishers: out of
-  scope for this release.
+- Installation: [source checkout and virtual environment](../README.md#install).
 
-The `whitehat` name on PyPI belongs to an unrelated project, currently listed as
-version `1.2.3`. Whitehat documentation must never direct users to
-`pip install whitehat`. The CLI and local package metadata may continue to use
-the Whitehat name for installation from this repository's exact source tag.
+The `whitehat` project on PyPI is unrelated. Do not use
+`pip install whitehat` to install this toolkit. PyPI, TestPyPI, uploaded wheels
+and sdists, and trusted publishers are outside the current release channel.
 
-## Current checkpoint
+The higher alpha versions in the changelog were private engineering checkpoints.
+They were never public releases and do not define a public upgrade sequence.
+The published `v0.1.0` tag remains fixed; later documentation and code changes
+on `main` do not change that release.
 
-Private `main` is `d70805c45877be6eec8330141644057ba6baf89c`, including the
-reviewed Ruff `0.16.7`, PyPA build `1.6.1`, setuptools `84.0.0`, and official
-Actions v7 updates. No Git tags or GitHub releases exist. The GitHub repository
-remains private.
+## Verified release evidence
 
-The release branch changes the internal development version `0.12.0a1` to the
-first public version `0.1.0`. The higher alpha numbers in the changelog were
-private engineering checkpoints and were never published as a public upgrade
-sequence.
+[Validation run 35049516439](https://github.com/agentcarlosian/Whitehat/actions/runs/35049516439)
+completed successfully for the release commit:
 
-Release implementation commit `5ca88cbd6a2f8621d9ef4192f44c51a71aeea685`
-passed the complete local validation and technical audit with 160 tracked files,
-45 release inputs, zero secret matches, a 53-file audit sdist, a 44-file audit
-wheel, and clean installed version `0.1.0`. The final evidence-only commit and
-eventual merge commit must repeat the audit.
+- Ubuntu and Windows with Python 3.11 and 3.13.
+- macOS with Python 3.13.
+- Actual Linux Atheris source-fuzz checks.
+- The release audit, after all validation and source-fuzz jobs passed.
+
+The platform jobs include installed-package checks. The annotated tag resolves
+to the same commit, and the GitHub release has no uploaded assets. These facts
+were rechecked on 2026-09-17.
+
+A fresh checkout of the published tag was also installed in a new virtual
+environment on Windows/Python 3.13.12 on 2026-09-17. The installed version,
+`doctor`, `tools`, and all four README review commands passed and produced the
+expected synthetic advisory report.
+
+The [release-preparation record](tasks/public-release-prep.md) retains earlier
+local and branch evidence. Repository administration settings and historical
+local-only release checks are not inferred from successful CI.
 
 ## Technical audit
 
@@ -52,66 +64,37 @@ dependencies. Generated packages are audit inputs and are deleted after the
 check; they are not release artifacts.
 
 The audit records exact identities while keeping publication, legal clearance,
-and originality claims false. Passing it is required but does not itself make the
-repository or a release public.
+and originality claims false. Passing it does not publish anything.
 
-## Release sequence
+## Checklist for a future source release
 
-Complete these steps against one exact commit. Any source change returns the
-process to validation and the clean audit.
+This is a reusable checklist, not unfinished work for `v0.1.0`. Choose a new
+version and one exact candidate commit. Any source change requires validation and
+a clean audit of the new candidate.
 
-### Prepare and merge
+1. Update package and CLI versions, changelog, installation examples, and release
+   notes consistently.
+2. Run the supported platform matrix, native-engine and source-fuzz evaluations,
+   installed-package checks, and release audit.
+3. Review the tracked changes and release inventory for credentials, personal
+   data, target evidence, generated artifacts, and license/provenance issues.
+4. Verify documentation links and the supported installation path.
+5. Review repository presentation and security settings using the
+   [maintainer checklist](github-about.md).
+6. After the maintainer's release decision, create a new annotated tag at the
+   verified commit and publish the reviewed release notes.
+7. Keep the source-only channel: upload no wheels or sdists and do not configure
+   a package index as part of this procedure.
+8. Verify the public release, tag, source archives, and security-reporting path.
+   Install from the new tag in a fresh checkout and virtual environment, then run
+   `python -m whitehat doctor --json` and the README's one-minute review.
 
-- [ ] Merge the `0.1.0` release-preparation PR after every matrix and release job
-  passes.
-- [ ] Verify the resulting `main` commit passes Ubuntu, Windows and macOS
-  validation, source-fuzz, installed-package checks, and release-audit.
-- [ ] Run the local clean-commit release audit and retain its content-free
-  summary.
-- [ ] Review `git ls-files` and the complete public diff. Confirm `.whitehat/`,
-  credentials, target evidence, personal data, databases, caches, and generated
-  artifacts are absent from every commit.
-- [ ] Confirm README, security, conduct, contribution, provenance, third-party,
-  issue-template, changelog, and release-note links render correctly.
+Do not move or reuse a published tag.
 
-### Prepare GitHub presentation
-
-- [ ] Apply the description and evidence-backed topics in
-  [GitHub presentation](github-about.md).
-- [ ] Keep Issues enabled and Discussions disabled. Disable Wiki and Projects
-  unless they have an active workflow. Enable automatic branch deletion.
-- [ ] Confirm no release or package documentation suggests
-  `pip install whitehat`.
-
-### Publish the repository
-
-- [ ] Change only `agentcarlosian/Whitehat` from private to public.
-- [ ] Confirm public `main` is the exact audited commit and Apache-2.0, Actions,
-  issues, description, and topics remain visible.
-- [ ] Create a `main` ruleset that blocks deletion and force pushes and requires
-  the `release-audit` status check, with a narrow owner recovery path.
-- [ ] Enable private vulnerability reporting, dependency graph, Dependabot
-  alerts and security updates, secret scanning, and push protection where GitHub
-  makes them available.
-
-### Publish `v0.1.0`
-
-- [ ] Create and push annotated tag `v0.1.0` at the exact audited `main` commit.
-- [ ] Create a non-draft, non-prerelease GitHub release titled `Whitehat 0.1.0`
-  using `docs/release-notes-0.1.0.md` verbatim.
-- [ ] Attach no package files. Use only GitHub's generated source archives.
-- [ ] Verify the release tag, source archives, README badge, documentation links,
-  issue routing, and security-reporting path while signed out.
-- [ ] Clone `v0.1.0` into a new directory, install from source, and run
-  `python -m whitehat doctor --json` plus the one-minute synthetic review.
-
-## What remains unproven
+## Limits of the evidence
 
 The audit cannot prove copyright ownership, originality, trademark clearance,
-absence of every possible secret, safety of future dependencies, support quality,
-or that publication is advisable. It does not authorize target testing,
+absence of every possible secret, safety of future dependencies, or support
+quality. Publication and successful tests do not authorize target testing,
 third-party data handling, hosted execution, disclosures, contact, or report
 submission.
-
-The active task and closure conditions are in
-[public release preparation](tasks/public-release-prep.md).

@@ -28,6 +28,12 @@ git clone https://github.com/agentcarlosian/Whitehat.git
 cd Whitehat
 git checkout v0.1.0
 python -m venv .venv
+```
+
+Activate the environment with `.\.venv\Scripts\Activate.ps1` in PowerShell or
+`. .venv/bin/activate` in a POSIX shell, then run:
+
+```sh
 python -m pip install .
 python -m whitehat doctor --json
 ```
@@ -49,9 +55,11 @@ replay requires exact prepared-request hashes and a reviewed session contract.
 
 ## Verification
 
-The release commit must pass the Ubuntu, Windows and macOS validation matrix,
-source-fuzz, installed-package checks, and the tracked-source release audit. The
-audit verifies Apache-2.0, scans tracked and packaged text for reviewed secret
+[Release validation](https://github.com/agentcarlosian/Whitehat/actions/runs/35049516439)
+passed at `b516e80540217c8c290a04b6d79b70fd9b811c96`: the Ubuntu,
+Windows and macOS matrix, source-fuzz, installed-package checks, and the
+tracked-source release audit. The audit verifies Apache-2.0, scans tracked and
+packaged text for reviewed secret
 patterns, checks exact archive membership and package source bytes, and installs
 the generated wheel without network dependencies. Generated distributions are
 audit inputs and are not uploaded with this source-only release.

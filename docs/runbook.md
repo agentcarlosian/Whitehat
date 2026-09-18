@@ -2,7 +2,7 @@
 
 ## Scope
 
-This runbook covers the Whitehat research alpha. Analysis and imports require no
+This runbook covers the Whitehat research CLI. Analysis and imports require no
 external account. Explicit native tool setup uses upstream release downloads.
 There is no persistent background service.
 
@@ -69,6 +69,11 @@ procedure. Never interpret an incomplete scan as a clean result.
 
 ## Release boundary
 
-Do not configure a public remote, tag, publish, or distribute the package until
-the exact Apache-2.0 tree passes provenance, secret, packaging, and platform
-review.
+Whitehat `0.1.0` is published as source on GitHub. Install the exact release tag
+using the [README instructions](../README.md#install); the PyPI project named
+`whitehat` is unrelated.
+
+For a new release, validate and audit the exact proposed commit before creating a
+new tag or release. Never move an existing release tag to include later fixes.
+See the [release record and checklist](release-readiness.md). A passing audit does
+not itself publish anything or authorize target testing.
