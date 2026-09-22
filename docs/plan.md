@@ -18,8 +18,9 @@ A fresh `v0.1.0` checkout installed in a new virtual environment and produced th
 expected report from all four README review commands. Runtime code and the
 published tag are unchanged.
 
-Future feature work should start from a scoped issue or one of the
-[starter contribution candidates](starter-tasks.md). No new feature is selected.
+Selected feature work: [workspace visibility and structured-input fuzzing](tasks/workspace-structured-fuzz.md).
+The two requested slices add artifact status/checks and bounded structured inputs
+to the existing CLI. No other proposed feature is selected.
 
 ## Shipped workflows
 

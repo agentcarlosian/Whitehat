@@ -30,6 +30,142 @@ from .reports import ReportError, canonical, parse_json, seal
 HYPOTHESIS_VERSION = "6.168.0"
 
 
+def mutation_schema(
+    value: dict, depth: int = 0, count: list[int] | None = None
+) -> dict:
+    """Validate a bounded scalar, scalar-array or GraphQL input-object projection."""
+    count = [0] if count is None else count
+    count[0] += 1
+    if (
+        not isinstance(value, dict)
+        or depth > 5
+        or count[0] > 32
+        or len(canonical(value)) > 16384
+    ):
+        raise ReportError("mutation schema exceeds its type, depth or size limits")
+    spec = {k: v for k, v in value.items() if k not in {"nullable", "graphqlType"}}
+    if "nullable" in value and type(value["nullable"]) is not bool:
+        raise ReportError("nullable must be a boolean")
+    if "graphqlType" in value and value["graphqlType"] not in (
+        "Int",
+        "Float",
+        "String",
+        "ID",
+        "Boolean",
+        "enum",
+        "list",
+        "input",
+    ):
+        raise ReportError("unsupported GraphQL projection type")
+    if spec.get("type") == "array":
+        if set(spec) - {"type", "items", "minItems", "maxItems", "uniqueItems"}:
+            raise ReportError("unsupported array schema keyword")
+        item = mutation_schema(spec.get("items"), depth + 1, count)
+        if item["type"] in ("array", "object"):
+            raise ReportError("array items must be scalar or enum values")
+        low = integer(spec.get("minItems", 0), "minItems", 0, 32)
+        high = integer(spec.get("maxItems", 32), "maxItems", 0, 32)
+        if low > high or type(spec.get("uniqueItems", False)) is not bool:
+            raise ReportError("invalid array bounds or uniqueness")
+    elif spec.get("type") == "object":
+        if value.get("graphqlType") != "input" or set(spec) != {
+            "type",
+            "properties",
+            "required",
+        }:
+            raise ReportError(
+                "object mutations require an explicit GraphQL input projection"
+            )
+        properties, required = spec["properties"], spec["required"]
+        if not isinstance(properties, dict) or not 1 <= len(properties) <= 16:
+            raise ReportError("input object requires 1-16 fields")
+        if (
+            not isinstance(required, list)
+            or any(not isinstance(v, str) for v in required)
+            or set(required) - properties.keys()
+            or len(set(required)) != len(required)
+        ):
+            raise ReportError("invalid required input fields")
+        for name, item in properties.items():
+            if (
+                not isinstance(name, str)
+                or not re.fullmatch(r"[_A-Za-z][_0-9A-Za-z]{0,99}", name)
+                or _SENSITIVE.search(name)
+            ):
+                raise ReportError("unsupported or credential-like input object field")
+            mutation_schema(item, depth + 1, count)
+    else:
+        scalar_schema(spec)
+    return value
+
+
+def _unique_key(value) -> str:
+    # JSON Schema numbers compare mathematically, while booleans remain distinct.
+    if type(value) in (int, float):
+        numerator, denominator = value.as_integer_ratio()
+        return f"number:{numerator}/{denominator}"
+    return digest(value)
+
+
+def valid_input(value, schema: dict) -> bool:
+    if value is None and schema.get("nullable"):
+        return True
+    kind = schema["type"]
+    if kind == "array":
+        if not isinstance(value, list):
+            # GraphQL coerces a single non-null scalar to a one-element list.
+            if schema.get("graphqlType") != "list" or value is None:
+                return False
+            value = [value]
+        return (
+            schema.get("minItems", 0)
+            <= len(value)
+            <= schema.get("maxItems", float("inf"))
+            and all(valid_input(v, schema["items"]) for v in value)
+            and (
+                not schema.get("uniqueItems")
+                or len({_unique_key(v) for v in value}) == len(value)
+            )
+        )
+    if kind == "object":
+        return (
+            isinstance(value, dict)
+            and not set(value) - schema["properties"].keys()
+            and not set(schema["required"]) - value.keys()
+            and all(valid_input(v, schema["properties"][k]) for k, v in value.items())
+        )
+    if schema.get("graphqlType") == "ID":
+        return type(value) in (str, int)
+    if schema.get("graphqlType") == "Int":
+        return type(value) is int and -(2**31) <= value < 2**31
+    if schema.get("graphqlType") == "String":
+        return isinstance(value, str)
+    if schema.get("graphqlType") == "Float":
+        import math
+
+        try:
+            return type(value) in (int, float) and math.isfinite(value)
+        except OverflowError:
+            return False
+    return valid_scalar(value, schema)
+
+
+def _representatives(schema: dict) -> list:
+    candidates = boundary_values(schema)
+    if schema["type"] in ("integer", "number"):
+        candidates += list(range(33))
+    elif schema["type"] == "string":
+        candidates += [str(n).ljust(schema.get("minLength", 0), "a") for n in range(33)]
+    result = list(
+        {_unique_key(v): v for v in candidates if valid_input(v, schema)}.values()
+    )
+    if not result:
+        raise ReportError(
+            "schema has no supported representative; review its constraints"
+        )
+    return result
+
+
 def scalar_schema(value: dict) -> dict:
     if not isinstance(value, dict) or set(value) - {
         "type",
@@ -97,6 +233,42 @@ def valid_scalar(value, schema: dict) -> bool:
 
 
 def boundary_values(schema: dict) -> list:
+    if schema["type"] == "array":
+        items = _representatives(schema["items"])
+        low, high = (
+            schema.get("minItems", 0),
+            schema.get("maxItems", max(8, schema.get("minItems", 0))),
+        )
+        values = [[], None, False, 0, "", {}]
+        sizes = sorted({max(0, low - 1), low, low + 1, high, high + 1})
+        for size in sizes:
+            values.append([copy.deepcopy(items[n % len(items)]) for n in range(size)])
+        values.append([copy.deepcopy(items[0]), copy.deepcopy(items[0])])
+        # Wrong item types and item-boundary violations, independent of length.
+        size = max(1, low)
+        for item in boundary_values(schema["items"]):
+            if not valid_input(item, schema["items"]):
+                values.append(
+                    [item]
+                    + [copy.deepcopy(items[n % len(items)]) for n in range(size - 1)]
+                )
+        if schema.get("graphqlType") == "list":
+            values.extend(items[:2])
+        return list({digest(v): v for v in values}.values())
+    if schema["type"] == "object":
+        base = {k: _representatives(v)[0] for k, v in schema["properties"].items()}
+        values = [base, {}, None, [], False, ""]
+        variants = []
+        for name, spec in schema["properties"].items():
+            omitted = copy.deepcopy(base)
+            del omitted[name]
+            variants.append(
+                [omitted] + [{**base, name: v} for v in boundary_values(spec)[:20]]
+            )
+        for index in range(max(len(v) for v in variants)):
+            values.extend(v[index] for v in variants if index < len(v))
+        # Keep nested projections finite; the outer batch still has its case cap.
+        return list({digest(v): v for v in values}.values())[:64]
     values = [None, False, True, 0, "", [], {}]
     values.extend(schema.get("enum", []))
     if schema["type"] in ("integer", "number"):
@@ -112,6 +284,57 @@ def boundary_values(schema: dict) -> list:
     return list({digest(v): v for v in values}.values())
 
 
+def _strategy(schema: dict, st):
+    kind = schema["type"]
+    if kind == "array":
+        strategy = st.lists(
+            _strategy(schema["items"], st),
+            min_size=schema.get("minItems", 0),
+            max_size=schema.get("maxItems", max(8, schema.get("minItems", 0))),
+            unique_by=_unique_key if schema.get("uniqueItems") else None,
+        )
+    elif kind == "object":
+        strategy = st.fixed_dictionaries(
+            {
+                k: _strategy(v, st)
+                for k, v in schema["properties"].items()
+                if k in schema["required"]
+            },
+            optional={
+                k: _strategy(v, st)
+                for k, v in schema["properties"].items()
+                if k not in schema["required"]
+            },
+        )
+    elif "enum" in schema:
+        strategy = st.sampled_from(schema["enum"])
+    elif kind == "integer":
+        import math
+
+        strategy = st.integers(
+            math.ceil(
+                schema.get("minimum", min(0, math.floor(schema.get("maximum", 100))))
+            ),
+            math.floor(schema.get("maximum", max(100, schema.get("minimum", 0)))),
+        )
+    elif kind == "number":
+        strategy = st.floats(
+            min_value=schema.get("minimum", min(0, schema.get("maximum", 100))),
+            max_value=schema.get("maximum", max(100, schema.get("minimum", 0))),
+            allow_nan=False,
+            allow_infinity=False,
+        )
+    elif kind == "boolean":
+        strategy = st.booleans()
+    else:
+        strategy = st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-é",
+            min_size=schema.get("minLength", 0),
+            max_size=schema.get("maxLength", max(32, schema.get("minLength", 0))),
+        )
+    return st.one_of(st.none(), strategy) if schema.get("nullable") else strategy
+
+
 def hypothesis_samples(schema: dict, count: int, seed: int) -> list:
     if count == 0:
         return []
@@ -124,29 +347,7 @@ def hypothesis_samples(schema: dict, count: int, seed: int) -> list:
     from hypothesis import Phase, given, seed as seeded, settings
     from hypothesis import strategies as st
 
-    if "enum" in schema:
-        strategy = st.sampled_from(schema["enum"])
-    elif schema["type"] == "integer":
-        import math
-
-        strategy = st.integers(
-            math.ceil(schema.get("minimum", 0)), math.floor(schema.get("maximum", 100))
-        )
-    elif schema["type"] == "number":
-        strategy = st.floats(
-            min_value=schema.get("minimum", 0),
-            max_value=schema.get("maximum", 100),
-            allow_nan=False,
-            allow_infinity=False,
-        )
-    elif schema["type"] == "boolean":
-        strategy = st.booleans()
-    else:
-        strategy = st.text(
-            alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-é",
-            min_size=schema.get("minLength", 0),
-            max_size=schema.get("maxLength", 32),
-        )
+    strategy = _strategy(schema, st)
     values = []
 
     @seeded(seed)
@@ -159,7 +360,46 @@ def hypothesis_samples(schema: dict, count: int, seed: int) -> list:
     return list({digest(v): v for v in values}.values())
 
 
-def _schema_fields(schema: dict, prefix: str = "", depth: int = 0) -> list[dict]:
+def _projection(item: dict, root: dict | None = None) -> tuple[dict, list[str]]:
+    if root is not None:
+        from .api_schema import _resolve
+
+        item = _resolve(item, root)
+    allowed_names = {"type", "enum", "minimum", "maximum", "minLength", "maxLength"}
+    if item.get("type") == "array":
+        allowed_names = {"type", "items", "minItems", "maxItems", "uniqueItems"}
+    allowed = {k: v for k, v in item.items() if k in allowed_names}
+    omitted = sorted(
+        set(item)
+        - set(allowed)
+        - {
+            "description",
+            "title",
+            "example",
+            "default",
+            "readOnly",
+            "writeOnly",
+            "deprecated",
+        }
+    )
+    if item.get("type") == "array":
+        child = item.get("items")
+        if not isinstance(child, dict):
+            raise ReportError(
+                "array projection requires an explicit scalar items schema"
+            )
+        if root is not None:
+            child = _resolve(child, root)
+        if child.get("type") not in ("string", "integer", "number", "boolean"):
+            raise ReportError("array projection supports scalar items only")
+        allowed["items"], extra = _projection(child, root)
+        omitted.extend("items." + keyword for keyword in extra)
+    return mutation_schema(allowed), sorted(omitted)
+
+
+def _schema_fields(
+    schema: dict, prefix: str = "", depth: int = 0, root: dict | None = None
+) -> list[dict]:
     if (
         not isinstance(schema, dict)
         or not isinstance(schema.get("properties", {}), dict)
@@ -172,43 +412,22 @@ def _schema_fields(schema: dict, prefix: str = "", depth: int = 0) -> list[dict]
     for name, item in schema.get("properties", {}).items():
         if not isinstance(item, dict):
             raise ReportError("invalid property schema")
+        if root is not None:
+            from .api_schema import _resolve
+
+            item = _resolve(item, root)
         if _SENSITIVE.search(name):
             continue
         pointer = prefix + "/" + name.replace("~", "~0").replace("/", "~1")
         if item.get("type") == "object":
-            result.extend(_schema_fields(item, pointer, depth + 1))
-        elif item.get("type") in ("string", "integer", "number", "boolean"):
-            allowed = {
-                k: item[k]
-                for k in (
-                    "type",
-                    "enum",
-                    "minimum",
-                    "maximum",
-                    "minLength",
-                    "maxLength",
-                )
-                if k in item
-            }
-            # Do not silently erase validation semantics of unsupported keywords.
-            omitted = sorted(
-                set(item)
-                - set(allowed)
-                - {
-                    "description",
-                    "title",
-                    "example",
-                    "default",
-                    "readOnly",
-                    "writeOnly",
-                    "deprecated",
-                }
-            )
+            result.extend(_schema_fields(item, pointer, depth + 1, root))
+        elif item.get("type") in ("string", "integer", "number", "boolean", "array"):
+            allowed, omitted = _projection(item, root)
             result.append(
                 {
                     "location": "json",
                     "pointer": pointer,
-                    "schema": scalar_schema(allowed),
+                    "schema": allowed,
                     "values": [],
                     "omit": name in schema.get("required", []),
                     "unsupportedSchemaKeywords": omitted,
@@ -251,7 +470,7 @@ def initialize_plan(
             .get("application/json", {})
             .get("schema", {})
         )
-        mutations.extend(_schema_fields(_resolve(body, schema)))
+        mutations.extend(_schema_fields(_resolve(body, schema), root=schema))
         parameters = {}
         for parameter in item.get("parameters", []) + operation.get("parameters", []):
             parameter = _resolve(parameter, schema)
@@ -296,6 +515,17 @@ def initialize_plan(
                         "type": "object",
                         "properties": {k: infer(v) for k, v in value.items()},
                     }
+                if isinstance(value, list):
+                    if not value or any(
+                        isinstance(v, (dict, list)) or v is None for v in value
+                    ):
+                        raise ReportError(
+                            "empty or structured arrays need an explicit scalar-array schema"
+                        )
+                    inferred = [infer(v) for v in value]
+                    if len({v["type"] for v in inferred}) != 1:
+                        raise ReportError("mixed array items need an explicit schema")
+                    return {"type": "array", "items": inferred[0]}
                 return {
                     "type": "boolean"
                     if type(value) is bool
@@ -323,7 +553,7 @@ def initialize_plan(
                 )
     if not 1 <= len(mutations) <= 16:
         raise ReportError(
-            "select a request with 1-16 scalar body/query fields, or author a mutation plan"
+            "select a request with 1-16 supported body/query fields, or author a mutation plan"
         )
     plan = {
         "schemaVersion": PLAN_SCHEMA,
@@ -553,7 +783,11 @@ def generate_plan(path: str, directory: str) -> dict:
             },
             "mutation slot",
         )
-        spec = scalar_schema(mutation["schema"])
+        spec = mutation_schema(mutation["schema"])
+        if mutation["location"] == "query" and spec["type"] in ("array", "object"):
+            raise ReportError(
+                "structured query fields require a separate serialization profile"
+            )
         if mutation["location"] == "json":
             from .http_evidence import _pointer
 
@@ -581,7 +815,7 @@ def generate_plan(path: str, directory: str) -> dict:
             not found and mutation["omit"] is True
         ):
             raise ReportError(
-                "seed does not satisfy the selected scalar projection; choose a valid baseline or author an explicit case"
+                "seed does not satisfy the selected input projection; choose a valid baseline or author an explicit case"
             )
         if mutation["unsupportedSchemaKeywords"]:
             raise ReportError(
@@ -598,7 +832,11 @@ def generate_plan(path: str, directory: str) -> dict:
             + hypothesis_samples(spec, samples, seed + index)
             + mutation["values"]
         )
-        if any(len(canonical(value)) > 2048 for value in values):
+        if any(
+            len(canonical(value))
+            > (16384 if spec["type"] in ("array", "object") else 2048)
+            for value in values
+        ):
             raise ReportError("mutation value size exceeded")
         variants = [
             (
@@ -613,7 +851,7 @@ def generate_plan(path: str, directory: str) -> dict:
             )
             for value in values
         ]
-        if mutation["omit"]:
+        if mutation["omit"] or spec["type"] in ("array", "object"):
             variants.insert(
                 0,
                 (
@@ -625,7 +863,7 @@ def generate_plan(path: str, directory: str) -> dict:
                         "location": mutation["location"],
                         "pointer": mutation["pointer"],
                     },
-                    False,
+                    not mutation["omit"],
                 ),
             )
         rounds.append(variants)
@@ -664,7 +902,9 @@ def generate_plan(path: str, directory: str) -> dict:
             "lineage": {
                 "planSha256": digest(plan),
                 "seed": seed,
-                "engine": "whitehat-boundary-v1",
+                "engine": "whitehat-boundary-v2"
+                if any(m["schema"]["type"] in ("array", "object") for m in mutations)
+                else "whitehat-boundary-v1",
                 "hypothesisVersion": HYPOTHESIS_VERSION if samples else None,
                 "mutation": mutation,
                 "dataMode": "positive" if valid else "negative",
@@ -726,7 +966,9 @@ def _valid_mutation(value, spec: dict, mutation: dict, plan: dict) -> bool:
             value = wire
     operation = plan["provenance"].get("graphqlOperation")
     if not operation:
-        return valid_scalar(value, spec)
+        return valid_input(value, spec)
+    if "graphqlType" in spec:
+        return valid_input(value, spec)
     name = mutation["pointer"].removeprefix("/variables/")
     declared = operation["variables"].get(name, "")
     if value is None:

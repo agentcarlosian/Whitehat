@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "whitehat-prepared-request-v1",
+  "method": "POST",
+  "url": "https://owned.example.invalid/graphql",
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"query\":\"query Check($filter: Filter!) { check(filter: $filter) }\",\"variables\":{\"filter\":{\"id\":7,\"colors\":[\"RED\"]}}}",
+  "objectId": "owned-item",
+  "operationId": "input-object-check"
+}

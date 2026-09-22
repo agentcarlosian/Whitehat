@@ -51,6 +51,22 @@ def owned_fuzz_api(*, vulnerable: bool = False):
             state["requests"] += 1
             if self.principal() != "alice":
                 return self.answer(403, {"error": "denied"})
+            if self.path == "/array-check":
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 <= length <= 65536:
+                    return self.answer(413, {"error": "too-large"})
+                try:
+                    value = json.loads(self.rfile.read(length))
+                except (ValueError, UnicodeError):
+                    return self.answer(400, {"error": "invalid-json"})
+                items = value.get("items") if isinstance(value, dict) else None
+                valid = (isinstance(items, list) and 1 <= len(items) <= 3
+                         and all(type(v) is int and 0 <= v <= 10 for v in items))
+                if valid:
+                    valid = len(items) == len(set(items))
+                if not valid and not state["vulnerable"]:
+                    return self.answer(422, {"error": "invalid-items"})
+                return self.answer(200, {"accepted": True})
             if self.path == "/reset":
                 state.update(
                     owner="alice", quantity=1, phase="draft", resets=state["resets"] + 1

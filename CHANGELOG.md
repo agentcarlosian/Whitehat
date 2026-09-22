@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add explicit workspace artifact indexes, deterministic status and integrity
+  checks, existing packet/candidate validation, and transitive stale dependencies.
+- Generate bounded scalar-array mutation cases with length, uniqueness, element
+  and omission checks; retain unsupported item constraints as diagnostics.
+- Prepare nested GraphQL input objects and scalar/enum lists with nullability,
+  defaults and coercion-aware expectations. Add owned twins and CLI evaluations.
+
 - Align release, roadmap, security, and operator documentation with the public
   `v0.1.0` source release and link its completed validation evidence.
 - Add complete source-install and virtual-environment instructions, clarify

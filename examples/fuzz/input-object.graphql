@@ -1,0 +1,8 @@
+enum Color { RED BLUE }
+input Filter {
+  id: ID!
+  colors: [Color!]!
+  count: Int! = 3
+  enabled: Boolean
+}
+type Query { check(filter: Filter!): Boolean }
