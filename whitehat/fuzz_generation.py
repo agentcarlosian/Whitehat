@@ -312,12 +312,14 @@ def _strategy(schema: dict, st):
         import math
 
         strategy = st.integers(
-            math.ceil(schema.get("minimum", 0)),
+            math.ceil(
+                schema.get("minimum", min(0, math.floor(schema.get("maximum", 100))))
+            ),
             math.floor(schema.get("maximum", max(100, schema.get("minimum", 0)))),
         )
     elif kind == "number":
         strategy = st.floats(
-            min_value=schema.get("minimum", 0),
+            min_value=schema.get("minimum", min(0, schema.get("maximum", 100))),
             max_value=schema.get("maximum", max(100, schema.get("minimum", 0))),
             allow_nan=False,
             allow_infinity=False,

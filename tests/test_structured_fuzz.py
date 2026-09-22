@@ -317,6 +317,21 @@ class StructuredFuzzTests(unittest.TestCase):
         with self.assertRaises(ReportError):
             mutation_schema(root)
 
+    def test_array_sampling_with_only_a_negative_upper_bound(self):
+        plan = self.plan()
+        for kind in ("integer", "number"):
+            value = copy.deepcopy(plan)
+            value["request"]["body"] = '{"items":[-2]}'
+            value["mutations"][0]["schema"] = {
+                "type": "array",
+                "items": {"type": kind, "maximum": -0.5},
+            }
+            _, cases = self.generate(value, "negative-" + kind)
+            self.assertGreater(len(cases), 1)
+            self.assertTrue(
+                any(c["lineage"]["dataMode"] == "positive" for c, _ in cases)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

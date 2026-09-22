@@ -42,7 +42,7 @@ Implemented:
 
 Verification (Windows/Python 3.13.12):
 
-- `python -B scripts/validate.py`: 169 tests, three expected platform skips,
+- `python -B scripts/validate.py`: 170 tests, three expected platform skips,
   74 syntax files and all existing golden-path assertions passed.
 - Isolated Ruff E4/E7/E9/F checks and `git diff --check` passed.
 - Workspace CLI evaluation detected an input change and stale comparison/packet.
@@ -52,6 +52,8 @@ Verification (Windows/Python 3.13.12):
 - Built and installed a wheel from a temporary copy of the release inventory;
   both workspace and fuzz evaluations passed with isolated installed imports.
 - 60 local Markdown file links resolved.
+- The final review added a regression for numeric array schemas with a negative
+  upper bound and no lower bound; both integer and number sampling pass.
 
 The checkout-wide pip wheel build was interrupted after stalling. The clean
 source build succeeded with the already installed pinned build dependencies and
