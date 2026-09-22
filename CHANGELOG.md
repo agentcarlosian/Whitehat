@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add an opt-in Express/TypeScript Opengrep profile for request-to-shell,
+  request-to-eval and request-to-file-path review with actual native controls.
+- Preserve bounded, redacted SARIF secondary locations and native/imported
+  reported flows. Display them in CLI, review and packet output without changing
+  observation fingerprints or asserting verified reachability.
+
 - Add explicit workspace artifact indexes, deterministic status and integrity
   checks, existing packet/candidate validation, and transitive stale dependencies.
 - Generate bounded scalar-array mutation cases with length, uniqueness, element

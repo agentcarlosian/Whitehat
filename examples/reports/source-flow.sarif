@@ -1,0 +1,30 @@
+{
+  "version": "2.1.0",
+  "runs": [{
+    "tool": {"driver": {"name": "OwnedAnalyzer", "rules": [{"id": "owned/request-flow"}]}},
+    "artifacts": [{"location": {"uri": "src/app.ts"}}, {"location": {"uri": "src/guards.ts"}}],
+    "threadFlowLocations": [{
+      "location": {"physicalLocation": {"artifactLocation": {"index": 0}, "region": {"startLine": 3}}},
+      "kinds": ["source"], "executionOrder": 1,
+      "state": {"request": {"text": "synthetic-private-value"}}
+    }],
+    "results": [{
+      "ruleId": "owned/request-flow",
+      "level": "warning",
+      "message": {"text": "untrusted analyzer text"},
+      "locations": [
+        {"physicalLocation": {"artifactLocation": {"uri": "src/app.ts"}, "region": {"startLine": 12}}},
+        {"physicalLocation": {"artifactLocation": {"uri": "src/app.ts"}, "region": {"startLine": 3}}}
+      ],
+      "relatedLocations": [{
+        "physicalLocation": {"artifactLocation": {"index": 1}, "region": {"startLine": 4}},
+        "message": {"text": "synthetic-private-value"}
+      }],
+      "codeFlows": [{"threadFlows": [{"locations": [
+        {"index": 0},
+        {"location": {"physicalLocation": {"artifactLocation": {"uri": "src/guards.ts"}, "region": {"startLine": 4, "snippet": {"text": "synthetic-private-value"}}}}, "kinds": ["condition"], "executionOrder": 2},
+        {"location": {"physicalLocation": {"artifactLocation": {"uri": "src/app.ts"}, "region": {"startLine": 12}}}, "kinds": ["sink"], "executionOrder": 3}
+      ]}]}]
+    }]
+  }]
+}

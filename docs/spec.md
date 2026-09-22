@@ -15,6 +15,14 @@ SARIF, ZAP, Nuclei, Opengrep, Betterleaks, and Gitleaks output into
 `whitehat-research-result-v1`. Native and imported results share fingerprints,
 relative source locations, explanations, reported context, and false finding claims.
 
+`scan opengrep SOURCE --profile express-typescript` adds a fixed opt-in JavaScript/
+TypeScript profile for Express request input reaching `exec`, `eval` or `readFile`.
+The default `basic` profile is unchanged. Native flow locations and SARIF secondary
+locations/code flows use optional `sourceContext` metadata outside the observation
+fingerprint. Context changes affect comparison metadata; import, validation, CLI,
+review and packet exports share the bounded unverified contract documented in
+[source-review.md](source-review.md).
+
 `compare BEFORE AFTER` reports introduced, absent, and unchanged fingerprints in
 `whitehat-research-comparison-v1`, plus whether the recorded analysis profiles
 match. `init NEW_DIRECTORY` creates a portable workspace and

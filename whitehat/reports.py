@@ -169,7 +169,7 @@ def observation(tool: str, rule: str, *, path: str | None = None,
                 line: int | None = None, url: str | None = None,
                 severity: str | None = None, category: str = "tool-observation",
                 context: dict[str, Any] | None = None,
-                explanation: str | None = None) -> dict[str, Any]:
+                explanation: str | None = None, source_context: dict | None = None) -> dict[str, Any]:
     result = {
         "tool": identifier(tool, "tool"), "ruleId": identifier(rule, "rule"),
         "category": category, "path": path, "line": line, "endpoint": url,
@@ -178,6 +178,10 @@ def observation(tool: str, rule: str, *, path: str | None = None,
     }
     identity = {k: result[k] for k in ("tool", "ruleId", "path", "line", "endpoint", "context")}
     result["fingerprint"] = hashlib.sha256(canonical(identity)).hexdigest()
+    if source_context is not None:
+        from .source_context import validate_context
+
+        result["sourceContext"] = validate_context(source_context)
     return result
 
 
@@ -189,6 +193,8 @@ def _severity(value: Any) -> str | None:
 
 
 def _sarif(value: Any, root: str | None) -> list[dict[str, Any]]:
+    from .source_context import sarif_context
+
     value = _object(value, "SARIF")
     if value.get("version") != "2.1.0":
         raise ReportError("only SARIF 2.1.0 is supported")
@@ -215,14 +221,17 @@ def _sarif(value: Any, root: str | None) -> list[dict[str, Any]]:
                 region = _object(physical.get("region", {}), "region")
                 if "startLine" in region:
                     line = positive(region["startLine"], "line")
+            source_context = sarif_context(result, run, root) if len(locations) > 1 or "relatedLocations" in result or "codeFlows" in result else None
             out.append(observation(tool, rule, path=path, line=line,
-                                   severity=_severity(result.get("level"))))
+                                   severity=_severity(result.get("level")), source_context=source_context))
             if len(out) > MAX_OBSERVATIONS:
                 raise ReportLimitError("observation count limit exceeded")
     return out
 
 
 def _opengrep(value: Any, root: str | None) -> list[dict[str, Any]]:
+    from .source_context import opengrep_context
+
     value = _object(value, "Opengrep report")
     if value.get("errors"):
         raise ReportError("Opengrep reported errors; incomplete scans cannot be imported as complete")
@@ -233,7 +242,8 @@ def _opengrep(value: Any, root: str | None) -> list[dict[str, Any]]:
         out.append(observation("opengrep", result.get("check_id"),
             path=relative_path(result.get("path"), root),
             line=positive(_object(result.get("start"), "start").get("line"), "line"),
-            severity=_severity(extra.get("severity")), category="source-review"))
+            severity=_severity(extra.get("severity")), category="source-review",
+            source_context=opengrep_context(extra["dataflow_trace"], root) if extra.get("dataflow_trace") is not None else None))
     return out
 
 
@@ -347,7 +357,21 @@ def normalize(raw: bytes, format_name: str, source_root: str | None = None) -> l
         records = parsers[format_name](value, source_root)
     if len(records) > MAX_OBSERVATIONS:
         raise ReportLimitError("observation count limit exceeded")
+    _source_context_budget(records)
     return records
+
+
+def _source_context_budget(records):
+    count = 0
+    for item in records:
+        context = item.get("sourceContext")
+        if "sourceContext" in item:
+            from .source_context import validate_context
+
+            validate_context(context)
+            count += len(context["relatedLocations"]) + sum(len(flow["steps"]) for flow in context["flows"])
+        if count > 10000:
+            raise ReportLimitError("report source-context location limit exceeded")
 
 
 def result_document(records: list[dict[str, Any]], provenance: dict[str, Any],
@@ -386,7 +410,7 @@ def compare_results(before_path: str, after_path: str) -> dict[str, Any]:
     shared = sorted(new.keys() & old.keys())
     changed = [k for k in shared if old[k] != new[k]]
     unchanged = [k for k in shared if k not in changed]
-    identity_keys = ("kind", "tool", "toolVersion", "configSha256", "format", "sourceSuffixes", "excludedDirectories")
+    identity_keys = ("kind", "tool", "toolVersion", "configSha256", "format", "sourceSuffixes", "excludedDirectories", "analysisProfile")
     comparable = all(before["provenance"].get(k) == after["provenance"].get(k) for k in identity_keys)
     return seal({"schemaVersion": "whitehat-research-comparison-v1", "ok": True,
         "beforeSha256": before["resultSha256"], "afterSha256": after["resultSha256"],
@@ -411,7 +435,7 @@ def checked_research_result(path: str) -> dict[str, Any]:
         item = _object(item, "observation")
         expected_fields = {"tool", "ruleId", "category", "path", "line", "endpoint",
                            "severityReported", "context", "explanation", "fingerprint"}
-        if set(item) != expected_fields:
+        if set(item) not in (expected_fields, expected_fields | {"sourceContext"}):
             raise ReportError("invalid observation fields")
         identifier(item["tool"], "tool")
         identifier(item["ruleId"], "rule")
@@ -430,4 +454,5 @@ def checked_research_result(path: str) -> dict[str, Any]:
         identity = {k: item[k] for k in ("tool", "ruleId", "path", "line", "endpoint", "context")}
         if hashlib.sha256(canonical(identity)).hexdigest() != fingerprint:
             raise ReportError("observation fingerprint does not match its identity")
+    _source_context_budget(result["observations"])
     return result

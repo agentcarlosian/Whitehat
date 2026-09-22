@@ -17,6 +17,7 @@ from .http_evidence import HTTP_SCHEMA, digest, label
 from .records import RecordError, write_json_document
 from .reports import CLAIMS, ReportError, parse_json, read_bytes, seal
 from .research import _markdown
+from .source_context import context_lines
 
 MANIFEST_SCHEMA = "whitehat-report-manifest-v1"
 TEXT_FIELDS = ("title", "prerequisites", "impact", "limitations", "negativeControl")
@@ -342,6 +343,9 @@ def _render_evidence(result: dict, selected: list[str]) -> list[str]:
                     "",
                 ]
             )
+            if "sourceContext" in item:
+                lines.extend("- " + _markdown(line) for line in context_lines(item["sourceContext"]))
+                lines.append("")
         provenance = result["provenance"]
         if provenance.get("kind") == "relational-assessment":
             lines.append(_line("Relational plan SHA-256", provenance.get("planSha256")))
