@@ -244,6 +244,22 @@ See `docs/release-readiness.md` and Decision 0003.
 
 ## Capture preparation, packets and candidate histories
 
+Workspace indexes provide a shared inspection surface over explicit input,
+result, packet and candidate registrations:
+
+```text
+whitehat workspace index DIRECTORY --project ID --input PATH --result PATH --output INDEX [--depends-on CHILD=PARENT] [--json]
+whitehat workspace status INDEX [--output RESULT] [--json]
+whitehat workspace check INDEX [--output RESULT] [--json]
+```
+
+Registration flags are repeatable; `--packet` and `--candidate` register existing
+manifests and histories. Index writes refuse overwrite. Inspection is read-only
+unless output is explicitly requested. `check` exits 3 when consistency is false;
+`status` exits 0 when inspection completes. Both use
+`whitehat-workspace-status-v1`. See [workspace.md](workspace.md) for path, byte,
+dependency and integrity semantics.
+
 ```text
 whitehat http prepare CAPTURE --project ID --index N --output-dir NEW_DIRECTORY
   [--format har|capture] [--identity ID] [--object ID] [--operation ID] [--json]
@@ -269,7 +285,8 @@ export; malformed paths/manifests fail. Retest profile mismatch is recorded as
 not-comparable, never an automatic fix. Scenario coverage describes existing
 receipts against supplied plans and does not execute them.
 
-All commands in this specification exit `0` on success. Command-line usage
+Commands exit `0` on success; `workspace check` also requires consistent artifacts.
+Command-line usage
 errors exit `2`, invalid inputs exit `3`, and configured limit failures exit `4`.
 
 ## Fuzzing and GraphQL

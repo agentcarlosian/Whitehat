@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "whitehat-prepared-request-v1",
+  "method": "POST",
+  "url": "https://owned.example.invalid/array-check",
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"items\":[1]}",
+  "objectId": "owned-item",
+  "operationId": "array-check"
+}

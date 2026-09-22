@@ -22,20 +22,22 @@ evaluations establish and what still requires human investigation.
 | [Source review](docs/quickstart.md) | Compare vulnerable, fixed, and negative-control source fixtures |
 | [Web/API evidence](docs/web-api-quickstart.md) | Compare captures across identities and assess explicit access expectations |
 | [Bounty packet](docs/bounty-workflow.md) | Prepare requests, bind an object ID, assemble evidence, and track retests |
+| [Workspace status](docs/workspace.md) | Register artifacts, inspect missing evidence and track stale dependencies |
 | [Reproducible fuzzing](docs/fuzzing.md) | Use concrete mutation batches, stateful checks, reduction, and regression corpora |
 
 ## What you can do
 
 | Task | Implemented support |
 | --- | --- |
-| Fuzz selected API inputs | Boundary/Hypothesis cases from prepared captures or scalar OpenAPI fields; exact reviewed batches |
+| Fuzz selected API inputs | Boundary/Hypothesis cases from scalar fields and scalar arrays; exact reviewed batches |
 | Check state and property boundaries | Relational readback assertions and finite-state sequences with explicit verified reset |
 | Reproduce and regress failures | Finite reduction sweeps, smallest verified candidate, deduplicated HTTP case corpora |
-| Investigate GraphQL | Offline SDL/introspection inventory, operation-aware captures, scalar/enum variable plans |
+| Investigate GraphQL | Offline inventory, operation-aware captures, scalar/enum, input-object and scalar-list plans |
 | Fuzz reviewed source parsers | Optional Atheris 3.1.0 fixed profiles on Linux x64/Python 3.12–3.14 |
 | Prepare research requests | Selected HAR entry to concrete request and unapproved session draft; staged ID binding |
 | Assemble evidence packets | Hash-pinned selected exchanges, comparisons, controls and Markdown reproduction steps |
 | Track candidate retests | Per-candidate decisions, explicit duplicate relationships, comparison suitability and history |
+| Inspect workspace integrity | Explicit artifact index, packet/candidate checks, changed inputs and transitive stale dependencies |
 | Inspect research coverage | Separate route observation, identity/object access outcomes and scenario completion |
 | Compare API access | HAR/request-response imports, selected JSON evidence, identity/object access matrix |
 | Replay approved requests | Exact prepared requests, session credential references, persistent budgets, HTTPS |

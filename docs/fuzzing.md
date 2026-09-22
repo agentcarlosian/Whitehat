@@ -34,7 +34,8 @@ python -m whitehat fuzz generate .whitehat-fuzz-review/plan.json --output-dir .w
 
 `http prepare` can supply the request from an existing HAR entry. `fuzz plan`
 also works without OpenAPI: it proposes scalar slots from captured JSON/query
-fields. Inferred types are suggestions; review them against the API's contract.
+fields, including homogeneous nonempty scalar arrays. Empty, mixed and structured
+arrays need an explicit supported schema. Review inferred types against the API's contract.
 The checked-in examples use `.invalid` and must be retargeted only as part of an
 independently authorized session. The owned evaluation does this for its own API.
 
@@ -44,7 +45,7 @@ codes, and optional setup/readback/reset and relational assertions. The complete
 example is [mutation-plan.json](../examples/fuzz/mutation-plan.json).
 
 The first profile changes one object property or query parameter at a time.
-Seeds must satisfy the selected scalar projection before a positive baseline is
+Seeds must satisfy the selected input projection before a positive baseline is
 generated. Query values are classified after string serialization/coercion;
 JSON strings and numbers cannot be treated as different wire types in a query.
 It tests omissions of declared required fields, null/wrong-type values, numeric
@@ -56,9 +57,26 @@ separate transport profiles and are not silently normalized into these cases.
 Supported schema keywords are `type` (string/integer/number/boolean), `enum`,
 `minimum`, `maximum`, `minLength` and `maxLength`. Nested object properties are
 supported up to five levels. Plans expose unsupported property keywords and
-generation refuses them until the operator reviews the projection. Array/input-
-object generation, regex constraints and complete OpenAPI conformance are not
-claimed. An accepted scalar case does not prove the whole request is valid.
+generation refuses them until the operator reviews the projection. Regex
+constraints and complete OpenAPI conformance are not claimed. An accepted
+projected case does not prove the whole request is valid.
+
+JSON array properties support scalar `items`, `minItems`, `maxItems` and
+`uniqueItems`. Declared size bounds range from 0 to 32; generated boundary arrays
+have at most 33 items. Cases include empty arrays, duplicates, wrong element types,
+element constraint violations, and omission. Omitting a required array is negative;
+omitting an optional array is positive. Unknown item constraints appear as
+`items.KEYWORD` diagnostics and block generation. Query arrays, arrays of objects
+and nested arrays require separate profiles. Structured mutation values are
+limited to 16 KiB; the ordinary request and batch limits still apply.
+
+```sh
+python -m whitehat fuzz plan examples/fuzz/array-request.json --schema examples/fuzz/array-openapi.json --project owned-fuzz --identity alice --output .whitehat-fuzz-review/array-plan.json
+python -m whitehat fuzz generate .whitehat-fuzz-review/array-plan.json --output-dir .whitehat-fuzz-review/arrays
+```
+
+Structured cases record engine `whitehat-boundary-v2`. The owned evaluation runs
+array batches against deliberately broken and fixed validation endpoints.
 
 Bounds: 16 mutation slots, 32 cases, 100 total request steps including cleanup,
 and 16 MiB of generated artifacts. Hypothesis sampling is pinned to 6.168.0;
@@ -207,10 +225,23 @@ than operation metadata. Different operations at `/graphql` remain distinct.
 POST JSON exchanges. Partial `data` and `errors` remain in the selected evidence.
 Batches, subscriptions, persisted-query-only inputs and streaming/multipart
 responses are outside the first profile. Variable mutation supports built-in
-scalar and enum variables. Input objects, lists and custom scalars need explicit
-strategies. GraphQL plans add selected error-presence/absence checks because an
+scalars, enums, nested input objects and scalar/enum lists. Input projections are
+bounded to five levels, 32 type nodes per variable and 16 fields per object.
+Recursive/oneOf inputs, custom scalars, lists of objects and nested lists require
+separate strategies. Credential-like object fields reject preparation.
+GraphQL plans add selected error-presence/absence checks because an
 HTTP 200 can carry validation errors; nullable variables, ID integer coercion and
 required-variable defaults are handled separately from HTTP status codes.
+
+Input-field defaults, nullability, non-null list elements and singleton-to-list
+coercion are preserved. Projected schemas record `graphqlType` and `nullable`;
+tests compare generated classifications with graphql-core's actual variable
+coercion without executing resolvers.
+
+```sh
+python -m whitehat graphql plan examples/fuzz/input-object-request.json --schema examples/fuzz/input-object.graphql --project owned-fuzz --identity alice --output .whitehat-fuzz-review/input-plan.json
+python -m whitehat fuzz generate .whitehat-fuzz-review/input-plan.json --output-dir .whitehat-fuzz-review/input-objects
+```
 
 For source fuzzing, use Linux x64 with Python 3.12–3.14:
 

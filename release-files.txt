@@ -43,3 +43,4 @@ whitehat/scanner.py
 whitehat/schemathesis_worker.py
 whitehat/security_rules.py
 whitehat/synthetic_child.py
+whitehat/workspace.py

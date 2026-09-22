@@ -52,6 +52,7 @@ from .fuzz_corpus import extract_http, reduce_case, minimize_batch, initialize_c
 from .fuzz_source import SOURCE_PROFILES, source_fuzz
 from .graphql_tools import graphql_inventory, inspect_operation, import_graphql_capture, graphql_mutation_plan
 from .relational import assess_relations
+from .workspace import KINDS, index_workspace, workspace_status
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -59,6 +60,21 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
         print(
             json.dumps(value, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
         )
+        return
+    if value.get("schemaVersion") == "whitehat-workspace-indexed-v1":
+        print(f"Indexed {value['artifacts']} artifacts in {value['projectId']}")
+        return
+    if value.get("schemaVersion") == "whitehat-workspace-status-v1":
+        print(f"Workspace {value['projectId']}: " + ("consistent" if value['consistent'] else "needs attention"))
+        for item in value["artifacts"]:
+            print(f"{item['status']}: {item['path']}")
+            if item["staleBecause"]:
+                print("  Depends on: " + ", ".join(item["staleBecause"]))
+            if "decision" in item:
+                print("  Latest decision: " + item["decision"])
+            for issue in item["issues"]:
+                print(f"  {issue['code']}: {issue['item']}")
+            print("  " + item["nextAction"])
         return
     if value.get("schemaVersion", "").startswith(("whitehat-fuzz-", "whitehat-graphql-", "whitehat-source-fuzz-")):
         print(value["schemaVersion"])
@@ -439,6 +455,22 @@ def _parser() -> argparse.ArgumentParser:
     _add_output(history)
     history.add_argument("--json", action="store_true")
 
+    workspace = commands.add_parser("workspace", help="Index explicit research artifacts and inspect their dependencies offline.")
+    workspace_commands = workspace.add_subparsers(dest="workspace_command", required=True)
+    workspace_index = workspace_commands.add_parser("index", help="Create a new artifact snapshot in the workspace root.")
+    workspace_index.add_argument("directory")
+    workspace_index.add_argument("--project", required=True)
+    for kind in KINDS:
+        workspace_index.add_argument("--" + kind, action="append", default=[], help="Explicit path relative to the workspace root.")
+    workspace_index.add_argument("--depends-on", action="append", default=[], help="Explicit child-path=parent-path dependency.")
+    workspace_index.add_argument("--output", required=True)
+    workspace_index.add_argument("--json", action="store_true")
+    for name in ("status", "check"):
+        inspection = workspace_commands.add_parser(name, help="Inspect the registered artifacts; check exits 3 for inconsistent state.")
+        inspection.add_argument("index")
+        _add_output(inspection)
+        inspection.add_argument("--json", action="store_true")
+
     http = commands.add_parser("http", help="Import HTTP evidence, compare responses, and assess access expectations.")
     http_commands = http.add_subparsers(dest="http_command", required=True)
     prepare = http_commands.add_parser("prepare", help="Prepare one source capture entry and an unapproved session draft.")
@@ -712,6 +744,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "tools":
             _emit(toolkit_status(), args.json)
             return 0
+        if args.command == "workspace":
+            if args.workspace_command == "index":
+                _emit(index_workspace(args.directory, args.output, args.project,
+                                      {kind: getattr(args, kind) for kind in KINDS}, args.depends_on), args.json)
+                return 0
+            result = workspace_status(args.index)
+            _emit_analysis(result, args)
+            return 3 if args.workspace_command == "check" and not result["consistent"] else 0
         if args.command == "fuzz":
             command = args.fuzz_command
             if command == "plan":

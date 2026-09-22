@@ -13,6 +13,8 @@ There is no persistent background service.
 | Health check | `python -B -m whitehat doctor --json` | Reports implemented boundaries |
 | Toolkit compatibility | `python -m whitehat tools` | Lists pins, platforms, and import formats |
 | Create research workspace | `python -m whitehat init NEW_DIRECTORY --title TITLE` | Creates inputs/results/notes/exports and case.json |
+| Inspect workspace | `python -m whitehat workspace status INDEX --json` | Read-only artifact and dependency status; see [workspace guide](workspace.md) |
+| Check workspace integrity | `python -m whitehat workspace check INDEX --json` | Exit 3 for changed/missing/invalid/stale artifacts; no automatic repairs |
 | Security source scan | `python -m whitehat scan opengrep SOURCE` | Authored Python/JavaScript rules; explicit tool setup required |
 | Secret pattern scan | `python -m whitehat scan secrets SOURCE` | Betterleaks; no live credential validation |
 | Import tool output | `python -m whitehat import REPORT --format FORMAT` | osv, sarif, zap, nuclei, opengrep, betterleaks, gitleaks |
@@ -35,6 +37,11 @@ There is no persistent background service.
 | Show version | `python -B -m whitehat --version` | Prints the package version |
 
 ## Failure handling
+
+Workspace checks distinguish content completeness from integrity. For changed
+inputs, inspect `staleBecause`, rebuild or reassess the dependent results, and
+explicitly create a new index. Index refresh alone does not recompute research.
+`python -B scripts/evaluate_workspace.py` proves propagation using owned artifacts.
 
 For mutation/stateful batches, relational assertions, reduction and corpus
 regression, GraphQL analysis and optional source fuzzing, see [fuzzing.md](fuzzing.md).

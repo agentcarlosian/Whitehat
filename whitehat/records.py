@@ -47,6 +47,7 @@ SUPPORTED_RESULT_SCHEMAS = frozenset(
         "whitehat-graphql-inventory-v1",
         "whitehat-graphql-operation-v1",
         "whitehat-source-fuzz-result-v1",
+        "whitehat-workspace-status-v1",
     }
 )
 REVIEW_DECISIONS = frozenset({"accepted", "dismissed", "needs-work"})

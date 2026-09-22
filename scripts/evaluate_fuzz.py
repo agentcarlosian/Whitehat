@@ -253,6 +253,29 @@ def evaluate(root: Path, installed: bool = False) -> dict:
                         "corpus reproduction/deduplication control failed"
                     )
                 outcomes["corpusReproduced"] = True
+    for broken in (False, True):
+        name = "array-broken" if broken else "array-fixed"
+        with owned_fuzz_api(vulnerable=broken) as (origin, state):
+            request = retarget(json.loads((ROOT / "examples/fuzz/array-request.json").read_text()), origin)
+            plan_path = root / (name + "-plan.json")
+            run("fuzz", "plan", write(root / (name + "-request.json"), request),
+                "--project", "owned-fuzz", "--identity", "alice",
+                "--schema", ROOT / "examples/fuzz/array-openapi.json", "--output", plan_path)
+            directory = root / (name + "-batch")
+            run("fuzz", "generate", plan_path, "--output-dir", directory)
+            result = run("fuzz", "run", directory / "batch.json", "--session", session(directory, name),
+                         "--state", directory / "ledger.sqlite3", "--output", directory / "run.json")
+            if not result["provenance"]["complete"] or (result["summary"]["observations"] > 0) != broken:
+                raise RuntimeError("owned array validation twin failed")
+            outcomes[name] = result["summary"]["observations"]
+    input_plan = root / "input-object-plan.json"
+    run("graphql", "plan", ROOT / "examples/fuzz/input-object-request.json",
+        "--schema", ROOT / "examples/fuzz/input-object.graphql", "--project", "owned-fuzz",
+        "--identity", "alice", "--output", input_plan)
+    input_generated = run("fuzz", "generate", input_plan, "--output-dir", root / "input-object-batch")
+    if input_generated["cases"] < 2:
+        raise RuntimeError("GraphQL input-object generation failed")
+    outcomes["graphqlInputObjectCases"] = input_generated["cases"]
     gql_plan = root / "graphql-plan.json"
     inventory = run(
         "graphql",

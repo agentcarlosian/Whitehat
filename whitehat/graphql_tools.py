@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 
 from .fuzz_contracts import PLAN_SCHEMA, json_file
-from .fuzz_generation import scalar_schema
+from .fuzz_generation import mutation_schema
 from .http_evidence import capture_entries, digest, evidence_document, exchange, label
 from .http_replay import prepared_request
 from .preparation import _SENSITIVE, _private_fields
@@ -301,6 +301,68 @@ def import_graphql_capture(
     )
 
 
+def _input_projection(gql, declared, depth=0, seen=(), count=None):
+    count = [0] if count is None else count
+    count[0] += 1
+    if depth > 5 or count[0] > 32:
+        raise ReportError("GraphQL input projection exceeds five levels or 32 nodes")
+    nullable = not isinstance(declared, gql.GraphQLNonNull)
+    value = declared.of_type if not nullable else declared
+    if isinstance(value, gql.GraphQLList):
+        item = _input_projection(gql, value.of_type, depth + 1, seen, count)
+        if item["type"] in ("array", "object"):
+            raise ReportError("GraphQL lists currently require scalar or enum items")
+        return {
+            "type": "array",
+            "items": item,
+            "graphqlType": "list",
+            "nullable": nullable,
+        }
+    if isinstance(value, gql.GraphQLInputObjectType):
+        if value.name in seen or getattr(value, "is_one_of", False):
+            raise ReportError(
+                "recursive or oneOf input objects require a separate strategy"
+            )
+        properties = {
+            name: _input_projection(
+                gql, field.type, depth + 1, (*seen, value.name), count
+            )
+            for name, field in value.fields.items()
+        }
+        required = [
+            name
+            for name, field in value.fields.items()
+            if isinstance(field.type, gql.GraphQLNonNull)
+            and field.default_value is gql.Undefined
+        ]
+        return {
+            "type": "object",
+            "properties": properties,
+            "required": required,
+            "graphqlType": "input",
+            "nullable": nullable,
+        }
+    if isinstance(value, gql.GraphQLEnumType):
+        return {
+            "type": "string",
+            "enum": list(value.values),
+            "graphqlType": "enum",
+            "nullable": nullable,
+        }
+    kinds = {
+        "Int": "integer",
+        "Float": "number",
+        "String": "string",
+        "ID": "string",
+        "Boolean": "boolean",
+    }
+    if value.name not in kinds:
+        raise ReportError(
+            "custom GraphQL scalars require an explicit reviewed strategy"
+        )
+    return {"type": kinds[value.name], "graphqlType": value.name, "nullable": nullable}
+
+
 def graphql_mutation_plan(
     schema_path: str, request_path: str, output: str, project: str, identity: str
 ) -> dict:
@@ -322,35 +384,20 @@ def graphql_mutation_plan(
     for name, declared in operation["variables"].items():
         if _SENSITIVE.search(name):
             continue
-        type_name = declared.rstrip("!")
-        if type_name in {"Int", "Float", "String", "ID", "Boolean"}:
-            spec = {
-                "type": {
-                    "Int": "integer",
-                    "Float": "number",
-                    "String": "string",
-                    "ID": "string",
-                    "Boolean": "boolean",
-                }[type_name]
-            }
-        elif isinstance(schema.get_type(type_name), gql.GraphQLEnumType):
-            spec = {"type": "string", "enum": list(schema.get_type(type_name).values)}
-        else:
-            raise ReportError(
-                "first GraphQL mutation profile supports scalar/enum variables; lists, input objects and custom scalars need explicit strategies"
-            )
+        projected_type = gql.type_from_ast(schema, gql.parse_type(declared))
+        spec = mutation_schema(_input_projection(gql, projected_type))
         mutations.append(
             {
                 "location": "json",
                 "pointer": "/variables/" + name,
-                "schema": scalar_schema(spec),
+                "schema": spec,
                 "values": [],
                 "omit": name in operation["requiredVariables"],
                 "unsupportedSchemaKeywords": [],
             }
         )
     if not 1 <= len(mutations) <= 16:
-        raise ReportError("select 1-16 noncredential scalar variables")
+        raise ReportError("select 1-16 supported noncredential variables")
     request = copy.deepcopy(request)
     request["operationId"] = operation["operationId"]
     plan = {

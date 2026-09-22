@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.3",
+  "info": {"title": "Owned array validation fixture", "version": "1"},
+  "paths": {
+    "/array-check": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "uniqueItems": true,
+                    "items": {"type": "integer", "minimum": 0, "maximum": 10}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {"200": {"description": "Accepted"}, "422": {"description": "Invalid items"}}
+      }
+    }
+  }
+}
