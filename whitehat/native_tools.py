@@ -11,7 +11,8 @@ from typing import Any
 from .reports import ReportError, ReportLimitError, canonical, normalize, parse_json, result_document
 from .runner import execute_fixed_profile
 from .scanner import ScannerLimits
-from .security_rules import EXPLANATIONS, RULES, RULES_VERSION, SECRET_CONFIG
+from .security_rules import SECRET_CONFIG
+from .source_profiles import PROFILES
 
 
 # Release asset SHA-256s from GitHub's official release API, verified 2026-09-14.
@@ -120,7 +121,9 @@ def _is_link(path: Path) -> bool:
     return path.is_symlink() or getattr(path, "is_junction", lambda: False)()
 
 
-def copy_inputs(root: Path, destination: Path, tool: str, limits: ScannerLimits) -> list[dict[str, Any]]:
+def copy_inputs(root: Path, destination: Path, tool: str, limits: ScannerLimits,
+                languages: dict[str, str] | None = None) -> list[dict[str, Any]]:
+    languages = languages or _LANGUAGES
     records = []
     pending = [root]
     entries_seen = total = 0
@@ -146,7 +149,7 @@ def copy_inputs(root: Path, destination: Path, tool: str, limits: ScannerLimits)
             if not entry.is_file(follow_symlinks=False):
                 raise ReportError("source contains a non-regular entry")
             suffix = path.suffix.lower()
-            if tool == "opengrep" and suffix not in _LANGUAGES:
+            if tool == "opengrep" and suffix not in languages:
                 continue
             if tool == "betterleaks" and suffix not in _TEXT_SUFFIXES and path.name != ".env":
                 continue
@@ -178,7 +181,11 @@ def copy_inputs(root: Path, destination: Path, tool: str, limits: ScannerLimits)
 
 
 def scan_native(source: str, tool: str, tool_path: str | None = None,
-                limits: ScannerLimits | None = None) -> dict[str, Any]:
+                limits: ScannerLimits | None = None, *, profile: str = "basic") -> dict[str, Any]:
+    if profile not in PROFILES or (tool != "opengrep" and profile != "basic"):
+        raise ReportError("unsupported source analysis profile")
+    selected = PROFILES[profile]
+    languages = selected["languages"]
     limits = limits or ScannerLimits()
     limits.validate()
     # The shared process supervisor currently enforces a 30-second upper bound.
@@ -194,17 +201,17 @@ def scan_native(source: str, tool: str, tool_path: str | None = None,
     source_root = source_path.resolve()
     records: list[dict[str, Any]] = []
     copied_root: Path | None = None
-    config = canonical({"rules": RULES}) if tool == "opengrep" else SECRET_CONFIG.encode("utf-8")
+    config = canonical({"rules": selected["rules"]}) if tool == "opengrep" else SECRET_CONFIG.encode("utf-8")
 
     def prepare(workspace: Path) -> None:
         nonlocal records, copied_root
         copied_root = workspace / "source"
         copied_root.mkdir()
-        records = copy_inputs(source_root, copied_root, tool, limits)
+        records = copy_inputs(source_root, copied_root, tool, limits, languages)
         (workspace / "rules.json" if tool == "opengrep" else workspace / "secrets.toml").write_bytes(config)
         if tool == "opengrep":
             targets = [["CodeTarget", {"path": str(copied_root / r["path"]),
-                "analyzer": _LANGUAGES[Path(r["path"]).suffix.lower()], "products": ["sast"]}] for r in records]
+                "analyzer": languages[Path(r["path"]).suffix.lower()], "products": ["sast"]}] for r in records]
             (workspace / "targets.json").write_bytes(canonical(targets))
 
     def arguments(workspace: Path) -> list[str]:
@@ -240,17 +247,24 @@ def scan_native(source: str, tool: str, tool_path: str | None = None,
         raise ReportError("secret detector exit/result mismatch")
     for item in observations:
         if tool == "opengrep":
-            if item["ruleId"] not in EXPLANATIONS:
+            if item["ruleId"] not in selected["explanations"]:
                 raise ReportError("Opengrep emitted an unreviewed rule")
-            item["explanation"] = EXPLANATIONS[item["ruleId"]]
+            item["explanation"] = selected["explanations"][item["ruleId"]]
             item["severityReported"] = "warning"
+            if item["path"] not in {r["path"] for r in records}:
+                raise ReportError("native observation references an uncopied file")
+            context = item.get("sourceContext", {})
+            locations = context.get("relatedLocations", []) + [step["location"] for flow in context.get("flows", []) for step in flow["steps"]]
+            if any(loc is not None and loc["path"] not in {r["path"] for r in records} for loc in locations):
+                raise ReportError("native flow references an uncopied file")
     return result_document(observations, {
         "kind": "native-scan", "tool": tool, "toolVersion": TOOLS[tool]["version"],
         "executableSha256": spec["members"][spec["executable"]],
-        "configSha256": hashlib.sha256(config).hexdigest(), "rulesVersion": RULES_VERSION if tool == "opengrep" else "1",
+        "configSha256": hashlib.sha256(config).hexdigest(), "rulesVersion": selected["rulesVersion"] if tool == "opengrep" else "1",
+        **({"analysisProfile": selected["rulesVersion"], "taintScope": "single-function"} if profile != "basic" else {}),
         "sourceTreeSha256": hashlib.sha256(canonical(records)).hexdigest(),
         "sourceFiles": len(records), "sourceBytes": sum(r["bytes"] for r in records),
-        "sourceSuffixes": sorted(_LANGUAGES if tool == "opengrep" else _TEXT_SUFFIXES),
+        "sourceSuffixes": sorted(languages if tool == "opengrep" else _TEXT_SUFFIXES),
         "excludedDirectories": sorted(_EXCLUDED), "process": execution.receipt(),
         "executionVerified": True, "osSandboxEnforced": False,
     }, effects={"network": False, "processCreation": True, "sourceExecuted": False,
@@ -268,5 +282,6 @@ def toolkit_status() -> dict[str, Any]:
             {"tool": "graphql-core", "version": "3.2.12", "extra": "graphql", "platforms": ["core-python"]},
             {"tool": "atheris", "version": "3.1.0", "extra": "source-fuzz", "platforms": ["linux-x64-python3.12-3.14"]}],
         "concreteRequestBatches": True,
+        "sourceProfiles": {name: {"rulesVersion": value["rulesVersion"], "sourceSuffixes": sorted(value["languages"])} for name, value in PROFILES.items()},
         "setup": "python scripts/setup_tools.py --destination .whitehat/tools",
         "networkScanning": False}

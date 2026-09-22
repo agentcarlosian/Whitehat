@@ -48,6 +48,10 @@ jobs:
         if: runner.os != 'macOS'
         run: python -B scripts/evaluate_research.py
 
+      - name: Evaluate framework source review and native flow controls
+        if: runner.os != 'macOS'
+        run: python -B scripts/evaluate_source_review.py --native
+
       - name: Evaluate web and stateful API workflows
         if: runner.os != 'macOS'
         run: python -B scripts/evaluate_web.py
@@ -75,6 +79,11 @@ jobs:
           python -B scripts/evaluate_bounty.py --installed
           python -B scripts/evaluate_fuzz.py --installed
           python -B scripts/evaluate_workspace.py --installed
+          python -B scripts/evaluate_source_review.py --installed
+
+      - name: Verify installed framework source profile
+        if: runner.os != 'macOS'
+        run: python -B scripts/evaluate_source_review.py --installed --native
 
   release-audit:
     needs: [validate, source-fuzz]

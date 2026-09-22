@@ -20,6 +20,7 @@ evaluations establish and what still requires human investigation.
 | --- | --- |
 | [One-minute review](#try-a-complete-review-in-one-minute) | Import a synthetic advisory and export a review without native tools or target access |
 | [Source review](docs/quickstart.md) | Compare vulnerable, fixed, and negative-control source fixtures |
+| [Framework source review](docs/source-review.md) | Inspect Express/TypeScript request flows and imported SARIF flow locations |
 | [Web/API evidence](docs/web-api-quickstart.md) | Compare captures across identities and assess explicit access expectations |
 | [Bounty packet](docs/bounty-workflow.md) | Prepare requests, bind an object ID, assemble evidence, and track retests |
 | [Workspace status](docs/workspace.md) | Register artifacts, inspect missing evidence and track stale dependencies |
@@ -43,7 +44,7 @@ evaluations establish and what still requires human investigation.
 | Replay approved requests | Exact prepared requests, session credential references, persistent budgets, HTTPS |
 | Review API changes | OpenAPI inventory/coverage and oasdiff 1.32.0 with effective authentication comparison |
 | Test lifecycle expectations | Explicit approved scenarios; Schemathesis 4.27.1 on an owned disposable API |
-| Review risky source patterns | Opengrep 1.30.0 with five authored Python/JavaScript rules |
+| Review risky source patterns | Opengrep 1.30.0 with the original five rules and an optional Express/TypeScript flow profile |
 | Triage dependency advisories | Import OSV-Scanner JSON with package/version, aliases, and reported fixes |
 | Bring your existing tools | Import SARIF 2.1.0, ZAP JSON, Nuclei HTTP JSONL, Opengrep JSON, Betterleaks/Gitleaks JSON |
 | Detect potential secrets | Betterleaks 1.8.1, redacted results, live credential validation disabled |

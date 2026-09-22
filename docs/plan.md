@@ -18,9 +18,10 @@ A fresh `v0.1.0` checkout installed in a new virtual environment and produced th
 expected report from all four README review commands. Runtime code and the
 published tag are unchanged.
 
-Selected feature work: [workspace visibility and structured-input fuzzing](tasks/workspace-structured-fuzz.md).
-The two requested slices add artifact status/checks and bounded structured inputs
-to the existing CLI. No other proposed feature is selected.
+Selected feature work: [framework-aware source review](tasks/framework-source-review.md).
+The requested slice adds an explicit Express/TypeScript profile and bounded
+reported source-flow context. [Workspace visibility and structured-input fuzzing](tasks/workspace-structured-fuzz.md)
+are merged through PR #12; other proposed improvements remain unselected.
 
 ## Shipped workflows
 

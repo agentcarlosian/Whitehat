@@ -16,6 +16,7 @@ There is no persistent background service.
 | Inspect workspace | `python -m whitehat workspace status INDEX --json` | Read-only artifact and dependency status; see [workspace guide](workspace.md) |
 | Check workspace integrity | `python -m whitehat workspace check INDEX --json` | Exit 3 for changed/missing/invalid/stale artifacts; no automatic repairs |
 | Security source scan | `python -m whitehat scan opengrep SOURCE` | Authored Python/JavaScript rules; explicit tool setup required |
+| Framework source review | `python -m whitehat scan opengrep SOURCE --profile express-typescript` | Fixed request-to-sink rules; [flow interpretation and limits](source-review.md) |
 | Secret pattern scan | `python -m whitehat scan secrets SOURCE` | Betterleaks; no live credential validation |
 | Import tool output | `python -m whitehat import REPORT --format FORMAT` | osv, sarif, zap, nuclei, opengrep, betterleaks, gitleaks |
 | Compare research results | `python -m whitehat compare BEFORE AFTER` | New/absent/unchanged fingerprints, profile comparison |

@@ -35,6 +35,8 @@ def doctor_result() -> dict[str, Any]:
             "credentials": True,
             "ruffScannerAdapter": True,
             "opengrepScannerAdapter": True,
+            "expressTypescriptSourceProfile": True,
+            "reportedSourceFlowContext": True,
             "secretScannerAdapter": True,
             "researchReportImports": True,
             "researchBaselineComparison": True,

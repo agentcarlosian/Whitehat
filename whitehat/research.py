@@ -9,6 +9,7 @@ from typing import Any
 
 from .records import RecordError, _bounded_text, write_json_document
 from .reports import canonical, checked_research_result, parse_json, read_bytes, relative_path
+from .source_context import context_lines
 
 
 CASE_SCHEMA = "whitehat-research-case-v1"
@@ -137,12 +138,16 @@ def export_markdown(result_path: str, output_path: str, *, case_path: str | None
                     value = ", ".join(str(v) for v in value) or "None reported"
                 lines.append(f"- {_markdown(CONTEXT_LABELS.get(key, key))}: {_markdown(value)}")
             lines.append("")
+        if "sourceContext" in item:
+            lines.extend("- " + _markdown(line) for line in context_lines(item["sourceContext"]))
+            lines.append("")
     lines.extend(["## Evidence references", "", "References are not opened or embedded by this exporter.", ""])
     lines.extend(f"- {_markdown(reference)}" for reference in case["evidenceReferences"])
     lines.extend(["", "## Provenance", "", "The result JSON contains the complete machine-readable provenance and process receipt.", ""])
     for key, label in (("kind", "Origin"), ("tool", "Tool"), ("toolVersion", "Tool version"),
                        ("format", "Imported format"), ("reportSha256", "Imported report SHA-256"),
-                       ("sourceTreeSha256", "Source tree SHA-256"), ("configSha256", "Rules/config SHA-256")):
+                       ("sourceTreeSha256", "Source tree SHA-256"), ("configSha256", "Rules/config SHA-256"),
+                       ("analysisProfile", "Analysis profile"), ("taintScope", "Taint scope")):
         if key in result["provenance"]:
             lines.append(f"- {label}: {_markdown(result['provenance'][key])}")
     lines.extend(["", "This packet records research. It does not establish authorization, exploitability, impact, eligibility, or a validated finding.", ""])

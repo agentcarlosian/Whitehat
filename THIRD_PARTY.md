@@ -6,7 +6,7 @@ or wheel. Whitehat-authored rules and examples are Apache-2.0.
 
 | Tool | Version | Purpose | Upstream license/source |
 | --- | --- | --- | --- |
-| Opengrep core | 1.30.0 | Native Python/JavaScript analysis | LGPL-2.1, https://github.com/opengrep/opengrep |
+| Opengrep core | 1.30.0 | Native Python/JavaScript and Express/TypeScript analysis | LGPL-2.1, https://github.com/opengrep/opengrep |
 | Betterleaks | 1.8.1 | Potential-secret detection | MIT, https://github.com/betterleaks/betterleaks |
 | oasdiff | 1.32.0 | Prepared OpenAPI differences | Apache-2.0, https://github.com/oasdiff/oasdiff |
 | Schemathesis | 4.27.1 | Owned stateful API test profile | MIT, https://github.com/schemathesis/schemathesis |
@@ -19,7 +19,8 @@ or wheel. Whitehat-authored rules and examples are Apache-2.0.
 | PyPA build | 1.6.1 | Release audit | MIT, https://github.com/pypa/build |
 | setuptools | 84.0.0 | Release audit backend | MIT, https://github.com/pypa/setuptools |
 
-The Opengrep adapter uses newly authored rules in `whitehat/security_rules.py`.
+The Opengrep adapter uses newly authored rules in `whitehat/security_rules.py`
+and the fixed Express/TypeScript profile in `whitehat/source_profiles.py`.
 It does not download or bundle Semgrep's separately licensed community rules.
 Betterleaks uses the rules embedded in its pinned upstream binary plus an owned
 non-credential marker. Live validation is explicitly disabled. No third-party

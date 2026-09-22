@@ -53,6 +53,8 @@ from .fuzz_source import SOURCE_PROFILES, source_fuzz
 from .graphql_tools import graphql_inventory, inspect_operation, import_graphql_capture, graphql_mutation_plan
 from .relational import assess_relations
 from .workspace import KINDS, index_workspace, workspace_status
+from .source_context import context_lines
+from .source_profiles import PROFILES
 
 
 def _emit(value: dict[str, Any], as_json: bool) -> None:
@@ -114,6 +116,9 @@ def _emit(value: dict[str, Any], as_json: bool) -> None:
                 location += f":{item['line']}"
             print(f"{item['tool']} / {item['ruleId']}  {location}")
             print("  " + item["explanation"])
+            if "sourceContext" in item:
+                for line in context_lines(item["sourceContext"]):
+                    print("  " + line)
         return
     if value.get("schemaVersion") == "whitehat-research-comparison-v1":
         summary = value["summary"]
@@ -640,10 +645,12 @@ def _parser() -> argparse.ArgumentParser:
     _add_output(ruff)
     ruff.add_argument("--json", action="store_true", help="Emit deterministic JSON.")
 
-    for name, description in (("opengrep", "Analyze Python/JavaScript with authored security rules."),
+    for name, description in (("opengrep", "Analyze source with a fixed basic or Express/TypeScript profile."),
                               ("secrets", "Detect potential secrets with pinned Betterleaks; no live credential checks.")):
         native = scan_commands.add_parser(name, help=description)
         native.add_argument("source")
+        if name == "opengrep":
+            native.add_argument("--profile", choices=sorted(PROFILES), default="basic", help="Reviewed rules and source-language profile.")
         native.add_argument("--tool-path", help="Exact pinned native executable; version and companion hashes must match.")
         native.add_argument("--max-entries", type=int, default=20_000)
         native.add_argument("--max-source-files", type=int, default=1_000)
@@ -866,7 +873,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 max_file_bytes=args.max_file_bytes, max_total_bytes=args.max_total_bytes,
                 max_observations=args.max_observations, timeout_seconds=args.timeout_seconds)
             tool = "opengrep" if args.scan_command == "opengrep" else "betterleaks"
-            _emit_analysis(scan_native(args.source, tool, args.tool_path, limits), args)
+            _emit_analysis(scan_native(args.source, tool, args.tool_path, limits, profile=getattr(args, "profile", "basic")), args)
             return 0
         if args.command == "analyze":
             if args.analysis_command == "inventory":
