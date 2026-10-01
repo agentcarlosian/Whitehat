@@ -24,7 +24,7 @@ classifiers = [
 
 [project.optional-dependencies]
 release = ["build==1.6.1", "setuptools==84.0.0"]
-scanner-ruff = ["ruff==0.16.7"]
+scanner-ruff = ["ruff==0.16.9"]
 api = ["PyYAML==6.0.3"]
 api-test = ["schemathesis==4.27.1", "hypothesis==6.168.0", "requests==2.34.2", "urllib3==2.7.0"]
 test-tls = ["trustme==1.2.1"]
