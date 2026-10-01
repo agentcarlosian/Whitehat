@@ -26,9 +26,9 @@ classifiers = [
 release = ["build==1.6.1", "setuptools==84.0.0"]
 scanner-ruff = ["ruff==0.16.7"]
 api = ["PyYAML==6.0.3"]
-api-test = ["schemathesis==4.27.1", "hypothesis==6.168.0", "requests==2.34.2", "urllib3==2.7.0"]
+api-test = ["schemathesis==4.27.1", "hypothesis==6.168.3", "requests==2.34.2", "urllib3==2.7.0"]
 test-tls = ["trustme==1.2.1"]
-fuzz = ["hypothesis==6.168.0"]
+fuzz = ["hypothesis==6.168.3"]
 graphql = ["graphql-core==3.2.12"]
 source-fuzz = ["atheris==3.1.0; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version >= '3.12' and python_version < '3.15'"]
 
