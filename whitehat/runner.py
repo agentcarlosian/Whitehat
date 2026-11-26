@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -180,6 +181,31 @@ def _validated_child_environment_keys(value: Any) -> list[str]:
     return value
 
 
+def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
+    """Terminate the child process and any grandchildren in its isolated process group."""
+    if os.name != "nt":
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+            return
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+    else:
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+                check=False,
+            )
+        except OSError:
+            pass
+    try:
+        process.kill()
+    except OSError:
+        pass
+
+
 def _read_bounded(
     stream: Any,
     limit: int,
@@ -194,7 +220,7 @@ def _read_bounded(
                 buffer.extend(chunk[:remaining])
             if len(buffer) > limit or len(chunk) > remaining:
                 overflow.set()
-                process.kill()
+                _terminate_process_tree(process)
                 break
     finally:
         stream.close()
@@ -267,7 +293,7 @@ def _run_process(
     try:
         exit_code = process.wait(timeout=float(limits.timeout_seconds))
     except subprocess.TimeoutExpired as exc:
-        process.kill()
+        _terminate_process_tree(process)
         process.wait(timeout=5)
         for reader in readers:
             reader.join(timeout=5)
@@ -275,7 +301,7 @@ def _run_process(
     for reader in readers:
         reader.join(timeout=5)
         if reader.is_alive():
-            process.kill()
+            _terminate_process_tree(process)
             raise RunnerError("fixed process output reader did not stop")
     elapsed_ms = max(0, round((time.monotonic() - started) * 1000))
     if stdout_overflow.is_set():

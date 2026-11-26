@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .network_session import (
     NetworkSessionError,
     load_network_session_document,
@@ -355,7 +356,7 @@ def _request_size(path: str, port: int) -> int:
         "Accept": "*/*",
         "Connection": "close",
         "Host": f"127.0.0.1:{port}",
-        "User-Agent": "Whitehat/0.8 loopback-observer",
+        "User-Agent": f"Whitehat/{__version__} loopback-observer",
     }
     request = f"GET {path} HTTP/1.1\r\n" + "".join(
         f"{name}: {value}\r\n" for name, value in headers.items()
@@ -419,7 +420,7 @@ def execute_loopback_observation(
             headers={
                 "Accept": "*/*",
                 "Connection": "close",
-                "User-Agent": "Whitehat/0.8 loopback-observer",
+                "User-Agent": f"Whitehat/{__version__} loopback-observer",
             },
         )
         response = connection.getresponse()

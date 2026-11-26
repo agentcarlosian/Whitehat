@@ -343,9 +343,9 @@ def _credential(profile: dict[str, Any]) -> dict[str, str]:
     return {"Cookie": value}
 
 
-def _resolve(host: str, port: int, timeout: float) -> str:
+def _resolve_candidates(host: str, port: int, timeout: float) -> list[str]:
     if host == "127.0.0.1":
-        return host
+        return [host]
     try:
         addresses = [str(ipaddress.ip_address(host))]
     except ValueError:
@@ -367,6 +367,7 @@ def _resolve(host: str, port: int, timeout: float) -> str:
         addresses = value["addresses"]
     if not isinstance(addresses, list) or not 1 <= len(addresses) <= 16:
         raise ReportError("invalid resolution")
+    validated: list[tuple[int, str]] = []
     try:
         for address in addresses:
             ip = ipaddress.ip_address(address)
@@ -379,9 +380,17 @@ def _resolve(host: str, port: int, timeout: float) -> str:
                 or getattr(ip, "teredo", None) is not None
             ):
                 raise ValueError
+            validated.append((ip.version, str(ip)))
     except (ValueError, TypeError) as exc:
         raise ReportError("external host resolved to a non-public address") from exc
-    return sorted(addresses)[0]
+    return [addr for _, addr in sorted(set(validated))]
+
+
+def _resolve(host: str, port: int, timeout: float) -> str:
+    return _resolve_candidates(host, port, timeout)[0]
+
+
+_DEFAULT_RESOLVE = _resolve
 
 
 def _send(
@@ -398,11 +407,28 @@ def _send(
     if remaining <= 0:
         raise ReportError("session expired before transport")
     deadline = time.monotonic() + remaining
-    address = _resolve(host, port, remaining)
+    candidates = (
+        _resolve_candidates(host, port, remaining)
+        if _resolve is _DEFAULT_RESOLVE
+        else [_resolve(host, port, remaining)]
+    )
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise ReportLimitError("resolution exhausted the request deadline")
-    wire = socket.create_connection((address, port), timeout=remaining)
+    wire: socket.socket | None = None
+    last_error: OSError | None = None
+    for address in candidates:
+        attempt_timeout = deadline - time.monotonic()
+        if attempt_timeout <= 0:
+            raise ReportLimitError("resolution exhausted the request deadline")
+        try:
+            wire = socket.create_connection((address, port), timeout=attempt_timeout)
+            break
+        except OSError as exc:
+            last_error = exc
+    if wire is None:
+        assert last_error is not None
+        raise last_error
     holder = {"socket": wire}
     expired = threading.Event()
 
@@ -526,9 +552,10 @@ def replay(
             secrets.append(auth["Authorization"].removeprefix("Bearer "))
         if "Cookie" in auth:
             secrets.extend(
-                part.split("=", 1)[1].strip()
+                val
                 for part in auth["Cookie"].split(";")
                 if "=" in part
+                and len(val := part.split("=", 1)[1].strip()) >= 8
             )
         if any(
             isinstance(v, str) and any(s and s in v for s in secrets)
