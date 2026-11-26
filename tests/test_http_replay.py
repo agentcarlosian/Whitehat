@@ -376,6 +376,47 @@ class ReplayTests(unittest.TestCase):
                 stop_session(str(root / "session.json"), str(root / "ledger.sqlite3"))
                 self.assertEqual(state["requests"], 1)
 
+    def test_dual_stack_resolution_prefers_ipv4_and_short_cookies_do_not_false_reject(self):
+        from whitehat.http_replay import _resolve_candidates
+        from whitehat.runner import ProcessExecution
+
+        fake_exec = ProcessExecution(
+            profile="http.dns.resolve",
+            executable_sha256="0" * 64,
+            arguments_sha256="0" * 64,
+            input_sha256="0" * 64,
+            exit_code=0,
+            elapsed_ms=1,
+            stdout=json.dumps({"addresses": ["2606:2800:220:1:248:1893:25c8:1946", "93.184.216.34"]}).encode("utf-8"),
+            stderr=b"",
+            workspace_cleaned=True,
+        )
+        with patch("whitehat.http_replay.execute_fixed_profile", return_value=fake_exec):
+            candidates = _resolve_candidates("owned.example.invalid", 443, 2.0)
+            self.assertEqual(candidates[0], "93.184.216.34")
+            self.assertEqual(candidates[1], "2606:2800:220:1:248:1893:25c8:1946")
+
+        with (
+            owned_api() as (origin, _state),
+            tempfile.TemporaryDirectory() as temp,
+            patch.dict(os.environ, {"WHITEHAT_CREDENTIAL_ALICE": "v=a; session=supersecretvalue123"}),
+        ):
+            root = Path(temp)
+            request = request_for(origin, "/items/1")
+            session = session_for(origin, [request])
+            session["identities"][0]["auth"] = "cookie"
+            session["responsePointers"] = ["/error"]
+            (root / "request.json").write_text(json.dumps(request))
+            (root / "session.json").write_text(json.dumps(session))
+            result = replay(
+                str(root / "session.json"),
+                str(root / "request.json"),
+                "alice",
+                str(root / "ledger.sqlite3"),
+            )
+            self.assertEqual(result["exchanges"][0]["response"]["status"], 401)
+            self.assertIn("/error", result["exchanges"][0]["response"]["json"]["values"])
+
 
 if __name__ == "__main__":
     unittest.main()
